@@ -197,30 +197,16 @@ void DTMF_HandleRequest(void)
 
 	if (gDTMF_WriteIndex >= 9) {
 		Offset = gDTMF_WriteIndex - 9;
-		sprintf(String, "%s%c%s", gEeprom.ANI_DTMF_ID, gEeprom.DTMF_SEPARATE_CODE, gEeprom.KILL_CODE);
+		sprintf(String, "%s%c", gEeprom.ANI_DTMF_ID, gEeprom.DTMF_SEPARATE_CODE);
 		if (DTMF_CompareMessage(gDTMF_Received + Offset, String, 9, true)) {
-			if (gEeprom.PERMIT_REMOTE_KILL) {
-				gSetting_KILLED = true;
-				SETTINGS_SaveSettings();
-				gDTMF_ReplyState = DTMF_REPLY_AB;
-#if defined(ENABLE_FMRADIO)
-				if (gFmRadioMode) {
-					FM_TurnOff();
-					GUI_SelectNextDisplay(DISPLAY_MAIN);
-				}
-#endif
-			} else {
-				gDTMF_ReplyState = DTMF_REPLY_NONE;
-			}
+			gDTMF_ReplyState = DTMF_REPLY_NONE;
 			gDTMF_CallState = DTMF_CALL_STATE_NONE;
 			gUpdateDisplay = true;
 			gUpdateStatus = true;
 			return;
 		}
-		sprintf(String, "%s%c%s", gEeprom.ANI_DTMF_ID, gEeprom.DTMF_SEPARATE_CODE, gEeprom.REVIVE_CODE);
+		sprintf(String, "%s%c", gEeprom.ANI_DTMF_ID, gEeprom.DTMF_SEPARATE_CODE);
 		if (DTMF_CompareMessage(gDTMF_Received + Offset, String, 9, true)) {
-			gSetting_KILLED = false;
-			SETTINGS_SaveSettings();
 			gDTMF_ReplyState = DTMF_REPLY_AB;
 			gDTMF_CallState = DTMF_CALL_STATE_NONE;
 			gUpdateDisplay = true;

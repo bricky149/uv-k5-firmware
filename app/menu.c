@@ -355,10 +355,6 @@ void MENU_AcceptSetting(void)
 		}
 		return;
 
-	case MENU_PONMSG:
-		gEeprom.POWER_ON_DISPLAY_MODE = gSubMenuSelection;
-		break;
-
 	case MENU_ROGER:
 		gEeprom.ROGER = gSubMenuSelection;
 		break;
@@ -367,14 +363,6 @@ void MENU_AcceptSetting(void)
 		gTxVfo->AM_CHANNEL_MODE = gSubMenuSelection;
 		gRequestSaveChannel = 1;
 		return;
-
-
-
-
-
-
-
-
 
 	case MENU_DEL_CH:
 		SETTINGS_UpdateChannel(gSubMenuSelection, NULL, false);
@@ -649,10 +637,6 @@ void MENU_ShowCurrentSetting(void)
 		gSubMenuSelection = gDTMFChosenContact + 1;
 		break;
 
-	case MENU_PONMSG:
-		gSubMenuSelection = gEeprom.POWER_ON_DISPLAY_MODE;
-		break;
-
 	case MENU_ROGER:
 		gSubMenuSelection = gEeprom.ROGER;
 		break;
@@ -660,12 +644,6 @@ void MENU_ShowCurrentSetting(void)
 	case MENU_AM:
 		gSubMenuSelection = gTxVfo->AM_CHANNEL_MODE;
 		break;
-
-
-
-
-
-
 
 	case MENU_DEL_CH:
 		gSubMenuSelection = RADIO_FindNextChannel(gEeprom.MrChannel[0], 1, false, 1);

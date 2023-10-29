@@ -16,10 +16,8 @@ extern const uint8_t BITMAP_KeyLock[9];
 
 extern const uint8_t BITMAP_F_Key[10];
 
-
 extern const uint8_t BITMAP_WX[12];
 extern const uint8_t BITMAP_TDR[12];
-extern const uint8_t BITMAP_VoicePrompt[9];
 
 #if defined(ENABLE_FMRADIO)
 extern const uint8_t BITMAP_FM[12];
@@ -44,12 +42,9 @@ extern const uint8_t BITMAP_RX[16];
 extern const uint8_t BITMAP_M[8];
 extern const uint8_t BITMAP_F[8];
 
-extern const uint8_t BITMAP_ReverseMode[8];
-
 extern const uint8_t BITMAP_NarrowBand[8];
 
 extern const uint8_t BITMAP_DTMF[24];
-extern const uint8_t BITMAP_Scramble[18];
 
 extern const uint8_t BITMAP_Add[8];
 extern const uint8_t BITMAP_Sub[8];

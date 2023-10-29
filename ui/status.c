@@ -63,9 +63,6 @@ void UI_DisplayStatus(void)
 	if (gEeprom.DUAL_WATCH != DUAL_WATCH_OFF) {
 		memcpy(gStatusLine + 45, BITMAP_TDR, sizeof(BITMAP_TDR));
 	}
-	if (gEeprom.VOICE_PROMPT != VOICE_PROMPT_OFF) {
-		memcpy(gStatusLine + 34, BITMAP_VoicePrompt, sizeof(BITMAP_VoicePrompt));
-	}
 	if (gSetting_KILLED) {
 		memset(gStatusLine + 21, 0xFF, 10);
 	}
@@ -74,11 +71,6 @@ void UI_DisplayStatus(void)
 		memcpy(gStatusLine + 21, BITMAP_FM, sizeof(BITMAP_FM));
 	}
 #endif
-
-
-
-
-
 	ST7565_BlitStatusLine();
 }
 

@@ -21,14 +21,6 @@
 #include <stdint.h>
 #include "radio.h"
 
-enum POWER_OnDisplayMode_t {
-	POWER_ON_DISPLAY_MODE_FULL_SCREEN = 0U,
-	POWER_ON_DISPLAY_MODE_MESSAGE     = 1U,
-	POWER_ON_DISPLAY_MODE_VOLTAGE     = 2U,
-};
-
-typedef enum POWER_OnDisplayMode_t POWER_OnDisplayMode_t;
-
 enum {
 	F_LOCK_OFF = 0U,
 	F_LOCK_FCC = 1U,
@@ -96,7 +88,6 @@ typedef struct {
 	uint8_t ScreenChannel[2];
 	uint8_t FreqChannel[2];
 	uint8_t MrChannel[2];
-	uint8_t NoaaChannel[2];
 	uint8_t RX_VFO;
 	uint8_t TX_VFO;
 	uint8_t field7_0xa;
@@ -105,7 +96,6 @@ typedef struct {
 	uint8_t SQUELCH_LEVEL;
 	uint8_t TX_TIMEOUT_TIMER;
 	bool KEY_LOCK;
-	VOICE_Prompt_t VOICE_PROMPT;
 	uint8_t CHANNEL_DISPLAY_MODE;
 	bool TAIL_NOTE_ELIMINATION;
 	bool VFO_OPEN;
@@ -129,7 +119,6 @@ typedef struct {
 	uint16_t FM_LowerLimit;
 	uint16_t FM_UpperLimit;
 	bool AUTO_KEYPAD_LOCK;
-	POWER_OnDisplayMode_t POWER_ON_DISPLAY_MODE;
 	ROGER_Mode_t ROGER;
 	uint8_t REPEATER_TAIL_TONE_ELIMINATION;
 	uint8_t KEY_1_SHORT_PRESS_ACTION;
@@ -140,8 +129,6 @@ typedef struct {
 	uint8_t MIC_SENSITIVITY_TUNING;
 	uint8_t CHAN_1_CALL;
 	char ANI_DTMF_ID[8];
-	char KILL_CODE[8];
-	char REVIVE_CODE[8];
 	char DTMF_UP_CODE[16];
 	uint8_t field57_0x6c;
 	uint8_t field58_0x6d;
@@ -158,9 +145,7 @@ typedef struct {
 	uint16_t DTMF_CODE_PERSIST_TIME;
 	uint16_t DTMF_CODE_INTERVAL_TIME;
 	bool DTMF_SIDE_TONE;
-	bool PERMIT_REMOTE_KILL;
 	int16_t BK4819_XTAL_FREQ_LOW;
-	bool NOAA_AUTO_SCAN;
 	uint8_t VOLUME_GAIN;
 	uint8_t DAC_GAIN;
 	uint8_t field77_0x95;
