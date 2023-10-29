@@ -349,12 +349,13 @@ void APP_StartListening(FUNCTION_Type_t Function)
 		}
 		if (gRxVfo->IsAM) {
 			BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
-			gNeverUsed = 0;
+			BK4819_DisableAGC();
 		} else {
 			BK4819_WriteRegister(BK4819_REG_48, 0xB000
 					| (gEeprom.VOLUME_GAIN << 4)
 					| (gEeprom.DAC_GAIN << 0)
 					);
+			BK4819_EnableAGC();
 		}
 		if (gVoiceWriteIndex == 0) {
 			if (gRxVfo->IsAM) {

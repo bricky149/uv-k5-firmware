@@ -120,6 +120,7 @@ ifeq ($(ENABLE_OVERLAY),1)
 ASFLAGS += -DENABLE_OVERLAY
 endif
 CFLAGS = -Os -Wall -Werror -mcpu=cortex-m0 -fno-builtin -fshort-enums -fno-delete-null-pointer-checks -std=c11 -MMD
+CFLAGS += -freorder-blocks-algorithm=stc -ffunction-sections -fdata-sections
 CFLAGS += -DPRINTF_INCLUDE_CONFIG_H
 CFLAGS += -DGIT_HASH=\"$(GIT_HASH)\"
 ifeq ($(ENABLE_AIRCOPY),1)
@@ -147,6 +148,7 @@ ifeq ($(ENABLE_UART),1)
 CFLAGS += -DENABLE_UART
 endif
 LDFLAGS = -mcpu=cortex-m0 -nostartfiles -Wl,-T,firmware.ld
+LDFLAGS += --specs=nano.specs -Wl,--gc-sections
 
 ifeq ($(DEBUG),1)
 ASFLAGS += -g

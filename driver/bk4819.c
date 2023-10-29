@@ -40,7 +40,7 @@ void BK4819_Init(void)
 	BK4819_WriteRegister(BK4819_REG_00, 0x0000);
 	BK4819_WriteRegister(BK4819_REG_37, 0x1D0F);
 	BK4819_WriteRegister(BK4819_REG_36, 0x0022);
-	BK4819_SetAGC(0);
+	//BK4819_EnableAGC();
 	BK4819_WriteRegister(BK4819_REG_19, 0x1041);
 	BK4819_WriteRegister(BK4819_REG_7D, 0xE940);
 	BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
@@ -74,16 +74,16 @@ static uint16_t BK4819_ReadU16(void)
 
 	PORTCON_PORTC_IE = (PORTCON_PORTC_IE & ~PORTCON_PORTC_IE_C2_MASK) | PORTCON_PORTC_IE_C2_BITS_ENABLE;
 	GPIOC->DIR = (GPIOC->DIR & ~GPIO_DIR_2_MASK) | GPIO_DIR_2_BITS_INPUT;
-	SYSTICK_DelayUs(1);
+	
 
 	Value = 0;
 	for (i = 0; i < 16; i++) {
 		Value <<= 1;
 		Value |= GPIO_CheckBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
 		GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-		SYSTICK_DelayUs(1);
+		
 		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-		SYSTICK_DelayUs(1);
+		
 	}
 	PORTCON_PORTC_IE = (PORTCON_PORTC_IE & ~PORTCON_PORTC_IE_C2_MASK) | PORTCON_PORTC_IE_C2_BITS_DISABLE;
 	GPIOC->DIR = (GPIOC->DIR & ~GPIO_DIR_2_MASK) | GPIO_DIR_2_BITS_OUTPUT;
@@ -97,7 +97,7 @@ uint16_t BK4819_ReadRegister(BK4819_REGISTER_t Register)
 
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCN);
 	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-	SYSTICK_DelayUs(1);
+	
 	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCN);
 
 	BK4819_WriteU8(Register | 0x80);
@@ -105,7 +105,7 @@ uint16_t BK4819_ReadRegister(BK4819_REGISTER_t Register)
 	Value = BK4819_ReadU16();
 
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCN);
-	SYSTICK_DelayUs(1);
+	
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
 
@@ -116,14 +116,14 @@ void BK4819_WriteRegister(BK4819_REGISTER_t Register, uint16_t Data)
 {
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCN);
 	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-	SYSTICK_DelayUs(1);
+	
 	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCN);
 	BK4819_WriteU8(Register);
-	SYSTICK_DelayUs(1);
+	
 	BK4819_WriteU16(Data);
-	SYSTICK_DelayUs(1);
+	
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCN);
-	SYSTICK_DelayUs(1);
+	
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
 }
@@ -139,12 +139,12 @@ void BK4819_WriteU8(uint8_t Data)
 		} else {
 			GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
 		}
-		SYSTICK_DelayUs(1);
+		
 		GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-		SYSTICK_DelayUs(1);
+		
 		Data <<= 1;
 		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-		SYSTICK_DelayUs(1);
+		
 	}
 }
 
@@ -159,42 +159,42 @@ void BK4819_WriteU16(uint16_t Data)
 		} else {
 			GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
 		}
-		SYSTICK_DelayUs(1);
+		
 		GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
 		Data <<= 1;
-		SYSTICK_DelayUs(1);
+		
 		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-		SYSTICK_DelayUs(1);
+		
 	}
 }
 
-void BK4819_SetAGC(uint8_t Value)
+void BK4819_EnableAGC(void)
 {
-	if (Value == 0) {
-		BK4819_WriteRegister(BK4819_REG_13, 0x03BE);
-		BK4819_WriteRegister(BK4819_REG_12, 0x037B);
-		BK4819_WriteRegister(BK4819_REG_11, 0x027B);
-		BK4819_WriteRegister(BK4819_REG_10, 0x007A);
-		BK4819_WriteRegister(BK4819_REG_14, 0x0019);
-		BK4819_WriteRegister(BK4819_REG_49, 0x2A38);
-		BK4819_WriteRegister(BK4819_REG_7B, 0x8420);
-	} else if (Value == 1) {
-		uint8_t i;
+	BK4819_WriteRegister(BK4819_REG_7E,
+		(1u << 15) |      // 0  AGC fix mode
+		(3u << 12) |      // 3  AGC fix index
+		(5u <<  3) |      // 5  DC Filter band width for Tx (MIC In)
+		(6u <<  0));      // 6  DC Filter band width for Rx (I.F In)
 
-		BK4819_WriteRegister(BK4819_REG_13, 0x03BE);
-		BK4819_WriteRegister(BK4819_REG_12, 0x037C);
-		BK4819_WriteRegister(BK4819_REG_11, 0x027B);
-		BK4819_WriteRegister(BK4819_REG_10, 0x007A);
-		BK4819_WriteRegister(BK4819_REG_14, 0x0018);
-		BK4819_WriteRegister(BK4819_REG_49, 0x2A38);
-		BK4819_WriteRegister(BK4819_REG_7B, 0x318C);
-		BK4819_WriteRegister(BK4819_REG_7C, 0x595E);
-		BK4819_WriteRegister(BK4819_REG_20, 0x8DEF);
-		for (i = 0; i < 8; i++) {
-			// Bug? The bit 0x2000 below overwrites the (i << 13)
-			BK4819_WriteRegister(BK4819_REG_06, ((i << 13) | 0x2500U) + 0x36U);
-		}
-	}
+	BK4819_WriteRegister(BK4819_REG_49, 0x2A38);
+	BK4819_WriteRegister(BK4819_REG_7B, 0x8420);
+}
+
+void BK4819_DisableAGC(void)
+{
+	BK4819_WriteRegister(BK4819_REG_7E,
+		(1u << 15) |      // 0  AGC fix mode
+		(4u << 12) |      // 3  AGC fix index
+		(5u <<  3) |      // 5  DC Filter band width for Tx (MIC In)
+		(6u <<  0));      // 6  DC Filter band width for Rx (I.F In)
+
+	BK4819_WriteRegister(BK4819_REG_49, 0x2A38);
+	BK4819_WriteRegister(BK4819_REG_7B, 0x318C);
+	BK4819_WriteRegister(BK4819_REG_7C, 0x595E);
+	BK4819_WriteRegister(BK4819_REG_20, 0x8DEF);
+
+	for (unsigned int i = 0; i < 8; i++)
+		BK4819_WriteRegister(BK4819_REG_06, (i & 7) << 13 | 0x4A << 7 | 0x36);
 }
 
 void BK4819_ToggleGpioOut(BK4819_GPIO_PIN_t Pin, bool bSet)
@@ -449,7 +449,7 @@ void BK4819_PlayTone(uint16_t Frequency, bool bTuningGainSwitch)
 	}
 	BK4819_WriteRegister(BK4819_REG_70, ToneConfig);
 
-	BK4819_WriteRegister(BK4819_REG_30, 0);
+
 	BK4819_WriteRegister(BK4819_REG_30, 0
 			| BK4819_REG_30_ENABLE_AF_DAC
 			| BK4819_REG_30_ENABLE_DISC_MODE
@@ -480,7 +480,7 @@ void BK4819_TurnsOffTones_TurnsOnRX(void)
 	BK4819_WriteRegister(BK4819_REG_70, 0);
 	BK4819_SetAF(BK4819_AF_MUTE);
 	BK4819_ExitTxMute();
-	BK4819_WriteRegister(BK4819_REG_30, 0);
+
 	BK4819_WriteRegister(BK4819_REG_30, 0
 			| BK4819_REG_30_ENABLE_VCO_CALIB
 			| BK4819_REG_30_ENABLE_RX_LINK

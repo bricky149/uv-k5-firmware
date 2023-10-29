@@ -137,6 +137,10 @@ void Main(void)
 #endif
 	}
 
+	// Everything is initialised, set SLEEP* bits
+	SYSCON_REGISTER |= SYSCON_REGISTER_SLEEPONEXIT_BITS_ENABLE;
+	SYSCON_REGISTER |= SYSCON_REGISTER_SLEEPDEEP_BITS_ENABLE;
+
 	while (1) {
 		APP_Update();
 		if (gNextTimeslice) {
