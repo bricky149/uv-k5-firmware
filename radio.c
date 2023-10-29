@@ -504,59 +504,49 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 		| BK4819_REG_3F_SQUELCH_LOST
 		;
 
-	if (IS_NOT_NOAA_CHANNEL(gRxVfo->CHANNEL_SAVE)) {
-		if (!gRxVfo->IsAM) {
-			uint8_t CodeType;
-			uint8_t Code;
+	if (!gRxVfo->IsAM) {
+		uint8_t CodeType;
+		uint8_t Code;
 
-			CodeType = gSelectedCodeType;
-			Code = gSelectedCode;
-			if (gCssScanMode == CSS_SCAN_MODE_OFF) {
-				CodeType = gRxVfo->pRX->CodeType;
-				Code = gRxVfo->pRX->Code;
-			}
-			switch (CodeType) {
-			case CODE_TYPE_DIGITAL:
-			case CODE_TYPE_REVERSE_DIGITAL:
-				BK4819_SetCDCSSCodeWord(DCS_GetGolayCodeWord(CodeType, Code));
-				InterruptMask = 0
-					| BK4819_REG_3F_CxCSS_TAIL
-					| BK4819_REG_3F_CDCSS_FOUND
-					| BK4819_REG_3F_CDCSS_LOST
-					| BK4819_REG_3F_SQUELCH_FOUND
-					| BK4819_REG_3F_SQUELCH_LOST
-					;
-				break;
-			case CODE_TYPE_CONTINUOUS_TONE:
-				BK4819_SetCTCSSFrequency(CTCSS_Options[Code]);
-				BK4819_Set55HzTailDetection();
-				InterruptMask = 0
-					| BK4819_REG_3F_CxCSS_TAIL
-					| BK4819_REG_3F_CTCSS_FOUND
-					| BK4819_REG_3F_CTCSS_LOST
-					| BK4819_REG_3F_SQUELCH_FOUND
-					| BK4819_REG_3F_SQUELCH_LOST
-					;
-				break;
-			default:
-				BK4819_SetCTCSSFrequency(670);
-				BK4819_Set55HzTailDetection();
-				InterruptMask = 0
-					| BK4819_REG_3F_CxCSS_TAIL
-					| BK4819_REG_3F_SQUELCH_FOUND
-					| BK4819_REG_3F_SQUELCH_LOST
-					;
-				break;
-			}
+		CodeType = gSelectedCodeType;
+		Code = gSelectedCode;
+		if (gCssScanMode == CSS_SCAN_MODE_OFF) {
+			CodeType = gRxVfo->pRX->CodeType;
+			Code = gRxVfo->pRX->Code;
 		}
-	} else {
-		BK4819_SetCTCSSFrequency(2625);
-		InterruptMask = 0
-			| BK4819_REG_3F_CTCSS_FOUND
-			| BK4819_REG_3F_CTCSS_LOST
-			| BK4819_REG_3F_SQUELCH_FOUND
-			| BK4819_REG_3F_SQUELCH_LOST
-			;
+		switch (CodeType) {
+		case CODE_TYPE_DIGITAL:
+		case CODE_TYPE_REVERSE_DIGITAL:
+			BK4819_SetCDCSSCodeWord(DCS_GetGolayCodeWord(CodeType, Code));
+			InterruptMask = 0
+				| BK4819_REG_3F_CxCSS_TAIL
+				| BK4819_REG_3F_CDCSS_FOUND
+				| BK4819_REG_3F_CDCSS_LOST
+				| BK4819_REG_3F_SQUELCH_FOUND
+				| BK4819_REG_3F_SQUELCH_LOST
+				;
+			break;
+		case CODE_TYPE_CONTINUOUS_TONE:
+			BK4819_SetCTCSSFrequency(CTCSS_Options[Code]);
+			BK4819_Set55HzTailDetection();
+			InterruptMask = 0
+				| BK4819_REG_3F_CxCSS_TAIL
+				| BK4819_REG_3F_CTCSS_FOUND
+				| BK4819_REG_3F_CTCSS_LOST
+				| BK4819_REG_3F_SQUELCH_FOUND
+				| BK4819_REG_3F_SQUELCH_LOST
+				;
+			break;
+		default:
+			BK4819_SetCTCSSFrequency(670);
+			BK4819_Set55HzTailDetection();
+			InterruptMask = 0
+				| BK4819_REG_3F_CxCSS_TAIL
+				| BK4819_REG_3F_SQUELCH_FOUND
+				| BK4819_REG_3F_SQUELCH_LOST
+				;
+			break;
+		}
 	}
 
 	if (gRxVfo->IsAM || (!gRxVfo->DTMF_DECODING_ENABLE && !gSetting_KILLED)) {

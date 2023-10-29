@@ -113,13 +113,11 @@ void ACTION_Scan(bool bRestart)
 #endif
 	if (gScreenToDisplay != DISPLAY_SCANNER) {
 		RADIO_SelectVfos();
-		if (IS_NOT_NOAA_CHANNEL(gRxVfo->CHANNEL_SAVE)) {
-			GUI_SelectNextDisplay(DISPLAY_MAIN);
-			if (gScanState != SCAN_OFF) {
-				SCANNER_Stop();
-			} else {
-				CHANNEL_Next(true, 1);
-			}
+		GUI_SelectNextDisplay(DISPLAY_MAIN);
+		if (gScanState != SCAN_OFF) {
+			SCANNER_Stop();
+		} else {
+			CHANNEL_Next(true, 1);
 		}
 	}
 }
@@ -199,16 +197,10 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	case 4:
 		ACTION_Scan(true);
 		break;
-	case 5:
-		break;
-	case 6:
-		break;
 	case 7:
 #if defined(ENABLE_FMRADIO)
 		ACTION_FM();
 #endif
-		break;
-	case 8:
 		break;
 	}
 }

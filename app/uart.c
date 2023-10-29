@@ -86,7 +86,7 @@ typedef struct {
 	uint8_t Size;
 	bool bAllowPassword;
 	uint32_t Timestamp;
-	uint8_t Data[0];
+	uint8_t Data[1];
 } CMD_051D_t;
 
 typedef struct {
@@ -378,8 +378,6 @@ static void CMD_052F(const uint8_t *pBuffer)
 	gEeprom.VfoInfo[0].DTMF_PTT_ID_TX_MODE = PTT_ID_OFF;
 	gEeprom.VfoInfo[0].DTMF_DECODING_ENABLE = false;
 
-
-
 	if (gCurrentFunction == FUNCTION_POWER_SAVE) {
 		FUNCTION_Select(FUNCTION_FOREGROUND);
 	}
@@ -429,7 +427,7 @@ bool UART_IsCommandAvailable(void)
 
 	Index = DMA_INDEX(gUART_WriteIndex, 2);
 	Size = (UART_DMA_Buffer[DMA_INDEX(Index, 1)] << 8) | UART_DMA_Buffer[Index];
-	if (Size + 8 > sizeof(UART_DMA_Buffer)) {
+	if ((uint16_t)(Size + 8) > sizeof(UART_DMA_Buffer)) {
 		gUART_WriteIndex = DmaLength;
 		return false;
 	}

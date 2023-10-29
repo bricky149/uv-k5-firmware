@@ -85,6 +85,9 @@ enum CHANNEL_DisplayMode_t {
 typedef enum CHANNEL_DisplayMode_t CHANNEL_DisplayMode_t;
 
 typedef struct {
+	VFO_Info_t VfoInfo[2];
+	uint32_t POWER_ON_PASSWORD;
+	int16_t BK4819_XTAL_FREQ_LOW;
 	uint8_t ScreenChannel[2];
 	uint8_t FreqChannel[2];
 	uint8_t MrChannel[2];
@@ -92,7 +95,6 @@ typedef struct {
 	uint8_t TX_VFO;
 	uint8_t field7_0xa;
 	uint8_t field8_0xb;
-	uint32_t POWER_ON_PASSWORD;
 	uint8_t SQUELCH_LEVEL;
 	uint8_t TX_TIMEOUT_TIMER;
 	bool KEY_LOCK;
@@ -145,13 +147,12 @@ typedef struct {
 	uint16_t DTMF_CODE_PERSIST_TIME;
 	uint16_t DTMF_CODE_INTERVAL_TIME;
 	bool DTMF_SIDE_TONE;
-	int16_t BK4819_XTAL_FREQ_LOW;
 	uint8_t VOLUME_GAIN;
 	uint8_t DAC_GAIN;
 	uint8_t field77_0x95;
 	uint8_t field78_0x96;
 	uint8_t field79_0x97;
-	VFO_Info_t VfoInfo[2];
+	uint16_t _pad[1];
 } EEPROM_Config_t;
 
 extern EEPROM_Config_t gEeprom;

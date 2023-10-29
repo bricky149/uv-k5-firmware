@@ -39,17 +39,13 @@ FUNCTION_Type_t gCurrentFunction;
 
 void FUNCTION_Init(void)
 {
-	if (IS_NOT_NOAA_CHANNEL(gRxVfo->CHANNEL_SAVE)) {
-		gCurrentCodeType = gSelectedCodeType;
-		if (gCssScanMode == CSS_SCAN_MODE_OFF) {
-			if (gRxVfo->IsAM) {
-				gCurrentCodeType = CODE_TYPE_OFF;
-			} else {
-				gCurrentCodeType = gRxVfo->pRX->CodeType;
-			}
+	gCurrentCodeType = gSelectedCodeType;
+	if (gCssScanMode == CSS_SCAN_MODE_OFF) {
+		if (gRxVfo->IsAM) {
+			gCurrentCodeType = CODE_TYPE_OFF;
+		} else {
+			gCurrentCodeType = gRxVfo->pRX->CodeType;
 		}
-	} else {
-		gCurrentCodeType = CODE_TYPE_CONTINUOUS_TONE;
 	}
 	gDTMF_RequestPending = false;
 	gDTMF_WriteIndex = 0;

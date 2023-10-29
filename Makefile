@@ -97,8 +97,8 @@ SIZE = arm-none-eabi-size
 GIT_HASH := $(shell git rev-parse --short HEAD)
 
 ASFLAGS = -c -mcpu=cortex-m0
-CFLAGS = -Os -Wall -Werror -mcpu=cortex-m0 -fno-builtin -fshort-enums -fno-delete-null-pointer-checks -std=c11 -MMD
-CFLAGS += -freorder-blocks-algorithm=stc -ffunction-sections -fdata-sections
+CFLAGS = -Os -Wall -mcpu=cortex-m0 -fno-delete-null-pointer-checks -std=c11 -MMD
+CFLAGS += -Wextra -freorder-blocks-algorithm=stc -ffunction-sections -fdata-sections
 CFLAGS += -DPRINTF_INCLUDE_CONFIG_H
 CFLAGS += -DGIT_HASH=\"$(GIT_HASH)\"
 

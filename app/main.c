@@ -66,35 +66,34 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
 			return;
 		}
-		if (IS_NOT_NOAA_CHANNEL(gTxVfo->CHANNEL_SAVE)) {
-			uint32_t Frequency;
 
-			if (gInputBoxIndex < 6) {
-				return;
-			}
-			gInputBoxIndex = 0;
-			NUMBER_Get(gInputBox, &Frequency);
-			if (gSetting_350EN || (Frequency < 35000000 || Frequency > 39999990)) {
-				uint8_t i;
+		uint32_t Frequency;
 
-				for (i = 0; i < 7; i++) {
-					if (Frequency <= gUpperLimitFrequencyBandTable[i] && (gLowerLimitFrequencyBandTable[i] <= Frequency)) {
-						if (gTxVfo->Band != i) {
-							gTxVfo->Band = i;
-							gEeprom.ScreenChannel[Vfo] = i + FREQ_CHANNEL_FIRST;
-							gEeprom.FreqChannel[Vfo] = i + FREQ_CHANNEL_FIRST;
-							SETTINGS_SaveVfoIndices();
-							RADIO_ConfigureChannel(Vfo, 2);
-						}
-						Frequency += 75;
-						gTxVfo->ConfigRX.Frequency = FREQUENCY_FloorToStep(
-								Frequency,
-								gTxVfo->StepFrequency,
-								gLowerLimitFrequencyBandTable[gTxVfo->Band]
-								);
-						gRequestSaveChannel = 1;
-						return;
+		if (gInputBoxIndex < 6) {
+			return;
+		}
+		gInputBoxIndex = 0;
+		NUMBER_Get(gInputBox, &Frequency);
+		if (gSetting_350EN || (Frequency < 35000000 || Frequency > 39999990)) {
+			uint8_t i;
+
+			for (i = 0; i < 7; i++) {
+				if (Frequency <= gUpperLimitFrequencyBandTable[i] && (gLowerLimitFrequencyBandTable[i] <= Frequency)) {
+					if (gTxVfo->Band != i) {
+						gTxVfo->Band = i;
+						gEeprom.ScreenChannel[Vfo] = i + FREQ_CHANNEL_FIRST;
+						gEeprom.FreqChannel[Vfo] = i + FREQ_CHANNEL_FIRST;
+						SETTINGS_SaveVfoIndices();
+						RADIO_ConfigureChannel(Vfo, 2);
 					}
+					Frequency += 75;
+					gTxVfo->ConfigRX.Frequency = FREQUENCY_FloorToStep(
+							Frequency,
+							gTxVfo->StepFrequency,
+							gLowerLimitFrequencyBandTable[gTxVfo->Band]
+							);
+					gRequestSaveChannel = 1;
+					return;
 				}
 			}
 		}
@@ -150,7 +149,7 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		break;
 
 	case KEY_3:
-		if (gEeprom.VFO_OPEN && IS_NOT_NOAA_CHANNEL(gTxVfo->CHANNEL_SAVE)) {
+		if (gEeprom.VFO_OPEN) {
 			uint8_t Channel;
 
 			if (IS_MR_CHANNEL(gTxVfo->CHANNEL_SAVE)) {
@@ -178,14 +177,8 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		gEeprom.CROSS_BAND_RX_TX = CROSS_BAND_OFF;
 		break;
 
-	case KEY_5:
-		break;
-
 	case KEY_6:
 		ACTION_Power();
-		break;
-
-	case KEY_7:
 		break;
 
 	case KEY_8:
@@ -264,7 +257,7 @@ static void MAIN_Key_STAR(bool bKeyPressed, bool bKeyHeld)
 			ACTION_Scan(false);
 			return;
 		}
-		if (gScanState == SCAN_OFF && IS_NOT_NOAA_CHANNEL(gTxVfo->CHANNEL_SAVE)) {
+		if (gScanState == SCAN_OFF) {
 			gDTMF_InputMode = true;
 			memcpy(gDTMF_InputBox, gDTMF_String, 15);
 			gDTMF_InputIndex = 0;
@@ -277,12 +270,10 @@ static void MAIN_Key_STAR(bool bKeyPressed, bool bKeyHeld)
 		}
 		gWasFKeyPressed = false;
 		gUpdateStatus = true;
-		if (IS_NOT_NOAA_CHANNEL(gTxVfo->CHANNEL_SAVE)) {
-			gFlagStartScan = true;
-			gScanSingleFrequency = true;
-			gBackupCROSS_BAND_RX_TX = gEeprom.CROSS_BAND_RX_TX;
-			gEeprom.CROSS_BAND_RX_TX = CROSS_BAND_OFF;
-		}
+		gFlagStartScan = true;
+		gScanSingleFrequency = true;
+		gBackupCROSS_BAND_RX_TX = gEeprom.CROSS_BAND_RX_TX;
+		gEeprom.CROSS_BAND_RX_TX = CROSS_BAND_OFF;
 		gPttWasReleased = true;
 	}
 }
@@ -312,24 +303,22 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 	}
 
 	if (gScanState == SCAN_OFF) {
-		if (IS_NOT_NOAA_CHANNEL(Channel)) {
 			uint8_t Next;
 
-			if (IS_FREQ_CHANNEL(Channel)) {
-				APP_SetFrequencyByStep(gTxVfo, Direction);
-				gRequestSaveChannel = 1;
-				return;
-			}
-			Next = RADIO_FindNextChannel(Channel + Direction, Direction, false, 0);
-			if (Next == 0xFF) {
-				return;
-			}
-			if (Channel == Next) {
-				return;
-			}
-			gEeprom.MrChannel[gEeprom.TX_VFO] = Next;
-			gEeprom.ScreenChannel[gEeprom.TX_VFO] = Next;
+		if (IS_FREQ_CHANNEL(Channel)) {
+			APP_SetFrequencyByStep(gTxVfo, Direction);
+			gRequestSaveChannel = 1;
+			return;
 		}
+		Next = RADIO_FindNextChannel(Channel + Direction, Direction, false, 0);
+		if (Next == 0xFF) {
+			return;
+		}
+		if (Channel == Next) {
+			return;
+		}
+		gEeprom.MrChannel[gEeprom.TX_VFO] = Next;
+		gEeprom.ScreenChannel[gEeprom.TX_VFO] = Next;
 		gRequestSaveVFO = true;
 		gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
 		return;

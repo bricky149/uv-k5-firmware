@@ -834,7 +834,7 @@ static void MENU_Key_STAR(bool bKeyPressed, bool bKeyHeld)
 {
 	if (!bKeyHeld && bKeyPressed) {
 		RADIO_SelectVfos();
-		if (IS_NOT_NOAA_CHANNEL(gRxVfo->CHANNEL_SAVE) && !gRxVfo->IsAM) {
+		if (!gRxVfo->IsAM) {
 			if (gMenuCursor == MENU_R_CTCS || gMenuCursor == MENU_R_DCS) {
 				if (gCssScanMode == CSS_SCAN_MODE_OFF) {
 					MENU_StartCssScan(1);

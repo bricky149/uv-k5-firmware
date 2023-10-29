@@ -159,51 +159,49 @@ void SETTINGS_SaveChannel(uint8_t Channel, uint8_t VFO, const VFO_Info_t *pVFO, 
 	UART_LogSend("schn\r\n", 6);
 #endif
 
-	if (IS_NOT_NOAA_CHANNEL(Channel)) {
-		uint16_t OffsetMR;
-		uint16_t OffsetVFO;
+	uint16_t OffsetMR;
+	uint16_t OffsetVFO;
 
-		OffsetMR = 0x0000 + (Channel * 16);
-		OffsetVFO = OffsetMR;
-		if (!IS_MR_CHANNEL(Channel)) {
-			if (VFO == 0) {
-				OffsetVFO = 0x0C80 + ((Channel - FREQ_CHANNEL_FIRST) * 32);
-			} else {
-				OffsetVFO = 0x0C90 + ((Channel - FREQ_CHANNEL_FIRST) * 32);
-			}
+	OffsetMR = 0x0000 + (Channel * 16);
+	OffsetVFO = OffsetMR;
+	if (!IS_MR_CHANNEL(Channel)) {
+		if (VFO == 0) {
+			OffsetVFO = 0x0C80 + ((Channel - FREQ_CHANNEL_FIRST) * 32);
+		} else {
+			OffsetVFO = 0x0C90 + ((Channel - FREQ_CHANNEL_FIRST) * 32);
 		}
+	}
 
-		if (Mode == 2 || !IS_MR_CHANNEL(Channel)) {
-			uint32_t State32[2];
-			uint8_t State8[8];
+	if (Mode == 2 || !IS_MR_CHANNEL(Channel)) {
+		uint32_t State32[2];
+		uint8_t State8[8];
 
-			State32[0] = pVFO->ConfigRX.Frequency;
-			State32[1] = pVFO->FREQUENCY_OF_DEVIATION;
+		State32[0] = pVFO->ConfigRX.Frequency;
+		State32[1] = pVFO->FREQUENCY_OF_DEVIATION;
 
-			EEPROM_WriteBuffer(OffsetVFO + 0, State32);
+		EEPROM_WriteBuffer(OffsetVFO + 0, State32);
 
-			State8[0] = pVFO->ConfigRX.Code;
-			State8[1] = pVFO->ConfigTX.Code;
-			State8[2] = (pVFO->ConfigTX.CodeType << 4) | pVFO->ConfigRX.CodeType;
-			State8[3] = (pVFO->AM_CHANNEL_MODE << 4) | pVFO->FREQUENCY_DEVIATION_SETTING;
-			State8[4] = 0
-				| (pVFO->BUSY_CHANNEL_LOCK << 4)
-				| (pVFO->OUTPUT_POWER << 2)
-				| (pVFO->CHANNEL_BANDWIDTH << 1)
-				| (pVFO->FrequencyReverse << 0)
-				;
-			State8[5] = (pVFO->DTMF_PTT_ID_TX_MODE << 1) | pVFO->DTMF_DECODING_ENABLE;
-			State8[6] = pVFO->STEP_SETTING;
+		State8[0] = pVFO->ConfigRX.Code;
+		State8[1] = pVFO->ConfigTX.Code;
+		State8[2] = (pVFO->ConfigTX.CodeType << 4) | pVFO->ConfigRX.CodeType;
+		State8[3] = (pVFO->AM_CHANNEL_MODE << 4) | pVFO->FREQUENCY_DEVIATION_SETTING;
+		State8[4] = 0
+			| (pVFO->BUSY_CHANNEL_LOCK << 4)
+			| (pVFO->OUTPUT_POWER << 2)
+			| (pVFO->CHANNEL_BANDWIDTH << 1)
+			| (pVFO->FrequencyReverse << 0)
+			;
+		State8[5] = (pVFO->DTMF_PTT_ID_TX_MODE << 1) | pVFO->DTMF_DECODING_ENABLE;
+		State8[6] = pVFO->STEP_SETTING;
 
-			EEPROM_WriteBuffer(OffsetVFO + 8, State8);
+		EEPROM_WriteBuffer(OffsetVFO + 8, State8);
 
-			SETTINGS_UpdateChannel(Channel, pVFO, true);
+		SETTINGS_UpdateChannel(Channel, pVFO, true);
 
-			if (IS_MR_CHANNEL(Channel)) {
-				memset(&State32, 0xFF, sizeof(State32));
-				EEPROM_WriteBuffer(OffsetMR + 0x0F50, State32);
-				EEPROM_WriteBuffer(OffsetMR + 0x0F58, State32);
-			}
+		if (IS_MR_CHANNEL(Channel)) {
+			memset(&State32, 0xFF, sizeof(State32));
+			EEPROM_WriteBuffer(OffsetMR + 0x0F50, State32);
+			EEPROM_WriteBuffer(OffsetMR + 0x0F58, State32);
 		}
 	}
 }
@@ -214,27 +212,25 @@ void SETTINGS_UpdateChannel(uint8_t Channel, const VFO_Info_t *pVFO, bool bUpdat
 	UART_LogSend("svalid\r\n", 8);
 #endif
 
-	if (IS_NOT_NOAA_CHANNEL(Channel)) {
-		uint8_t State[8];
-		uint16_t Offset;
-		uint8_t Attributes;
+	uint8_t State[8];
+	uint16_t Offset;
+	uint8_t Attributes;
 
-		Offset = 0x0D60 + (Channel & ~7U);
-		EEPROM_ReadBuffer(Offset, State, sizeof(State));
-		if (bUpdate) {
-			Attributes = 0
-				| (pVFO->SCANLIST1_PARTICIPATION << 7)
-				| (pVFO->SCANLIST2_PARTICIPATION << 6)
-				| (pVFO->Band << 0);
-			if (State[Channel & 7U] == Attributes) {
-				return;
-			}
-		} else {
-			Attributes = 0xFF;
+	Offset = 0x0D60 + (Channel & ~7U);
+	EEPROM_ReadBuffer(Offset, State, sizeof(State));
+	if (bUpdate) {
+		Attributes = 0
+			| (pVFO->SCANLIST1_PARTICIPATION << 7)
+			| (pVFO->SCANLIST2_PARTICIPATION << 6)
+			| (pVFO->Band << 0);
+		if (State[Channel & 7U] == Attributes) {
+			return;
 		}
-		State[Channel & 7U] = Attributes;
-		EEPROM_WriteBuffer(Offset, State);
-		gMR_ChannelAttributes[Channel] = Attributes;
+	} else {
+		Attributes = 0xFF;
 	}
+	State[Channel & 7U] = Attributes;
+	EEPROM_WriteBuffer(Offset, State);
+	gMR_ChannelAttributes[Channel] = Attributes;
 }
 

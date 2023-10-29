@@ -105,6 +105,7 @@ typedef struct VFO_Info_t {
 	uint8_t AM_CHANNEL_MODE;
 	bool IsAM;
 	char Name[16];
+	uint8_t _pad[1];
 } VFO_Info_t;
 
 extern VFO_Info_t *gTxVfo;
