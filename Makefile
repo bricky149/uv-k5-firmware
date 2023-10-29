@@ -1,6 +1,7 @@
 TARGET = firmware
 
 ENABLE_FMRADIO := 1
+ENABLE_LTO := 0
 ENABLE_SWD := 0
 ENABLE_UART := 1
 
@@ -98,12 +99,17 @@ GIT_HASH := $(shell git rev-parse --short HEAD)
 
 ASFLAGS = -c -mcpu=cortex-m0
 CFLAGS = -Os -Wall -mcpu=cortex-m0 -fno-delete-null-pointer-checks -std=c11 -MMD
-CFLAGS += -Wextra -freorder-blocks-algorithm=stc -ffunction-sections -fdata-sections
+CFLAGS += -Wextra -freorder-blocks-algorithm=stc
 CFLAGS += -DPRINTF_INCLUDE_CONFIG_H
 CFLAGS += -DGIT_HASH=\"$(GIT_HASH)\"
 
 ifeq ($(ENABLE_FMRADIO),1)
 CFLAGS += -DENABLE_FMRADIO
+endif
+ifeq ($(ENABLE_LTO),1)
+CFLAGS += -DENABLE_LTO -flto=2
+else
+CFLAGS += -ffunction-sections -fdata-sections
 endif
 ifeq ($(ENABLE_SWD),1)
 CFLAGS += -DENABLE_SWD
@@ -113,7 +119,10 @@ CFLAGS += -DENABLE_UART
 endif
 
 LDFLAGS = -mcpu=cortex-m0 -nostartfiles -Wl,-T,firmware.ld
-LDFLAGS += --specs=nano.specs -Wl,--gc-sections
+LDFLAGS += --specs=nano.specs
+ifeq ($(ENABLE_LTO),0)
+LDFLAGS += -Wl,--gc-sections
+endif
 
 ifeq ($(DEBUG),1)
 ASFLAGS += -g

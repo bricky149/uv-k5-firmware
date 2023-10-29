@@ -117,7 +117,7 @@ static void APP_HandleIncoming(void)
 	DTMF_HandleRequest();
 
 	if (gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF) {
-		if (gRxVfo->DTMF_DECODING_ENABLE || gSetting_KILLED) {
+		if (gRxVfo->DTMF_DECODING_ENABLE) {
 			if (gDTMF_CallState == DTMF_CALL_STATE_NONE) {
 				if (gRxReceptionMode == RX_MODE_DETECTED) {
 					gDualWatchCountdown = 500;
@@ -282,69 +282,69 @@ static void APP_HandleFunction(void)
 
 void APP_StartListening(FUNCTION_Type_t Function)
 {
-	if (!gSetting_KILLED) {
+
 #if defined(ENABLE_FMRADIO)
 		if (gFmRadioMode) {
 			BK1080_Init(0, false);
 		}
 #endif
-		gVFO_RSSI_Level[!gEeprom.RX_VFO] = 0;
-		GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
-		gEnableSpeaker = true;
-		BACKLIGHT_TurnOn();
-		if (gScanState != SCAN_OFF) {
-			switch (gEeprom.SCAN_RESUME_MODE) {
-			case SCAN_RESUME_TO:
-				if (!gScanPauseMode) {
-					ScanPauseDelayIn10msec = 500;
-					gScheduleScanListen = false;
-					gScanPauseMode = true;
-				}
-				break;
-			case SCAN_RESUME_CO:
-			case SCAN_RESUME_SE:
-				ScanPauseDelayIn10msec = 0;
+	gVFO_RSSI_Level[!gEeprom.RX_VFO] = 0;
+	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
+	gEnableSpeaker = true;
+	BACKLIGHT_TurnOn();
+	if (gScanState != SCAN_OFF) {
+		switch (gEeprom.SCAN_RESUME_MODE) {
+		case SCAN_RESUME_TO:
+			if (!gScanPauseMode) {
+				ScanPauseDelayIn10msec = 500;
 				gScheduleScanListen = false;
-				break;
+				gScanPauseMode = true;
 			}
-			bScanKeepFrequency = true;
+			break;
+		case SCAN_RESUME_CO:
+		case SCAN_RESUME_SE:
+			ScanPauseDelayIn10msec = 0;
+			gScheduleScanListen = false;
+			break;
 		}
-
-		if (gCssScanMode != CSS_SCAN_MODE_OFF) {
-			gCssScanMode = CSS_SCAN_MODE_FOUND;
-		}
-		if (gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF && gEeprom.DUAL_WATCH != DUAL_WATCH_OFF) {
-			gRxVfoIsActive = true;
-			gDualWatchCountdown = 360;
-			gScheduleDualWatch = false;
-		}
-		if (gRxVfo->IsAM) {
-			BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
-			// https://www.eecg.utoronto.ca/~kphang/papers/2001/martin_AGC.pdf
-			BK4819_PseudoDisableAGC();
-		} else {
-			BK4819_WriteRegister(BK4819_REG_48, 0xB000
-					| (gEeprom.VOLUME_GAIN << 4)
-					| (gEeprom.DAC_GAIN << 0)
-					);
-			BK4819_EnableAGC();
-		}
-		if (gRxVfo->IsAM) {
-			BK4819_SetAF(BK4819_AF_AM);
-		} else {
-			BK4819_SetAF(BK4819_AF_OPEN);
-		}
-		FUNCTION_Select(Function);
-		if (Function == FUNCTION_MONITOR
-#if defined(ENABLE_FMRADIO)
-			|| gFmRadioMode
-#endif
-			) {
-			GUI_SelectNextDisplay(DISPLAY_MAIN);
-			return;
-		}
-		gUpdateDisplay = true;
+		bScanKeepFrequency = true;
 	}
+
+	if (gCssScanMode != CSS_SCAN_MODE_OFF) {
+		gCssScanMode = CSS_SCAN_MODE_FOUND;
+	}
+	if (gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF && gEeprom.DUAL_WATCH != DUAL_WATCH_OFF) {
+		gRxVfoIsActive = true;
+		gDualWatchCountdown = 360;
+		gScheduleDualWatch = false;
+	}
+	if (gRxVfo->IsAM) {
+		BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
+		// https://www.eecg.utoronto.ca/~kphang/papers/2001/martin_AGC.pdf
+		BK4819_DisableAGC();
+	} else {
+		BK4819_WriteRegister(BK4819_REG_48, 0xB000
+				| (gEeprom.VOLUME_GAIN << 4)
+				| (gEeprom.DAC_GAIN << 0)
+				);
+		BK4819_EnableAGC();
+	}
+	if (gRxVfo->IsAM) {
+		BK4819_SetAF(BK4819_AF_AM);
+	} else {
+		BK4819_SetAF(BK4819_AF_OPEN);
+	}
+	FUNCTION_Select(Function);
+	if (Function == FUNCTION_MONITOR
+#if defined(ENABLE_FMRADIO)
+		|| gFmRadioMode
+#endif
+		) {
+		GUI_SelectNextDisplay(DISPLAY_MAIN);
+		return;
+	}
+	gUpdateDisplay = true;
+
 }
 
 void APP_SetFrequencyByStep(VFO_Info_t *pInfo, int8_t Step)
@@ -625,10 +625,6 @@ void APP_CheckKeys(void)
 {
 	KEY_Code_t Key;
 
-	if (gSetting_KILLED) {
-		return;
-	}
-
 	if (gPttIsPressed) {
 		if (GPIO_CheckBit(&GPIOC->DATA, GPIOC_PIN_PTT)) {
 			SYSTEM_DelayMs(20);
@@ -705,6 +701,10 @@ void APP_TimeSlice10ms(void)
 
 	if (gReducedService) {
 		return;
+	}
+
+	if (gRxVfo->IsAM) {
+		BK4819_NaiveAGC();
 	}
 
 	if (gCurrentFunction != FUNCTION_POWER_SAVE || !gRxIdleMode) {

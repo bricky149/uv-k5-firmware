@@ -66,7 +66,6 @@ extern const uint32_t *gUpperLimitFrequencyBandTable;
 extern const uint32_t *gLowerLimitFrequencyBandTable;
 
 extern bool gSetting_350TX;
-extern bool gSetting_KILLED;
 extern bool gSetting_200TX;
 extern bool gSetting_500TX;
 extern bool gSetting_350EN;

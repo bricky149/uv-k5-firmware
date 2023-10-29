@@ -75,7 +75,6 @@ static uint16_t BK4819_ReadU16(void)
 	PORTCON_PORTC_IE = (PORTCON_PORTC_IE & ~PORTCON_PORTC_IE_C2_MASK) | PORTCON_PORTC_IE_C2_BITS_ENABLE;
 	GPIOC->DIR = (GPIOC->DIR & ~GPIO_DIR_2_MASK) | GPIO_DIR_2_BITS_INPUT;
 	
-
 	Value = 0;
 	for (i = 0; i < 16; i++) {
 		Value <<= 1;
@@ -144,7 +143,6 @@ void BK4819_WriteU8(uint8_t Data)
 		
 		Data <<= 1;
 		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-		
 	}
 }
 
@@ -164,21 +162,34 @@ void BK4819_WriteU16(uint16_t Data)
 		Data <<= 1;
 		
 		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-		
 	}
+}
+
+void BK4819_NaiveAGC(void)
+{
+	unsigned int gain_index = 4;
+	do {
+		BK4819_WriteRegister(0x13,
+			(3u << 8) | // LNA Short
+			(5u << 5) | // LNA
+			(3u << 3) | // MIXER
+			(gain_index << 0)); // PGA
+		// 000000 11 <111..000> 11 <111..000>
+		unsigned int rssi = BK4819_GetRSSI();
+		if (rssi < 138)
+			gain_index++;
+		else if (rssi > 143)
+			gain_index--;
+		else
+			break;
+	} while (gain_index <= 7);
 }
 
 void BK4819_EnableAGC(void)
 {
-    BK4819_WriteRegister(BK4819_REG_13, 0x03BE);
-    BK4819_WriteRegister(BK4819_REG_12, 0x037B);
-    BK4819_WriteRegister(BK4819_REG_11, 0x027B);
-    BK4819_WriteRegister(BK4819_REG_10, 0x007A);
-    BK4819_WriteRegister(BK4819_REG_14, 0x0019);
-
 	BK4819_WriteRegister(BK4819_REG_7E,
 		(0u << 15) |      // 0  AGC fix mode
-		(3u << 12) |      // 3  AGC fix index
+		(4u << 12) |      // 3  AGC fix index
 		(5u <<  3) |      // 5  DC Filter band width for Tx (MIC In)
 		(6u <<  0));      // 6  DC Filter band width for Rx (I.F In)
 
@@ -186,19 +197,19 @@ void BK4819_EnableAGC(void)
 	BK4819_WriteRegister(BK4819_REG_7B, 0x8420);
 }
 
-void BK4819_PseudoDisableAGC(void)
+void BK4819_DisableAGC(void)
 {
+	BK4819_WriteRegister(BK4819_REG_7E,
+		(1u << 15) |      // 0  AGC fix mode
+		(4u << 12) |      // 3  AGC fix index
+		(5u <<  3) |      // 5  DC Filter band width for Tx (MIC In)
+		(6u <<  0));      // 6  DC Filter band width for Rx (I.F In)
+
     BK4819_WriteRegister(BK4819_REG_13, 0x03BE);
     BK4819_WriteRegister(BK4819_REG_12, 0x037C);
     BK4819_WriteRegister(BK4819_REG_11, 0x027B);
     BK4819_WriteRegister(BK4819_REG_10, 0x007A);
     BK4819_WriteRegister(BK4819_REG_14, 0x0018);
-
-	BK4819_WriteRegister(BK4819_REG_7E,
-		(1u << 15) |      // 0  AGC fix mode
-		(0u << 12) |      // 3  AGC fix index
-		(5u <<  3) |      // 5  DC Filter band width for Tx (MIC In)
-		(6u <<  0));      // 6  DC Filter band width for Rx (I.F In)
 
 	BK4819_WriteRegister(BK4819_REG_49, 0x2A38);
 	BK4819_WriteRegister(BK4819_REG_7B, 0x318C);
@@ -417,7 +428,6 @@ void BK4819_PlayTone(uint16_t Frequency, bool bTuningGainSwitch)
 			| (28U << BK4819_REG_70_SHIFT_TONE1_TUNING_GAIN);
 	}
 	BK4819_WriteRegister(BK4819_REG_70, ToneConfig);
-
 
 	BK4819_WriteRegister(BK4819_REG_30, 0
 			| BK4819_REG_30_ENABLE_AF_DAC

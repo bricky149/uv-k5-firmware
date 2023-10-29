@@ -191,7 +191,7 @@ void DTMF_HandleRequest(void)
 		return;
 	}
 
-	if (!gRxVfo->DTMF_DECODING_ENABLE && !gSetting_KILLED) {
+	if (!gRxVfo->DTMF_DECODING_ENABLE) {
 		return;
 	}
 
@@ -232,7 +232,7 @@ void DTMF_HandleRequest(void)
 		}
 	}
 
-	if (gSetting_KILLED || gDTMF_CallState != DTMF_CALL_STATE_NONE) {
+	if (gDTMF_CallState != DTMF_CALL_STATE_NONE) {
 		return;
 	}
 
