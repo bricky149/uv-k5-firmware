@@ -14,7 +14,7 @@
  *     limitations under the License.
  */
 
-#include "app/aircopy.h"
+
 #include "bsp/dp32g030/gpio.h"
 #include "driver/bk4819.h"
 #include "driver/keyboard.h"

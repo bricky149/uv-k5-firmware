@@ -1,6 +1,6 @@
 TARGET = firmware
 
-ENABLE_AIRCOPY := 1
+
 ENABLE_ALARM := 1
 ENABLE_FMRADIO := 1
 ENABLE_NOAA := 1
@@ -52,9 +52,9 @@ endif
 
 # Main
 OBJS += app/action.o
-ifeq ($(ENABLE_AIRCOPY),1)
-OBJS += app/aircopy.o
-endif
+
+
+
 OBJS += app/app.o
 OBJS += app/dtmf.o
 ifeq ($(ENABLE_FMRADIO),1)

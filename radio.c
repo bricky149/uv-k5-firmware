@@ -574,11 +574,11 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 					;
 				break;
 			}
-			if (gRxVfo->SCRAMBLING_TYPE == 0 || !gSetting_ScrambleEnable) {
-				BK4819_DisableScramble();
-			} else {
-				BK4819_EnableScramble(gRxVfo->SCRAMBLING_TYPE - 1);
-			}
+
+
+
+
+
 		}
 	} else {
 		BK4819_SetCTCSSFrequency(2625);
@@ -590,19 +590,19 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 			;
 	}
 
-	if (gEeprom.VOX_SWITCH
-#if defined(ENABLE_FMRADIO)
-		&& !gFmRadioMode
-#endif
-		&& IS_NOT_NOAA_CHANNEL(gCurrentVfo->CHANNEL_SAVE) && !gCurrentVfo->IsAM) {
-		BK4819_EnableVox(gEeprom.VOX1_THRESHOLD, gEeprom.VOX0_THRESHOLD);
-		InterruptMask |= 0
-			| BK4819_REG_3F_VOX_FOUND
-			| BK4819_REG_3F_VOX_LOST
-			;
-	} else {
-		BK4819_DisableVox();
-	}
+
+
+
+
+
+
+
+
+
+
+
+
+
 	if (gRxVfo->IsAM || (!gRxVfo->DTMF_DECODING_ENABLE && !gSetting_KILLED)) {
 		BK4819_DisableDTMF();
 	} else {

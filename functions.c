@@ -115,7 +115,7 @@ void FUNCTION_Select(FUNCTION_Type_t Function)
 	case FUNCTION_POWER_SAVE:
 		gBatterySave = gEeprom.BATTERY_SAVE * 10;
 		gRxIdleMode = true;
-		BK4819_DisableVox();
+
 		BK4819_Sleep();
 		BK4819_ToggleGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE, false);
 		gBatterySaveCountdownExpired = false;
@@ -174,11 +174,11 @@ void FUNCTION_Select(FUNCTION_Type_t Function)
 			break;
 		}
 #endif
-		if (gCurrentVfo->SCRAMBLING_TYPE && gSetting_ScrambleEnable) {
-			BK4819_EnableScramble(gCurrentVfo->SCRAMBLING_TYPE - 1U);
-		} else {
-			BK4819_DisableScramble();
-		}
+
+
+
+
+
 		break;
 	}
 	gBatterySaveCountdown = 1000;

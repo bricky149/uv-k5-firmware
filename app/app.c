@@ -349,6 +349,7 @@ void APP_StartListening(FUNCTION_Type_t Function)
 		}
 		if (gRxVfo->IsAM) {
 			BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
+			// https://www.eecg.utoronto.ca/~kphang/papers/2001/martin_AGC.pdf
 			BK4819_DisableAGC();
 		} else {
 			BK4819_WriteRegister(BK4819_REG_48, 0xB000
@@ -761,9 +762,9 @@ void APP_Update(void)
 	if (gBatterySaveCountdownExpired && gCurrentFunction == FUNCTION_POWER_SAVE && gVoiceWriteIndex == 0) {
 		if (gRxIdleMode) {
 			BK4819_EnableRX();
-			if (gEeprom.VOX_SWITCH) {
-				BK4819_EnableVox(gEeprom.VOX1_THRESHOLD, gEeprom.VOX0_THRESHOLD);
-			}
+
+
+
 			if (gEeprom.DUAL_WATCH != DUAL_WATCH_OFF && gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF) {
 				DUALWATCH_Alternate();
 				gUpdateRSSI = false;
@@ -776,7 +777,7 @@ void APP_Update(void)
 			UI_UpdateRSSI(gCurrentRSSI);
 			gBatterySave = gEeprom.BATTERY_SAVE * 10;
 			gRxIdleMode = true;
-			BK4819_DisableVox();
+
 			BK4819_Sleep();
 			BK4819_ToggleGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE, false);
 			// Authentic device checked removed
@@ -1464,18 +1465,18 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 							GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
 							gEnableSpeaker = false;
 							BK4819_ExitDTMF_TX(false);
-							if (gCurrentVfo->SCRAMBLING_TYPE == 0 || !gSetting_ScrambleEnable) {
-								BK4819_DisableScramble();
-							} else {
-								BK4819_EnableScramble(gCurrentVfo->SCRAMBLING_TYPE - 1);
-							}
+
+
+
+
+
 						}
 					} else {
 						if (gEeprom.DTMF_SIDE_TONE) {
 							GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
 							gEnableSpeaker = true;
 						}
-						BK4819_DisableScramble();
+
 						if (Code == 0xFE) {
 							BK4819_TransmitTone(gEeprom.DTMF_SIDE_TONE, 1750);
 						} else {
