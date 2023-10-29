@@ -3,7 +3,6 @@ TARGET = firmware
 
 ENABLE_ALARM := 1
 ENABLE_FMRADIO := 1
-ENABLE_NOAA := 1
 ENABLE_OVERLAY := 1
 ENABLE_SWD := 0
 ENABLE_TX1750 := 1
@@ -32,7 +31,7 @@ ifeq ($(ENABLE_FMRADIO),1)
 OBJS += driver/bk1080.o
 endif
 OBJS += driver/bk4819.o
-ifeq ($(filter $(ENABLE_AIRCOPY) $(ENABLE_UART),1),1)
+ifeq ($(ENABLE_UART),1)
 OBJS += driver/crc.o
 endif
 OBJS += driver/eeprom.o
@@ -52,9 +51,6 @@ endif
 
 # Main
 OBJS += app/action.o
-
-
-
 OBJS += app/app.o
 OBJS += app/dtmf.o
 ifeq ($(ENABLE_FMRADIO),1)
@@ -80,9 +76,6 @@ OBJS += misc.o
 OBJS += radio.o
 OBJS += scheduler.o
 OBJS += settings.o
-ifeq ($(ENABLE_AIRCOPY),1)
-OBJS += ui/aircopy.o
-endif
 OBJS += ui/battery.o
 ifeq ($(ENABLE_FMRADIO),1)
 OBJS += ui/fmradio.o
@@ -123,17 +116,11 @@ CFLAGS = -Os -Wall -Werror -mcpu=cortex-m0 -fno-builtin -fshort-enums -fno-delet
 CFLAGS += -freorder-blocks-algorithm=stc -ffunction-sections -fdata-sections
 CFLAGS += -DPRINTF_INCLUDE_CONFIG_H
 CFLAGS += -DGIT_HASH=\"$(GIT_HASH)\"
-ifeq ($(ENABLE_AIRCOPY),1)
-CFLAGS += -DENABLE_AIRCOPY
-endif
 ifeq ($(ENABLE_ALARM),1)
 CFLAGS += -DENABLE_ALARM
 endif
 ifeq ($(ENABLE_FMRADIO),1)
 CFLAGS += -DENABLE_FMRADIO
-endif
-ifeq ($(ENABLE_NOAA),1)
-CFLAGS += -DENABLE_NOAA
 endif
 ifeq ($(ENABLE_OVERLAY),1)
 CFLAGS += -DENABLE_OVERLAY

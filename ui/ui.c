@@ -22,9 +22,9 @@
 #include "app/scanner.h"
 #include "driver/keyboard.h"
 #include "misc.h"
-#if defined(ENABLE_AIRCOPY)
-#include "ui/aircopy.h"
-#endif
+
+
+
 #include "ui/fmradio.h"
 #include "ui/inputbox.h"
 #include "ui/main.h"
@@ -56,11 +56,11 @@ void GUI_DisplayScreen(void)
 	case DISPLAY_SCANNER:
 		UI_DisplayScanner();
 		break;
-#if defined(ENABLE_AIRCOPY)
-	case DISPLAY_AIRCOPY:
-		UI_DisplayAircopy();
-		break;
-#endif
+
+
+
+
+
 	default:
 		break;
 	}

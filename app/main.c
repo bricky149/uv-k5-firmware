@@ -106,26 +106,26 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 				}
 			}
 		} else {
-#if defined(ENABLE_NOAA)
-			uint8_t Channel;
 
-			if (gInputBoxIndex != 2) {
-				gAnotherVoiceID = (VOICE_ID_t)Key;
-				gRequestDisplayScreen = DISPLAY_MAIN;
-				return;
-			}
-			gInputBoxIndex = 0;
-			Channel = (gInputBox[0] * 10) + gInputBox[1];
-			if (Channel >= 1 && Channel <= ARRAY_SIZE(NoaaFrequencyTable)) {
-				Channel += NOAA_CHANNEL_FIRST;
-				gAnotherVoiceID = (VOICE_ID_t)Key;
-				gEeprom.NoaaChannel[Vfo] = Channel;
-				gEeprom.ScreenChannel[Vfo] = Channel;
-				gRequestSaveVFO = true;
-				gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
-				return;
-			}
-#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		}
 		gRequestDisplayScreen = DISPLAY_MAIN;
 		gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
@@ -218,16 +218,16 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		break;
 
 	case KEY_5:
-#if defined(ENABLE_NOAA)
-		if (IS_NOT_NOAA_CHANNEL(gTxVfo->CHANNEL_SAVE)) {
-			gEeprom.ScreenChannel[Vfo] = gEeprom.NoaaChannel[gEeprom.TX_VFO];
-		} else {
-			gEeprom.ScreenChannel[Vfo] = gEeprom.FreqChannel[gEeprom.TX_VFO];
-			gAnotherVoiceID = VOICE_ID_FREQUENCY_MODE;
-		}
-		gRequestSaveVFO = true;
-		gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
-#endif
+
+
+
+
+
+
+
+
+
+
 		break;
 
 	case KEY_6:
@@ -407,11 +407,11 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 				gAnotherVoiceID = (VOICE_ID_t)0xFE;
 			}
 		} else {
-#if defined(ENABLE_NOAA)
-			Channel = NOAA_CHANNEL_FIRST + NUMBER_AddWithWraparound(gEeprom.ScreenChannel[gEeprom.TX_VFO] - NOAA_CHANNEL_FIRST, Direction, 0, 9);
-			gEeprom.NoaaChannel[gEeprom.TX_VFO] = Channel;
-			gEeprom.ScreenChannel[gEeprom.TX_VFO] = Channel;
-#endif
+
+
+
+
+
 		}
 		gRequestSaveVFO = true;
 		gVfoConfigureMode = VFO_CONFIGURE_RELOAD;

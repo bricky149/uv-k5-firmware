@@ -27,9 +27,9 @@ enum GUI_DisplayType_t {
 #endif
 	DISPLAY_MENU	= 0x02U,
 	DISPLAY_SCANNER	= 0x03U,
-#if defined(ENABLE_AIRCOPY)
-	DISPLAY_AIRCOPY	= 0x04U,
-#endif
+
+
+
 	DISPLAY_INVALID	= 0xFFU,
 };
 

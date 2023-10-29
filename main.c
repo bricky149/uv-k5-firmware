@@ -108,9 +108,6 @@ void Main(void)
 #if defined(ENABLE_ALARM)
 		gMenuListCount++;
 #endif
-#if defined(ENABLE_NOAA)
-		gMenuListCount++;
-#endif
 
 		BootMode = BOOT_GetMode();
 		if (gEeprom.POWER_ON_PASSWORD < 1000000) {
@@ -132,9 +129,6 @@ void Main(void)
 			AUDIO_SetVoiceID(1, VOICE_ID_FREQUENCY_MODE);
 		}
 		AUDIO_PlaySingleVoice(0);
-#if defined(ENABLE_NOAA)
-		RADIO_ConfigureNOAA();
-#endif
 	}
 
 	// Everything is initialised, set SLEEP* bits

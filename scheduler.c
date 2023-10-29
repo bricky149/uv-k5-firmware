@@ -72,16 +72,6 @@ void SystickHandler(void)
 		}
 	}
 
-#if defined(ENABLE_NOAA)
-	if (gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF && gEeprom.DUAL_WATCH == DUAL_WATCH_OFF) {
-		if (gIsNoaaMode && gCurrentFunction != FUNCTION_MONITOR && gCurrentFunction != FUNCTION_TRANSMIT) {
-			if (gCurrentFunction != FUNCTION_RECEIVE) {
-				DECREMENT_AND_TRIGGER(gNOAA_Countdown, gScheduleNOAA);
-			}
-		}
-	}
-#endif
-
 	if (gScanState != SCAN_OFF || gCssScanMode == CSS_SCAN_MODE_SCANNING) {
 		if (gCurrentFunction != FUNCTION_MONITOR && gCurrentFunction != FUNCTION_TRANSMIT) {
 			DECREMENT_AND_TRIGGER(ScanPauseDelayIn10msec, gScheduleScanListen);

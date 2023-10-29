@@ -16,9 +16,9 @@
 
 #include <string.h>
 #include "app/action.h"
-#if defined(ENABLE_AIRCOPY)
-#include "app/aircopy.h"
-#endif
+
+
+
 #include "app/app.h"
 #include "app/dtmf.h"
 #if defined(ENABLE_FMRADIO)
@@ -75,12 +75,12 @@ static void APP_CheckForIncoming(void)
 			gRxReceptionMode = RX_MODE_DETECTED;
 		}
 		if (gEeprom.DUAL_WATCH == DUAL_WATCH_OFF) {
-#if defined(ENABLE_NOAA)
-			if (gIsNoaaMode) {
-				gNOAA_Countdown = 20;
-				gScheduleNOAA = false;
-			}
-#endif
+
+
+
+
+
+
 			FUNCTION_Select(FUNCTION_INCOMING);
 			return;
 		}
@@ -113,12 +113,12 @@ static void APP_HandleIncoming(void)
 	}
 
 	bFlag = (gScanState == SCAN_OFF && gCurrentCodeType == CODE_TYPE_OFF);
-#if defined(ENABLE_NOAA)
-	if (IS_NOAA_CHANNEL(gRxVfo->CHANNEL_SAVE) && gSystickCountdown2) {
-		bFlag = true;
-		gSystickCountdown2 = 0;
-	}
-#endif
+
+
+
+
+
+
 	if (g_CTCSS_Lost && gCurrentCodeType == CODE_TYPE_CONTINUOUS_TONE) {
 		bFlag = true;
 		gFoundCTCSS = false;
@@ -248,11 +248,11 @@ Skip:
 	switch (Mode) {
 	case END_OF_RX_MODE_END:
 		RADIO_SetupRegisters(true);
-#if defined(ENABLE_NOAA)
-		if (IS_NOAA_CHANNEL(gRxVfo->CHANNEL_SAVE)) {
-			gSystickCountdown2 = 300;
-		}
-#endif
+
+
+
+
+
 		gUpdateDisplay = true;
 		if (gScanState != SCAN_OFF) {
 			switch (gEeprom.SCAN_RESUME_MODE) {
@@ -329,16 +329,16 @@ void APP_StartListening(FUNCTION_Type_t Function)
 			}
 			bScanKeepFrequency = true;
 		}
-#if defined(ENABLE_NOAA)
-		if (IS_NOAA_CHANNEL(gRxVfo->CHANNEL_SAVE) && gIsNoaaMode) {
-			gRxVfo->CHANNEL_SAVE = gNoaaChannel + NOAA_CHANNEL_FIRST;
-			gRxVfo->pRX->Frequency = NoaaFrequencyTable[gNoaaChannel];
-			gRxVfo->pTX->Frequency = NoaaFrequencyTable[gNoaaChannel];
-			gEeprom.ScreenChannel[gEeprom.RX_VFO] = gRxVfo->CHANNEL_SAVE;
-			gNOAA_Countdown = 500;
-			gScheduleNOAA = false;
-		}
-#endif
+
+
+
+
+
+
+
+
+
+
 		if (gCssScanMode != CSS_SCAN_MODE_OFF) {
 			gCssScanMode = CSS_SCAN_MODE_FOUND;
 		}
@@ -463,42 +463,32 @@ static void MR_NextChannel(void)
 	}
 }
 
-#if defined(ENABLE_NOAA)
-static void NOAA_NextChannel(void)
-{
-	gNoaaChannel++;
-	if (gNoaaChannel > 9) {
-		gNoaaChannel = 0;
-	}
-}
-#endif
-
 static void DUALWATCH_Alternate(void)
 {
-#if defined(ENABLE_NOAA)
-	if (gIsNoaaMode) {
-		if (IS_NOT_NOAA_CHANNEL(gEeprom.ScreenChannel[0]) || IS_NOT_NOAA_CHANNEL(gEeprom.ScreenChannel[1])) {
-			gEeprom.RX_VFO = !gEeprom.RX_VFO;
-		} else {
-			gEeprom.RX_VFO = 0;
-		}
-		gRxVfo = &gEeprom.VfoInfo[gEeprom.RX_VFO];
-		if (gEeprom.VfoInfo[0].CHANNEL_SAVE >= NOAA_CHANNEL_FIRST) {
-			NOAA_NextChannel();
-		}
-	} else {
-#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
 		gEeprom.RX_VFO = !gEeprom.RX_VFO;
 		gRxVfo = &gEeprom.VfoInfo[gEeprom.RX_VFO];
-#if defined(ENABLE_NOAA)
-	}
-#endif
+
+
+
 	RADIO_SetupRegisters(false);
-#if defined(ENABLE_NOAA)
-	if (gIsNoaaMode) {
-		gDualWatchCountdown = 7;
-	} else
-#endif
+
+
+
+
+
 		gDualWatchCountdown = 10;
 }
 
@@ -570,16 +560,16 @@ void APP_CheckRadioInterrupts(void)
 			g_SquelchLost = false;
 			BK4819_ToggleGpioOut(BK4819_GPIO6_PIN2_GREEN, false);
 		}
-#if defined(ENABLE_AIRCOPY)
-		if (Mask & BK4819_REG_02_FSK_FIFO_ALMOST_FULL && gScreenToDisplay == DISPLAY_AIRCOPY && gAircopyState == AIRCOPY_TRANSFER && gAirCopyIsSendMode == 0) {
-			uint8_t i;
 
-			for (i = 0; i < 4; i++) {
-				g_FSK_Buffer[gFSKWriteIndex++] = BK4819_ReadRegister(BK4819_REG_5F);
-			}
-			AIRCOPY_StorePacket();
-		}
-#endif
+
+
+
+
+
+
+
+
+
 	}
 }
 
@@ -694,14 +684,14 @@ void APP_Update(void)
 		gScheduleScanListen = false;
 	}
 
-#if defined(ENABLE_NOAA)
-	if (gEeprom.DUAL_WATCH == DUAL_WATCH_OFF && gIsNoaaMode && gScheduleNOAA && gVoiceWriteIndex == 0) {
-		NOAA_NextChannel();
-		RADIO_SetupRegisters(false);
-		gScheduleNOAA = false;
-		gNOAA_Countdown = 7;
-	}
-#endif
+
+
+
+
+
+
+
+
 
 	if (gScreenToDisplay != DISPLAY_SCANNER && gEeprom.DUAL_WATCH != DUAL_WATCH_OFF) {
 		if (gScheduleDualWatch && gVoiceWriteIndex == 0) {
@@ -747,9 +737,9 @@ void APP_Update(void)
 			gBatterySaveCountdown = 1000;
 		} else {
 			if ((IS_NOT_NOAA_CHANNEL(gEeprom.ScreenChannel[0]) && IS_NOT_NOAA_CHANNEL(gEeprom.ScreenChannel[1]))
-#if defined(ENABLE_NOAA)
-				|| !gIsNoaaMode
-#endif
+
+
+
 				) {
 				FUNCTION_Select(FUNCTION_POWER_SAVE);
 			} else {
@@ -794,11 +784,7 @@ void APP_CheckKeys(void)
 {
 	KEY_Code_t Key;
 
-	if (gSetting_KILLED
-#if defined(ENABLE_AIRCOPY)
-		|| (gScreenToDisplay == DISPLAY_AIRCOPY && gAircopyState != AIRCOPY_READY)
-#endif
-		) {
+	if (gSetting_KILLED) {
 		return;
 	}
 
@@ -1061,17 +1047,17 @@ void APP_TimeSlice10ms(void)
 		}
 	}
 
-#if defined(ENABLE_AIRCOPY)
-	if (gScreenToDisplay == DISPLAY_AIRCOPY && gAircopyState == AIRCOPY_TRANSFER && gAirCopyIsSendMode == 1) {
-		if (gAircopySendCountdown) {
-			gAircopySendCountdown--;
-			if (gAircopySendCountdown == 0) {
-				AIRCOPY_SendMessage();
-				GUI_DisplayScreen();
-			}
-		}
-	}
-#endif
+
+
+
+
+
+
+
+
+
+
+
 
 	APP_CheckKeys();
 }
@@ -1136,9 +1122,9 @@ void APP_TimeSlice500ms(void)
 				}
 			}
 			if (
-#if defined(ENABLE_AIRCOPY)
-				gScreenToDisplay != DISPLAY_AIRCOPY &&
-#endif
+
+
+
 				(gScreenToDisplay != DISPLAY_SCANNER || (gScanCssState >= SCAN_CSS_STATE_FOUND))) {
 				if (gEeprom.AUTO_KEYPAD_LOCK && gKeyLockCountdown && !gDTMF_InputMode) {
 					gKeyLockCountdown--;
@@ -1515,19 +1501,15 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			case DISPLAY_SCANNER:
 				SCANNER_ProcessKeys(Key, bKeyPressed, bKeyHeld);
 				break;
-#if defined(ENABLE_AIRCOPY)
-			case DISPLAY_AIRCOPY:
-				AIRCOPY_ProcessKeys(Key, bKeyPressed, bKeyHeld);
-				break;
-#endif
+
+
+
+
+
 			default:
 				break;
 			}
-		} else if (gScreenToDisplay != DISPLAY_SCANNER
-#if defined(ENABLE_AIRCOPY)
-				&& gScreenToDisplay != DISPLAY_AIRCOPY
-#endif
-			) {
+		} else if (gScreenToDisplay != DISPLAY_SCANNER) {
 			ACTION_Handle(Key, bKeyPressed, bKeyHeld);
 		} else if (!bKeyHeld && bKeyPressed) {
 			gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
@@ -1609,9 +1591,9 @@ Skip:
 
 	if (gFlagReconfigureVfos) {
 		RADIO_SelectVfos();
-#if defined(ENABLE_NOAA)
-		RADIO_ConfigureNOAA();
-#endif
+
+
+
 		RADIO_SetupRegisters(true);
 		gDTMF_AUTO_RESET_TIME = 0;
 		gDTMF_CallState = DTMF_CALL_STATE_NONE;

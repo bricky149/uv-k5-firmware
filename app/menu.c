@@ -157,9 +157,9 @@ int MENU_GetLimits(uint8_t Cursor, uint8_t *pMin, uint8_t *pMax)
 #endif
 	case MENU_D_ST: case MENU_D_DCD:
 	case MENU_AM:
-#if defined(ENABLE_NOAA)
-	case MENU_NOAA_S:
-#endif
+
+
+
 	case MENU_RESET: case MENU_350TX:
 	case MENU_200TX: case MENU_500TX:
 	case MENU_350EN: case MENU_SCREN:
@@ -347,14 +347,14 @@ void MENU_AcceptSetting(void)
 		return;
 
 	case MENU_WX:
-#if defined(ENABLE_NOAA)
-		if (IS_NOAA_CHANNEL(gEeprom.ScreenChannel[0])) {
-			return;
-		}
-		if (IS_NOAA_CHANNEL(gEeprom.ScreenChannel[1])) {
-			return;
-		}
-#endif
+
+
+
+
+
+
+
+
 		gEeprom.CROSS_BAND_RX_TX = gSubMenuSelection;
 		gFlagReconfigureVfos = true;
 		gRequestSaveSettings = true;
@@ -481,13 +481,13 @@ void MENU_AcceptSetting(void)
 		gRequestSaveChannel = 1;
 		return;
 
-#if defined(ENABLE_NOAA)
-	case MENU_NOAA_S:
-		gEeprom.NOAA_AUTO_SCAN = gSubMenuSelection;
-		gRequestSaveSettings = true;
-		gFlagReconfigureVfos = true;
-		return;
-#endif
+
+
+
+
+
+
+
 
 	case MENU_DEL_CH:
 		SETTINGS_UpdateChannel(gSubMenuSelection, NULL, false);
@@ -806,11 +806,11 @@ void MENU_ShowCurrentSetting(void)
 		gSubMenuSelection = gTxVfo->AM_CHANNEL_MODE;
 		break;
 
-#if defined(ENABLE_NOAA)
-	case MENU_NOAA_S:
-		gSubMenuSelection = gEeprom.NOAA_AUTO_SCAN;
-		break;
-#endif
+
+
+
+
+
 
 	case MENU_DEL_CH:
 		gSubMenuSelection = RADIO_FindNextChannel(gEeprom.MrChannel[0], 1, false, 1);
