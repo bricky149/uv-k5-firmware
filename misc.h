@@ -47,15 +47,6 @@ enum {
 	VFO_CONFIGURE_RELOAD = 2U,
 };
 
-enum AlarmState_t {
-	ALARM_STATE_OFF     = 0U,
-	ALARM_STATE_TXALARM = 1U,
-	ALARM_STATE_ALARM   = 2U,
-	ALARM_STATE_TX1750  = 3U,
-};
-
-typedef enum AlarmState_t AlarmState_t;
-
 enum ReceptionMode_t {
 	RX_MODE_NONE      = 0U,
 	RX_MODE_DETECTED  = 1U,
@@ -80,8 +71,6 @@ extern bool gSetting_KILLED;
 extern bool gSetting_200TX;
 extern bool gSetting_500TX;
 extern bool gSetting_350EN;
-extern uint8_t gSetting_F_LOCK;
-extern bool gSetting_ScrambleEnable;
 extern uint8_t gSetting_F_LOCK;
 
 extern const uint32_t gDefaultAesKey[4];
@@ -116,7 +105,6 @@ extern uint8_t gReducedService;
 extern uint8_t gBatteryVoltageIndex;
 extern CssScanMode_t gCssScanMode;
 extern bool gUpdateRSSI;
-extern AlarmState_t gAlarmState;
 extern uint8_t gVoltageMenuCountdown;
 extern bool gPttWasReleased;
 extern bool gPttWasPressed;
@@ -156,10 +144,6 @@ extern uint8_t gCurrentScanList;
 extern uint8_t gPreviousMrChannel;
 extern uint32_t gRestoreFrequency;
 extern uint8_t gRxVfoIsActive;
-#if defined(ENABLE_ALARM)
-extern uint8_t gAlarmToneCounter;
-extern uint16_t gAlarmRunningCounter;
-#endif
 extern bool gKeyBeingHeld;
 extern bool gPttIsPressed;
 extern uint8_t gPttDebounceCounter;

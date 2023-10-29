@@ -46,11 +46,6 @@ BOOT_Mode_t BOOT_GetMode(void)
 		if (Keys[0] == KEY_SIDE1) {
 			return BOOT_MODE_F_LOCK;
 		}
-
-
-
-
-
 	}
 
 	return BOOT_MODE_NORMAL;
@@ -63,36 +58,7 @@ void BOOT_ProcessMode(BOOT_Mode_t Mode)
 		gSubMenuSelection = gSetting_350TX;
 		GUI_SelectNextDisplay(DISPLAY_MENU);
 		gMenuListCount = 55;
-#if defined(ENABLE_ALARM)
-		gMenuListCount++;
-#endif
-
-
-
 		gF_LOCK = true;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	} else {
 		GUI_SelectNextDisplay(DISPLAY_MAIN);
 	}

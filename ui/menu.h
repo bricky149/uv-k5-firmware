@@ -53,9 +53,6 @@ enum {
 	MENU_S_LIST,
 	MENU_SLIST1,
 	MENU_SLIST2,
-#if defined(ENABLE_ALARM)
-	MENU_AL_MOD,
-#endif
 	MENU_ANI_ID,
 	MENU_UPCODE,
 	MENU_DWCODE,
@@ -70,9 +67,6 @@ enum {
 	MENU_ROGER,
 	MENU_VOL,
 	MENU_AM,
-
-
-
 	MENU_DEL_CH,
 	MENU_RESET,
 	MENU_350TX,
@@ -80,7 +74,6 @@ enum {
 	MENU_200TX,
 	MENU_500TX,
 	MENU_350EN,
-	MENU_SCREN,
 };
 
 extern bool gIsInSubMenu;

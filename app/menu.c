@@ -44,7 +44,6 @@ static const VOICE_ID_t MenuVoices[] = {
 	VOICE_ID_FREQUENCY_DIRECTION,
 	VOICE_ID_OFFSET_FREQUENCY,
 	VOICE_ID_CHANNEL_BANDWIDTH,
-	VOICE_ID_SCRAMBLER_ON,
 	VOICE_ID_BUSY_LOCKOUT,
 	VOICE_ID_MEMORY_CHANNEL,
 	VOICE_ID_SAVE_MODE,
@@ -146,17 +145,11 @@ int MENU_GetLimits(uint8_t Cursor, uint8_t *pMin, uint8_t *pMax)
 	case MENU_BEEP: case MENU_AUTOLK:
 	case MENU_S_ADD1: case MENU_S_ADD2:
 	case MENU_STE:
-#if defined(ENABLE_ALARM)
-	case MENU_AL_MOD:
-#endif
 	case MENU_D_ST: case MENU_D_DCD:
 	case MENU_AM:
-
-
-
 	case MENU_RESET: case MENU_350TX:
 	case MENU_200TX: case MENU_500TX:
-	case MENU_350EN: case MENU_SCREN:
+	case MENU_350EN:
 		*pMin = 0;
 		*pMax = 1;
 		break;
@@ -293,11 +286,6 @@ void MENU_AcceptSetting(void)
 		gRequestSaveChannel = 1;
 		return;
 
-	case MENU_SCR:
-		gTxVfo->SCRAMBLING_TYPE = gSubMenuSelection;
-		gRequestSaveChannel = 1;
-		return;
-
 	case MENU_BCL:
 		gTxVfo->BUSY_CHANNEL_LOCK = gSubMenuSelection;
 		gRequestSaveChannel = 1;
@@ -408,12 +396,6 @@ void MENU_AcceptSetting(void)
 		gEeprom.SCAN_LIST_DEFAULT = gSubMenuSelection - 1;
 		break;
 
-#if defined(ENABLE_ALARM)
-	case MENU_AL_MOD:
-		gEeprom.ALARM_MODE = gSubMenuSelection;
-		break;
-#endif
-
 	case MENU_D_ST:
 		gEeprom.DTMF_SIDE_TONE = gSubMenuSelection;
 		break;
@@ -503,12 +485,6 @@ void MENU_AcceptSetting(void)
 		gRequestSaveSettings = true;
 		gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
 		gFlagResetVfos = true;
-		return;
-
-	case MENU_SCREN:
-		gSetting_ScrambleEnable = gSubMenuSelection;
-		gRequestSaveSettings = true;
-		gFlagReconfigureVfos = true;
 		return;
 
 	default:
@@ -647,10 +623,6 @@ void MENU_ShowCurrentSetting(void)
 		gSubMenuSelection = gTxVfo->CHANNEL_BANDWIDTH;
 		break;
 
-	case MENU_SCR:
-		gSubMenuSelection = gTxVfo->SCRAMBLING_TYPE;
-		break;
-
 	case MENU_BCL:
 		gSubMenuSelection = gTxVfo->BUSY_CHANNEL_LOCK;
 		break;
@@ -735,12 +707,6 @@ void MENU_ShowCurrentSetting(void)
 		gSubMenuSelection = RADIO_FindNextChannel(0, 1, true, 1);
 		break;
 
-#if defined(ENABLE_ALARM)
-	case MENU_AL_MOD:
-		gSubMenuSelection = gEeprom.ALARM_MODE;
-		break;
-#endif
-
 	case MENU_D_ST:
 		gSubMenuSelection = gEeprom.DTMF_SIDE_TONE;
 		break;
@@ -809,10 +775,6 @@ void MENU_ShowCurrentSetting(void)
 
 	case MENU_350EN:
 		gSubMenuSelection = gSetting_350EN;
-		break;
-
-	case MENU_SCREN:
-		gSubMenuSelection = gSetting_ScrambleEnable;
 		break;
 	}
 }
@@ -987,15 +949,7 @@ static void MENU_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 				gIsInSubMenu = false;
 			}
 			gCssScanMode = CSS_SCAN_MODE_OFF;
-			if (gMenuCursor == MENU_SCR) {
-				if (gSubMenuSelection == 0) {
-					gAnotherVoiceID = VOICE_ID_SCRAMBLER_OFF;
-				} else {
-					gAnotherVoiceID = VOICE_ID_SCRAMBLER_ON;
-				}
-			} else {
-				gAnotherVoiceID = VOICE_ID_CONFIRM;
-			}
+			gAnotherVoiceID = VOICE_ID_CONFIRM;
 		}
 		gInputBoxIndex = 0;
 	}

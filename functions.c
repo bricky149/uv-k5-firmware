@@ -129,54 +129,11 @@ void FUNCTION_Select(FUNCTION_Type_t Function)
 		}
 #endif
 
-#if defined(ENABLE_ALARM)
-		if (gAlarmState == ALARM_STATE_TXALARM && gEeprom.ALARM_MODE != ALARM_MODE_TONE) {
-			gAlarmState = ALARM_STATE_ALARM;
-			GUI_DisplayScreen();
-			GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
-			SYSTEM_DelayMs(20);
-			BK4819_PlayTone(500, 0);
-			SYSTEM_DelayMs(2);
-			GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
-			gEnableSpeaker = true;
-			SYSTEM_DelayMs(60);
-			BK4819_ExitTxMute();
-			gAlarmToneCounter = 0;
-			break;
-		}
-#endif
-
 		GUI_DisplayScreen();
 		RADIO_SetTxParameters();
 		BK4819_ToggleGpioOut(BK4819_GPIO5_PIN1_RED, true);
 
 		DTMF_Reply();
-
-#if defined(ENABLE_ALARM) || defined(ENABLE_TX1750)
-		if (gAlarmState != ALARM_STATE_OFF) {
-#if defined(ENABLE_TX1750)
-			if (gAlarmState == ALARM_STATE_TX1750) {
-				BK4819_TransmitTone(true, 1750);
-			}
-#endif
-#if defined(ENABLE_ALARM)
-			if (gAlarmState == ALARM_STATE_TXALARM) {
-				BK4819_TransmitTone(true, 500);
-			}
-#endif
-			SYSTEM_DelayMs(2);
-			GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
-#if defined(ENABLE_ALARM)
-			gAlarmToneCounter = 0;
-#endif
-			gEnableSpeaker = true;
-			break;
-		}
-#endif
-
-
-
-
 
 		break;
 	}

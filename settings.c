@@ -126,11 +126,7 @@ void SETTINGS_SaveSettings(void)
 
 	EEPROM_WriteBuffer(0x0EA0, State);
 
-#if defined(ENABLE_ALARM)
-	State[0] = gEeprom.ALARM_MODE;
-#else
 	State[0] = 0xFF;
-#endif
 	State[1] = gEeprom.ROGER;
 	State[2] = gEeprom.REPEATER_TAIL_TONE_ELIMINATION;
 	State[3] = gEeprom.TX_VFO;
@@ -175,7 +171,6 @@ void SETTINGS_SaveSettings(void)
 	State[3] = gSetting_200TX;
 	State[4] = gSetting_500TX;
 	State[5] = gSetting_350EN;
-	State[6] = gSetting_ScrambleEnable;
 
 	EEPROM_WriteBuffer(0x0F40, State);
 }
@@ -221,7 +216,6 @@ void SETTINGS_SaveChannel(uint8_t Channel, uint8_t VFO, const VFO_Info_t *pVFO, 
 				;
 			State8[5] = (pVFO->DTMF_PTT_ID_TX_MODE << 1) | pVFO->DTMF_DECODING_ENABLE;
 			State8[6] = pVFO->STEP_SETTING;
-			State8[7] = pVFO->SCRAMBLING_TYPE;
 
 			EEPROM_WriteBuffer(OffsetVFO + 8, State8);
 

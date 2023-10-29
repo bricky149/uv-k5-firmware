@@ -797,43 +797,6 @@ void APP_TimeSlice10ms(void)
 		GPIO_FlipBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
 	}
 	if (gCurrentFunction == FUNCTION_TRANSMIT) {
-#if defined(ENABLE_ALARM)
-		if (gAlarmState == ALARM_STATE_TXALARM || gAlarmState == ALARM_STATE_ALARM) {
-			uint16_t Tone;
-
-			gAlarmRunningCounter++;
-			gAlarmToneCounter++;
-
-			Tone = 500 + (gAlarmToneCounter * 25);
-			if (Tone > 1500) {
-				Tone = 500;
-				gAlarmToneCounter = 0;
-			}
-			BK4819_SetScrambleFrequencyControlWord(Tone);
-			if (gEeprom.ALARM_MODE == ALARM_MODE_TONE && gAlarmRunningCounter == 512) {
-				gAlarmRunningCounter = 0;
-				if (gAlarmState == ALARM_STATE_TXALARM) {
-					gAlarmState = ALARM_STATE_ALARM;
-					RADIO_EnableCxCSS();
-					BK4819_SetupPowerAmplifier(0, 0);
-					BK4819_ToggleGpioOut(BK4819_GPIO1_PIN29_PA_ENABLE, false);
-					BK4819_Enable_AfDac_DiscMode_TxDsp();
-					BK4819_ToggleGpioOut(BK4819_GPIO5_PIN1_RED, false);
-					GUI_DisplayScreen();
-				} else {
-					gAlarmState = ALARM_STATE_TXALARM;
-					GUI_DisplayScreen();
-					BK4819_ToggleGpioOut(BK4819_GPIO5_PIN1_RED, true);
-					RADIO_SetTxParameters();
-					BK4819_TransmitTone(true, 500);
-					SYSTEM_DelayMs(2);
-					GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
-					gEnableSpeaker = true;
-					gAlarmToneCounter = 0;
-				}
-			}
-		}
-#endif
 		if (gRTTECountdown) {
 			gRTTECountdown--;
 			if (gRTTECountdown == 0) {
@@ -1149,22 +1112,6 @@ void APP_TimeSlice500ms(void)
 	}
 }
 
-#if defined(ENABLE_ALARM) || defined(ENABLE_TX1750)
-static void ALARM_Off(void)
-{
-	gAlarmState = ALARM_STATE_OFF;
-	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
-	gEnableSpeaker = false;
-	if (gEeprom.ALARM_MODE == ALARM_MODE_TONE) {
-		RADIO_SendEndOfTransmission();
-		RADIO_EnableCxCSS();
-	}
-	SYSTEM_DelayMs(5);
-	RADIO_SetupRegisters(true);
-	gRequestDisplayScreen = DISPLAY_MAIN;
-}
-#endif
-
 void CHANNEL_Next(bool bBackup, int8_t Direction)
 {
 	RADIO_SelectVfos();
@@ -1320,11 +1267,7 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 
 	if (!bFlag) {
 		if (gCurrentFunction == FUNCTION_TRANSMIT) {
-#if defined(ENABLE_ALARM) || defined(ENABLE_TX1750)
-			if (gAlarmState == ALARM_STATE_OFF) {
-#else
 			if (1) {
-#endif
 				if (Key == KEY_PTT) {
 					GENERIC_Key_PTT(bKeyPressed);
 				} else {
@@ -1344,11 +1287,6 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 							GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
 							gEnableSpeaker = false;
 							BK4819_ExitDTMF_TX(false);
-
-
-
-
-
 						}
 					} else {
 						if (gEeprom.DTMF_SIDE_TONE) {
@@ -1363,20 +1301,6 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 						}
 					}
 				}
-			} else if (!bKeyHeld && bKeyPressed) {
-#if defined(ENABLE_ALARM) || defined(ENABLE_TX1750)
-				ALARM_Off();
-				if (gEeprom.REPEATER_TAIL_TONE_ELIMINATION == 0) {
-					FUNCTION_Select(FUNCTION_FOREGROUND);
-				} else {
-					gRTTECountdown = gEeprom.REPEATER_TAIL_TONE_ELIMINATION * 10;
-				}
-				if (Key == KEY_PTT) {
-					gPttWasPressed = true;
-				} else {
-					gPttWasReleased = true;
-				}
-#endif
 			}
 		} else if (Key != KEY_SIDE1 && Key != KEY_SIDE2) {
 			switch (gScreenToDisplay) {
@@ -1394,11 +1318,6 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			case DISPLAY_SCANNER:
 				SCANNER_ProcessKeys(Key, bKeyPressed, bKeyHeld);
 				break;
-
-
-
-
-
 			default:
 				break;
 			}

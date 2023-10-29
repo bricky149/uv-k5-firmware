@@ -33,29 +33,24 @@ static const char MenuList[][7] = {
 	"SQL",    "STEP",    "TXP",    "R_DCS",
 	"R_CTCS", "T_DCS",   "T_CTCS", "SFT-D",
 	// 0x08
-	"OFFSET", "W/N",     "SCR",    "BCL",
-	"MEM-CH", "SAVE",    "ABR",
+	"OFFSET",   "W/N",   "BCL", "WX",
+	"MEM-CH", "SAVE",  "ABR", "TDR",
 	// 0x10
-	"TDR",    "WX",      "BEEP",   "TOT",
-	"VOICE",  "SC-REV",  "MDF",    "AUTOLK",
+	"BEEP",  "TOT",    "VOICE",  "SC-REV",
+	"MDF",   "AUTOLK", "S-ADD1", "S-ADD2",
 	// 0x18
-	"S-ADD1", "S-ADD2",  "STE",    "RP-STE",
-	"MIC",    "1-CALL",  "S-LIST", "SLIST1",
+	"STE",    "RP-STE", "MIC",    "1-CALL",
+	"S-LIST", "SLIST1", "SLIST2", "ANI-ID",
 	// 0x20
-	"SLIST2",
-#if defined(ENABLE_ALARM)
-	          "AL-MOD",
-#endif
-								  "ANI-ID", "UPCODE",
-	"DWCODE", "D-ST",    "D-RSP",  "D-HOLD",
+	"UPCODE", "DWCODE", "D-ST",   "D-RSP",
+	"D-HOLD", "D-PRE",  "PTT-ID", "D-DCD",
 	// 0x28
-	"D-PRE",  "PTT-ID",  "D-DCD",  "D-LIST",
-	"PONMSG", "ROGER",   "VOL",    "AM",
+	"D-LIST", "PONMSG", "ROGER", "VOL",
+	"AM",     "DEL-CH", "RESET", "350TX",
 	// 0x30
-	"DEL-CH",  "RESET",  "350TX",
-	"F-LOCK", "200TX",   "500TX",  "350EN",
+	"F-LOCK", "200TX",  "500TX", "350EN",
 	// 0x38
-	"SCREN",
+
 };
 
 static const uint16_t gSubMenu_Step[] = {
@@ -121,13 +116,6 @@ static const char gSubMenu_MDF[3][5] = {
 	"CHAN",
 	"NAME",
 };
-
-#if defined(ENABLE_ALARM)
-static const char gSubMenu_AL_MOD[2][5] = {
-	"SITE",
-	"TONE",
-};
-#endif
 
 static const char gSubMenu_D_RSP[4][6] = {
 	"NULL",
@@ -293,14 +281,10 @@ void UI_DisplayMenu(void)
 	case MENU_D_ST:
 	case MENU_D_DCD:
 	case MENU_AM:
-
-
-
 	case MENU_350TX:
 	case MENU_200TX:
 	case MENU_500TX:
 	case MENU_350EN:
-	case MENU_SCREN:
 		strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
 		break;
 
@@ -354,12 +338,6 @@ void UI_DisplayMenu(void)
 	case MENU_S_LIST:
 		sprintf(String, "LIST%d", gSubMenuSelection);
 		break;
-
-#if defined(ENABLE_ALARM)
-	case MENU_AL_MOD:
-		sprintf(String, gSubMenu_AL_MOD[gSubMenuSelection]);
-		break;
-#endif
 
 	case MENU_ANI_ID:
 		strcpy(String, gEeprom.ANI_DTMF_ID);

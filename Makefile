@@ -1,10 +1,7 @@
 TARGET = firmware
 
-
-ENABLE_ALARM := 1
 ENABLE_FMRADIO := 1
 ENABLE_SWD := 0
-ENABLE_TX1750 := 1
 ENABLE_UART := 1
 
 BSP_DEFINITIONS := $(wildcard hardware/*/*.def)
@@ -106,21 +103,17 @@ CFLAGS = -Os -Wall -Werror -mcpu=cortex-m0 -fno-builtin -fshort-enums -fno-delet
 CFLAGS += -freorder-blocks-algorithm=stc -ffunction-sections -fdata-sections
 CFLAGS += -DPRINTF_INCLUDE_CONFIG_H
 CFLAGS += -DGIT_HASH=\"$(GIT_HASH)\"
-ifeq ($(ENABLE_ALARM),1)
-CFLAGS += -DENABLE_ALARM
-endif
+
 ifeq ($(ENABLE_FMRADIO),1)
 CFLAGS += -DENABLE_FMRADIO
 endif
 ifeq ($(ENABLE_SWD),1)
 CFLAGS += -DENABLE_SWD
 endif
-ifeq ($(ENABLE_TX1750),1)
-CFLAGS += -DENABLE_TX1750
-endif
 ifeq ($(ENABLE_UART),1)
 CFLAGS += -DENABLE_UART
 endif
+
 LDFLAGS = -mcpu=cortex-m0 -nostartfiles -Wl,-T,firmware.ld
 LDFLAGS += --specs=nano.specs -Wl,--gc-sections
 

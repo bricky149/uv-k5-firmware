@@ -222,11 +222,6 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		gEeprom.VfoInfo[VFO].STEP_SETTING = Tmp;
 		gEeprom.VfoInfo[VFO].StepFrequency = StepFrequencyTable[Tmp];
 
-		Tmp = Data[7];
-		if (Tmp > 10) {
-			Tmp = 0;
-		}
-		gEeprom.VfoInfo[VFO].SCRAMBLING_TYPE = Tmp;
 		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = (Data[2] >> 0) & 0x0F;
 		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = (Data[2] >> 4) & 0x0F;
 
@@ -343,7 +338,6 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 
 	if (gEeprom.VfoInfo[VFO].Band == BAND2_108MHz && gEeprom.VfoInfo[VFO].AM_CHANNEL_MODE) {
 		gEeprom.VfoInfo[VFO].IsAM = true;
-		gEeprom.VfoInfo[VFO].SCRAMBLING_TYPE = 0;
 		gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = false;
 		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
 		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
@@ -666,18 +660,7 @@ void RADIO_PrepareTX(void)
 		gRxVfoIsActive = true;
 	}
 	RADIO_SelectCurrentVfo();
-#if defined(ENABLE_ALARM) || defined(ENABLE_TX1750)
-	if (gAlarmState == ALARM_STATE_OFF
-#if defined(ENABLE_TX1750)
-		|| gAlarmState == ALARM_STATE_TX1750
-#endif
-#if defined(ENABLE_ALARM)
-		|| (gAlarmState == ALARM_STATE_ALARM && gEeprom.ALARM_MODE == ALARM_MODE_TONE)
-#endif
-		) {
-#else
 	if (1) {
-#endif
 		VfoState_t State;
 
 		if (!FREQUENCY_Check(gCurrentVfo)) {
@@ -694,9 +677,6 @@ void RADIO_PrepareTX(void)
 			State = VFO_STATE_TX_DISABLE;
 		}
 		RADIO_SetVfoState(State);
-#if defined(ENABLE_ALARM) || defined(ENABLE_TX1750)
-		gAlarmState = ALARM_STATE_OFF;
-#endif
 		AUDIO_PlayBeep(BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL);
 		gDTMF_ReplyState = DTMF_REPLY_NONE;
 		return;
@@ -714,15 +694,7 @@ Skip:
 		}
 	}
 	FUNCTION_Select(FUNCTION_TRANSMIT);
-#if defined(ENABLE_ALARM) || defined(ENABLE_TX1750)
-	if (gAlarmState == ALARM_STATE_OFF) {
-		gTxTimerCountdown = gEeprom.TX_TIMEOUT_TIMER * 120;
-	} else {
-		gTxTimerCountdown = 0;
-	}
-#else
 	gTxTimerCountdown = gEeprom.TX_TIMEOUT_TIMER * 120;
-#endif
 	gTxTimeoutReached = false;
 	gFlagEndTransmission = false;
 	gRTTECountdown = 0;

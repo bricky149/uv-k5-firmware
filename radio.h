@@ -64,7 +64,6 @@ enum VfoState_t {
 	VFO_STATE_BAT_LOW    = 2U,
 	VFO_STATE_TX_DISABLE = 3U,
 	VFO_STATE_TIMEOUT    = 4U,
-	VFO_STATE_ALARM      = 5U,
 	VFO_STATE_VOL_HIGH   = 6U,
 };
 
@@ -96,7 +95,6 @@ typedef struct VFO_Info_t {
 	uint8_t OUTPUT_POWER;
 	uint8_t TXP_CalculatedSetting;
 	bool FrequencyReverse;
-	uint8_t SCRAMBLING_TYPE;
 	uint8_t CHANNEL_BANDWIDTH;
 	uint8_t SCANLIST1_PARTICIPATION;
 	uint8_t SCANLIST2_PARTICIPATION;

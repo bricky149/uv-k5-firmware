@@ -76,13 +76,6 @@ enum VOICE_Prompt_t {
 
 typedef enum VOICE_Prompt_t VOICE_Prompt_t;
 
-enum ALARM_Mode_t {
-	ALARM_MODE_SITE = 0U,
-	ALARM_MODE_TONE = 1U,
-};
-
-typedef enum ALARM_Mode_t ALARM_Mode_t;
-
 enum ROGER_Mode_t {
 	ROGER_MODE_OFF   = 0U,
 	ROGER_MODE_ROGER = 1U,
@@ -137,7 +130,6 @@ typedef struct {
 	uint16_t FM_LowerLimit;
 	uint16_t FM_UpperLimit;
 	bool AUTO_KEYPAD_LOCK;
-	ALARM_Mode_t ALARM_MODE;
 	POWER_OnDisplayMode_t POWER_ON_DISPLAY_MODE;
 	ROGER_Mode_t ROGER;
 	uint8_t REPEATER_TAIL_TONE_ELIMINATION;

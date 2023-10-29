@@ -136,13 +136,7 @@ void UI_DisplayMain(void)
 		uint32_t LevelMode = LEVEL_MODE_OFF;
 
 		if (gCurrentFunction == FUNCTION_TRANSMIT) {
-#if defined(ENABLE_ALARM)
-			if (gAlarmState == ALARM_STATE_ALARM) {
-				LevelMode = LEVEL_MODE_RSSI;
-			} else {
-#else
 			if (1) {
-#endif
 				if (gEeprom.CROSS_BAND_RX_TX == CROSS_BAND_OFF) {
 					Channel = gEeprom.RX_VFO;
 				} else {
@@ -175,34 +169,18 @@ void UI_DisplayMain(void)
 			memcpy(pLine1 + 14, BITMAP_F, sizeof(BITMAP_F));
 			c = (gEeprom.ScreenChannel[i] - FREQ_CHANNEL_FIRST) + 1;
 			UI_DisplaySmallDigits(1, &c, 22, Line + 1);
-		} else {
-
-
-
-
-
-
-
-
-
-
 		}
 
 		// 0x8FEC
 
 		uint8_t State = VfoState[i];
-#if defined(ENABLE_ALARM)
-		if (gCurrentFunction == FUNCTION_TRANSMIT && gAlarmState == ALARM_STATE_ALARM) {
+		if (gCurrentFunction == FUNCTION_TRANSMIT) {
 			if (gEeprom.CROSS_BAND_RX_TX == CROSS_BAND_OFF) {
 				Channel = gEeprom.RX_VFO;
 			} else {
 				Channel = gEeprom.TX_VFO;
 			}
-			if (Channel == i) {
-				State = VFO_STATE_ALARM;
-			}
 		}
-#endif
 		if (State) {
 			uint8_t Width = 10;
 
@@ -221,11 +199,6 @@ void UI_DisplayMain(void)
 			case 4:
 				strcpy(String, "TIMEOUT");
 				break;
-#if defined(ENABLE_ALARM)
-			case 5:
-				strcpy(String, "ALARM");
-				break;
-#endif
 			case 6:
 				sprintf(String, "VOL HIGH");
 				Width = 8;
@@ -369,9 +342,6 @@ void UI_DisplayMain(void)
 		}
 		if (gEeprom.VfoInfo[i].DTMF_DECODING_ENABLE || gSetting_KILLED) {
 			memcpy(pLine1 + 128 + 84, BITMAP_DTMF, sizeof(BITMAP_DTMF));
-		}
-		if (gEeprom.VfoInfo[i].SCRAMBLING_TYPE && gSetting_ScrambleEnable) {
-			memcpy(pLine1 + 128 + 110, BITMAP_Scramble, sizeof(BITMAP_Scramble));
 		}
 	}
 
