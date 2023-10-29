@@ -3,7 +3,6 @@ TARGET = firmware
 
 ENABLE_ALARM := 1
 ENABLE_FMRADIO := 1
-ENABLE_OVERLAY := 1
 ENABLE_SWD := 0
 ENABLE_TX1750 := 1
 ENABLE_UART := 1
@@ -16,9 +15,6 @@ OBJS =
 # Startup files
 OBJS += start.o
 OBJS += init.o
-ifeq ($(ENABLE_OVERLAY),1)
-OBJS += sram-overlay.o
-endif
 OBJS += external/printf/printf.o
 
 # Drivers
@@ -35,9 +31,6 @@ ifeq ($(ENABLE_UART),1)
 OBJS += driver/crc.o
 endif
 OBJS += driver/eeprom.o
-ifeq ($(ENABLE_OVERLAY),1)
-OBJS += driver/flash.o
-endif
 OBJS += driver/gpio.o
 OBJS += driver/i2c.o
 OBJS += driver/keyboard.o
@@ -109,9 +102,6 @@ SIZE = arm-none-eabi-size
 GIT_HASH := $(shell git rev-parse --short HEAD)
 
 ASFLAGS = -c -mcpu=cortex-m0
-ifeq ($(ENABLE_OVERLAY),1)
-ASFLAGS += -DENABLE_OVERLAY
-endif
 CFLAGS = -Os -Wall -Werror -mcpu=cortex-m0 -fno-builtin -fshort-enums -fno-delete-null-pointer-checks -std=c11 -MMD
 CFLAGS += -freorder-blocks-algorithm=stc -ffunction-sections -fdata-sections
 CFLAGS += -DPRINTF_INCLUDE_CONFIG_H
@@ -121,9 +111,6 @@ CFLAGS += -DENABLE_ALARM
 endif
 ifeq ($(ENABLE_FMRADIO),1)
 CFLAGS += -DENABLE_FMRADIO
-endif
-ifeq ($(ENABLE_OVERLAY),1)
-CFLAGS += -DENABLE_OVERLAY
 endif
 ifeq ($(ENABLE_SWD),1)
 CFLAGS += -DENABLE_SWD

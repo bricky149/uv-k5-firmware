@@ -218,16 +218,6 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		break;
 
 	case KEY_5:
-
-
-
-
-
-
-
-
-
-
 		break;
 
 	case KEY_6:
@@ -235,7 +225,6 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		break;
 
 	case KEY_7:
-		ACTION_Vox();
 		break;
 
 	case KEY_8:

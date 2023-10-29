@@ -32,7 +32,6 @@
 #include "driver/bk4819.h"
 #include "driver/crc.h"
 #include "driver/eeprom.h"
-#include "driver/flash.h"
 #include "driver/gpio.h"
 #include "driver/system.h"
 #include "driver/st7565.h"
@@ -40,21 +39,6 @@
 #include "helper/battery.h"
 #include "misc.h"
 #include "settings.h"
-#if defined(ENABLE_OVERLAY)
-#include "sram-overlay.h"
-#endif
-
-#if defined(ENABLE_OVERLAY)
-void BOARD_FLASH_Init(void)
-{
-	FLASH_Init(FLASH_READ_MODE_1_CYCLE);
-	FLASH_ConfigureTrimValues();
-	SYSTEM_ConfigureClocks();
-	overlay_FLASH_MainClock = 48000000;
-	overlay_FLASH_ClockMultiplier = 48;
-	FLASH_Init(FLASH_READ_MODE_2_CYCLE);
-}
-#endif
 
 void BOARD_GPIO_Init(void)
 {
@@ -520,8 +504,6 @@ void BOARD_EEPROM_Init(void)
 	gEeprom.TX_TIMEOUT_TIMER = (Data[2] < 11) ? Data[2] : 2;
 	gEeprom.NOAA_AUTO_SCAN   = (Data[3] <  2) ? Data[3] : true;
 	gEeprom.KEY_LOCK         = (Data[4] <  2) ? Data[4] : false;
-	gEeprom.VOX_SWITCH       = (Data[5] <  2) ? Data[5] : false;
-	gEeprom.VOX_LEVEL        = (Data[6] < 10) ? Data[6] : 5;
 	gEeprom.MIC_SENSITIVITY  = (Data[7] <  5) ? Data[7] : 2;
 
 	// 0E78..0E7F
@@ -722,8 +704,6 @@ void BOARD_EEPROM_LoadCalibration(void)
 	}
 	gBatteryCalibration[5] = 2300;
 
-	EEPROM_ReadBuffer(0x1F50 + (gEeprom.VOX_LEVEL * 2), &gEeprom.VOX1_THRESHOLD, 2);
-	EEPROM_ReadBuffer(0x1F68 + (gEeprom.VOX_LEVEL * 2), &gEeprom.VOX0_THRESHOLD, 2);
 
 	EEPROM_ReadBuffer(0x1F80 + gEeprom.MIC_SENSITIVITY, &Mic, 1);
 	gEeprom.MIC_SENSITIVITY_TUNING = (Mic < 32) ? Mic : 15;

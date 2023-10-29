@@ -102,7 +102,6 @@ void GENERIC_Key_PTT(bool bKeyPressed)
 					}
 				}
 				gFlagEndTransmission = false;
-				gVOX_NoiseDetected = false;
 			}
 			RADIO_SetVfoState(VFO_STATE_NORMAL);
 			gRequestDisplayScreen = DISPLAY_MAIN;

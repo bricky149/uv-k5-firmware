@@ -112,8 +112,6 @@ typedef struct {
 	uint8_t SQUELCH_LEVEL;
 	uint8_t TX_TIMEOUT_TIMER;
 	bool KEY_LOCK;
-	bool VOX_SWITCH;
-	uint8_t VOX_LEVEL;
 	VOICE_Prompt_t VOICE_PROMPT;
 	bool BEEP_CONTROL;
 	uint8_t CHANNEL_DISPLAY_MODE;
@@ -130,8 +128,6 @@ typedef struct {
 	uint8_t SCANLIST_PRIORITY_CH2[2];
 	uint8_t field29_0x26;
 	uint8_t field30_0x27;
-	uint16_t VOX1_THRESHOLD;
-	uint16_t VOX0_THRESHOLD;
 	uint16_t FM_SelectedFrequency;
 	uint8_t FM_SelectedChannel;
 	bool FM_IsMrMode;

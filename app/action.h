@@ -21,7 +21,6 @@
 
 void ACTION_Power(void);
 void ACTION_Scan(bool bFlag);
-void ACTION_Vox(void);
 void ACTION_FM(void);
 
 void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld);

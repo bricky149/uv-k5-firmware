@@ -89,8 +89,5 @@ void SystickHandler(void)
 		}
 	}
 #endif
-	if (gVoxStopCountdown) {
-		gVoxStopCountdown--;
-	}
 }
 

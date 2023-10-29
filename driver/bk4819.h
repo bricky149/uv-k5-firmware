@@ -57,7 +57,7 @@ void BK4819_WriteU8(uint8_t Data);
 void BK4819_WriteU16(uint16_t Data);
 
 void BK4819_EnableAGC(void);
-void BK4819_DisableAGC(void);
+void BK4819_PseudoDisableAGC(void);
 
 void BK4819_ToggleGpioOut(BK4819_GPIO_PIN_t Pin, bool bSet);
 

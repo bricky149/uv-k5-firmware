@@ -186,7 +186,7 @@ void BK4819_EnableAGC(void)
 	BK4819_WriteRegister(BK4819_REG_7B, 0x8420);
 }
 
-void BK4819_DisableAGC(void)
+void BK4819_PseudoDisableAGC(void)
 {
     BK4819_WriteRegister(BK4819_REG_13, 0x03BE);
     BK4819_WriteRegister(BK4819_REG_12, 0x037C);
@@ -195,7 +195,7 @@ void BK4819_DisableAGC(void)
     BK4819_WriteRegister(BK4819_REG_14, 0x0018);
 
 	BK4819_WriteRegister(BK4819_REG_7E,
-		(1u << 15) |      // 0  AGC fix mode
+		(0u << 15) |      // 0  AGC fix mode
 		(4u << 12) |      // 3  AGC fix index
 		(5u <<  3) |      // 5  DC Filter band width for Tx (MIC In)
 		(6u <<  0));      // 6  DC Filter band width for Rx (I.F In)

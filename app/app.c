@@ -51,9 +51,6 @@
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
-#if defined(ENABLE_OVERLAY)
-#include "sram-overlay.h"
-#endif
 #include "ui/battery.h"
 #include "ui/inputbox.h"
 #include "ui/menu.h"
@@ -330,15 +327,6 @@ void APP_StartListening(FUNCTION_Type_t Function)
 			bScanKeepFrequency = true;
 		}
 
-
-
-
-
-
-
-
-
-
 		if (gCssScanMode != CSS_SCAN_MODE_OFF) {
 			gCssScanMode = CSS_SCAN_MODE_FOUND;
 		}
@@ -350,7 +338,7 @@ void APP_StartListening(FUNCTION_Type_t Function)
 		if (gRxVfo->IsAM) {
 			BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
 			// https://www.eecg.utoronto.ca/~kphang/papers/2001/martin_AGC.pdf
-			BK4819_DisableAGC();
+			BK4819_PseudoDisableAGC();
 		} else {
 			BK4819_WriteRegister(BK4819_REG_48, 0xB000
 					| (gEeprom.VOLUME_GAIN << 4)
@@ -534,24 +522,6 @@ void APP_CheckRadioInterrupts(void)
 		if (Mask & BK4819_REG_02_CTCSS_FOUND) {
 			g_CTCSS_Lost = false;
 		}
-		if (Mask & BK4819_REG_02_VOX_LOST) {
-			g_VOX_Lost = true;
-			gVoxPauseCountdown = 10;
-			if (gEeprom.VOX_SWITCH) {
-				if (gCurrentFunction == FUNCTION_POWER_SAVE && !gRxIdleMode) {
-					gBatterySave = 20;
-					gBatterySaveCountdownExpired = 0;
-				}
-				if (gEeprom.DUAL_WATCH != DUAL_WATCH_OFF && (gScheduleDualWatch || gDualWatchCountdown < 20)) {
-					gDualWatchCountdown = 20;
-					gScheduleDualWatch = false;
-				}
-			}
-		}
-		if (Mask & BK4819_REG_02_VOX_FOUND) {
-			g_VOX_Lost = false;
-			gVoxPauseCountdown = 0;
-		}
 		if (Mask & BK4819_REG_02_SQUELCH_LOST) {
 			g_SquelchLost = true;
 			BK4819_ToggleGpioOut(BK4819_GPIO6_PIN2_GREEN, true);
@@ -560,16 +530,6 @@ void APP_CheckRadioInterrupts(void)
 			g_SquelchLost = false;
 			BK4819_ToggleGpioOut(BK4819_GPIO6_PIN2_GREEN, false);
 		}
-
-
-
-
-
-
-
-
-
-
 	}
 }
 
@@ -578,58 +538,6 @@ void APP_EndTransmission(void)
 	RADIO_SendEndOfTransmission();
 	RADIO_EnableCxCSS();
 	RADIO_SetupRegisters(false);
-}
-
-static void APP_HandleVox(void)
-{
-	if (!gSetting_KILLED) {
-		if (gVoxResumeCountdown == 0) {
-			if (gVoxPauseCountdown) {
-				return;
-			}
-		} else {
-			g_VOX_Lost = false;
-			gVoxPauseCountdown = 0;
-		}
-		if (gCurrentFunction != FUNCTION_RECEIVE && gCurrentFunction != FUNCTION_MONITOR && gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF
-#if defined(ENABLE_FMRADIO)
-			&& !gFmRadioMode
-#endif
-			) {
-			if (gVOX_NoiseDetected) {
-				if (g_VOX_Lost) {
-					gVoxStopCountdown = 100;
-				} else if (gVoxStopCountdown == 0) {
-					gVOX_NoiseDetected = false;
-				}
-				if (gCurrentFunction == FUNCTION_TRANSMIT && !gPttIsPressed && !gVOX_NoiseDetected) {
-					if (gFlagEndTransmission) {
-						FUNCTION_Select(FUNCTION_FOREGROUND);
-					} else {
-						APP_EndTransmission();
-						if (gEeprom.REPEATER_TAIL_TONE_ELIMINATION == 0) {
-							FUNCTION_Select(FUNCTION_FOREGROUND);
-						} else {
-							gRTTECountdown = gEeprom.REPEATER_TAIL_TONE_ELIMINATION * 10;
-						}
-					}
-					gUpdateDisplay = true;
-					gFlagEndTransmission = false;
-					return;
-				}
-			} else if (g_VOX_Lost) {
-				gVOX_NoiseDetected = true;
-				if (gCurrentFunction == FUNCTION_POWER_SAVE) {
-					FUNCTION_Select(FUNCTION_FOREGROUND);
-				}
-				if (gCurrentFunction != FUNCTION_TRANSMIT) {
-					gDTMF_ReplyState = DTMF_REPLY_NONE;
-					RADIO_PrepareTX();
-					gUpdateDisplay = true;
-				}
-			}
-		}
-	}
 }
 
 void APP_Update(void)
@@ -721,10 +629,6 @@ void APP_Update(void)
 		gScheduleFM = false;
 	}
 #endif
-
-	if (gEeprom.VOX_SWITCH) {
-		APP_HandleVox();
-	}
 
 	if (gSchedulePowerSave) {
 		if (gEeprom.BATTERY_SAVE == 0 || gScanState != SCAN_OFF || gCssScanMode != CSS_SCAN_MODE_OFF
@@ -891,12 +795,6 @@ void APP_TimeSlice10ms(void)
 
 	if (gFlashLightState == FLASHLIGHT_BLINK && (gFlashLightBlinkCounter & 15U) == 0) {
 		GPIO_FlipBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
-	}
-	if (gVoxResumeCountdown) {
-		gVoxResumeCountdown--;
-	}
-	if (gVoxPauseCountdown) {
-		gVoxPauseCountdown--;
 	}
 	if (gCurrentFunction == FUNCTION_TRANSMIT) {
 #if defined(ENABLE_ALARM)
@@ -1085,11 +983,7 @@ void APP_TimeSlice500ms(void)
 	if (gReducedService) {
 		BOARD_ADC_GetBatteryInfo(&gBatteryCurrentVoltage, &gBatteryCurrent);
 		if (gBatteryCurrent > 500 || gBatteryCalibration[3] < gBatteryCurrentVoltage) {
-#if defined(ENABLE_OVERLAY)
-			overlay_FLASH_RebootToBootloader();
-#else
 			NVIC_SystemReset();
-#endif
 		}
 		return;
 	}
@@ -1265,7 +1159,6 @@ static void ALARM_Off(void)
 		RADIO_SendEndOfTransmission();
 		RADIO_EnableCxCSS();
 	}
-	gVoxResumeCountdown = 0x50;
 	SYSTEM_DelayMs(5);
 	RADIO_SetupRegisters(true);
 	gRequestDisplayScreen = DISPLAY_MAIN;

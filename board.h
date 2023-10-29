@@ -20,7 +20,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-void BOARD_FLASH_Init(void);
 void BOARD_GPIO_Init(void);
 void BOARD_PORTCON_Init(void);
 void BOARD_ADC_Init(void);

@@ -16,7 +16,6 @@ extern const uint8_t BITMAP_KeyLock[9];
 
 extern const uint8_t BITMAP_F_Key[10];
 
-extern const uint8_t BITMAP_VOX[18];
 
 extern const uint8_t BITMAP_WX[12];
 extern const uint8_t BITMAP_TDR[12];

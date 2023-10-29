@@ -333,7 +333,6 @@ void SCANNER_Start(void)
 	g_CDCSS_Lost = false;
 	gCDCSSCodeType = 0;
 	g_CTCSS_Lost = false;
-	g_VOX_Lost = false;
 	g_SquelchLost = false;
 	gScannerEditState = 0;
 	gScanProgressIndicator = 0;

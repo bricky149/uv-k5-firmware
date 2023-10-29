@@ -15,9 +15,7 @@
  */
 
 #include <string.h>
-#if !defined(ENABLE_OVERLAY)
 #include "ARMCM0.h"
-#endif
 #include "app/dtmf.h"
 #include "app/generic.h"
 #include "app/menu.h"
@@ -31,9 +29,6 @@
 #include "frequencies.h"
 #include "misc.h"
 #include "settings.h"
-#if defined(ENABLE_OVERLAY)
-#include "sram-overlay.h"
-#endif
 #include "ui/inputbox.h"
 #include "ui/menu.h"
 #include "ui/ui.h"
@@ -53,7 +48,6 @@ static const VOICE_ID_t MenuVoices[] = {
 	VOICE_ID_BUSY_LOCKOUT,
 	VOICE_ID_MEMORY_CHANNEL,
 	VOICE_ID_SAVE_MODE,
-	VOICE_ID_VOX,
 	VOICE_ID_INVALID,
 	VOICE_ID_DUAL_STANDBY,
 	VOICE_ID_INVALID,
@@ -166,7 +160,7 @@ int MENU_GetLimits(uint8_t Cursor, uint8_t *pMin, uint8_t *pMax)
 		*pMin = 0;
 		*pMax = 1;
 		break;
-	case MENU_SCR: case MENU_VOX:
+	case MENU_SCR:
 	case MENU_TOT: case MENU_RP_STE:
 		*pMin = 0;
 		*pMax = 10;
@@ -318,17 +312,6 @@ void MENU_AcceptSetting(void)
 	case MENU_SAVE:
 		gEeprom.BATTERY_SAVE = gSubMenuSelection;
 		break;
-
-	case MENU_VOX:
-		gEeprom.VOX_SWITCH = gSubMenuSelection != 0;
-		if (gEeprom.VOX_SWITCH) {
-			gEeprom.VOX_LEVEL = gSubMenuSelection - 1;
-		}
-		BOARD_EEPROM_LoadCalibration();
-		gFlagReconfigureVfos = true;
-		gRequestSaveSettings = true;
-		gUpdateStatus = true;
-		return;
 
 	case MENU_ABR:
 		gEeprom.BACKLIGHT = gSubMenuSelection;
@@ -680,14 +663,6 @@ void MENU_ShowCurrentSetting(void)
 		gSubMenuSelection = gEeprom.BATTERY_SAVE;
 		break;
 
-	case MENU_VOX:
-		if (gEeprom.VOX_SWITCH) {
-			gSubMenuSelection = gEeprom.VOX_LEVEL + 1;
-		} else {
-			gSubMenuSelection = 0;
-		}
-		break;
-
 	case MENU_ABR:
 		gSubMenuSelection = gEeprom.BACKLIGHT;
 		break;
@@ -1001,11 +976,7 @@ static void MENU_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 						AUDIO_SetVoiceID(0, VOICE_ID_CONFIRM);
 						AUDIO_PlaySingleVoice(true);
 						MENU_AcceptSetting();
-#if defined(ENABLE_OVERLAY)
-						overlay_FLASH_RebootToBootloader();
-#else
 						NVIC_SystemReset();
-#endif
 					}
 					gFlagAcceptSetting = true;
 					gIsInSubMenu = false;

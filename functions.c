@@ -57,7 +57,6 @@ void FUNCTION_Init(void)
 	g_CxCSS_TAIL_Found = false;
 	g_CDCSS_Lost = false;
 	g_CTCSS_Lost = false;
-	g_VOX_Lost = false;
 	g_SquelchLost = false;
 	gTailNoteEliminationCountdown = 0;
 	gFlagTteComplete = false;

@@ -88,8 +88,6 @@ void SETTINGS_SaveSettings(void)
 	State[2] = gEeprom.TX_TIMEOUT_TIMER;
 	State[3] = gEeprom.NOAA_AUTO_SCAN;
 	State[4] = gEeprom.KEY_LOCK;
-	State[5] = gEeprom.VOX_SWITCH;
-	State[6] = gEeprom.VOX_LEVEL;
 	State[7] = gEeprom.MIC_SENSITIVITY;
 
 	EEPROM_WriteBuffer(0x0E70, State);

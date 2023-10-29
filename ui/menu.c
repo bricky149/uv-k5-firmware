@@ -34,7 +34,7 @@ static const char MenuList[][7] = {
 	"R_CTCS", "T_DCS",   "T_CTCS", "SFT-D",
 	// 0x08
 	"OFFSET", "W/N",     "SCR",    "BCL",
-	"MEM-CH", "SAVE",    "VOX",    "ABR",
+	"MEM-CH", "SAVE",    "ABR",
 	// 0x10
 	"TDR",    "WX",      "BEEP",   "TOT",
 	"VOICE",  "SC-REV",  "MDF",    "AUTOLK",
@@ -46,16 +46,13 @@ static const char MenuList[][7] = {
 #if defined(ENABLE_ALARM)
 	          "AL-MOD",
 #endif
-		             "ANI-ID", "UPCODE",
+								  "ANI-ID", "UPCODE",
 	"DWCODE", "D-ST",    "D-RSP",  "D-HOLD",
 	// 0x28
 	"D-PRE",  "PTT-ID",  "D-DCD",  "D-LIST",
 	"PONMSG", "ROGER",   "VOL",    "AM",
 	// 0x30
-
-
-
-	          "DEL-CH",  "RESET",  "350TX",
+	"DEL-CH",  "RESET",  "350TX",
 	"F-LOCK", "200TX",   "500TX",  "350EN",
 	// 0x38
 	"SCREN",
@@ -279,7 +276,6 @@ void UI_DisplayMenu(void)
 		break;
 
 	case MENU_SCR:
-	case MENU_VOX:
 	case MENU_ABR:
 		if (gSubMenuSelection == 0) {
 			strcpy(String, "OFF");

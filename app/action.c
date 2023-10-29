@@ -141,15 +141,6 @@ void ACTION_Scan(bool bRestart)
 	}
 }
 
-void ACTION_Vox(void)
-{
-	gEeprom.VOX_SWITCH = !gEeprom.VOX_SWITCH;
-	gRequestSaveSettings = true;
-	gFlagReconfigureVfos = true;
-	gAnotherVoiceID = VOICE_ID_VOX;
-	gUpdateStatus = true;
-}
-
 #if defined(ENABLE_ALARM) || defined(ENABLE_TX1750)
 static void ACTION_AlarmOr1750(bool b1750)
 {
@@ -179,7 +170,6 @@ void ACTION_FM(void)
 		if (gFmRadioMode) {
 			FM_TurnOff();
 			gInputBoxIndex = 0;
-			gVoxResumeCountdown = 80;
 			gFlagReconfigureVfos = true;
 			gRequestDisplayScreen = DISPLAY_MAIN;
 			return;
@@ -252,7 +242,6 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		ACTION_Scan(true);
 		break;
 	case 5:
-		ACTION_Vox();
 		break;
 	case 6:
 #if defined(ENABLE_ALARM)

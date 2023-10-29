@@ -57,9 +57,6 @@ void UI_DisplayStatus(void)
 		memcpy(gStatusLine + 90, BITMAP_F_Key, sizeof(BITMAP_F_Key));
 	}
 
-	if (gEeprom.VOX_SWITCH) {
-		memcpy(gStatusLine + 71, BITMAP_VOX, sizeof(BITMAP_VOX));
-	}
 	if (gEeprom.CROSS_BAND_RX_TX != CROSS_BAND_OFF) {
 		memcpy(gStatusLine + 58, BITMAP_WX, sizeof(BITMAP_WX));
 	}
