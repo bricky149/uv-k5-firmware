@@ -35,6 +35,7 @@ enum {
 	MENU_BCL,
 	MENU_MEM_CH,
 	MENU_SAVE,
+	MENU_VOX,
 	MENU_ABR,
 	MENU_TDR,
 	MENU_WX,
@@ -74,6 +75,7 @@ enum {
 	MENU_200TX,
 	MENU_500TX,
 	MENU_350EN,
+	MENU_SCREN,
 };
 
 extern bool gIsInSubMenu;

@@ -21,7 +21,6 @@
 #include "app/generic.h"
 #include "app/menu.h"
 #include "app/scanner.h"
-#include "audio.h"
 #include "driver/keyboard.h"
 #include "dtmf.h"
 #include "external/printf/printf.h"
@@ -34,9 +33,6 @@
 void GENERIC_Key_F(bool bKeyPressed, bool bKeyHeld)
 {
 	if (gInputBoxIndex) {
-		if (!bKeyHeld && bKeyPressed) {
-			gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
-		}
 		return;
 	}
 	if (bKeyHeld || !bKeyPressed) {
@@ -46,11 +42,6 @@ void GENERIC_Key_F(bool bKeyPressed, bool bKeyHeld)
 			}
 			if (!bKeyPressed) {
 				return;
-			}
-			if (gEeprom.KEY_LOCK) {
-				gAnotherVoiceID = VOICE_ID_UNLOCK;
-			} else {
-				gAnotherVoiceID = VOICE_ID_LOCK;
 			}
 			gEeprom.KEY_LOCK = !gEeprom.KEY_LOCK;
 			gRequestSaveSettings = true;
@@ -65,23 +56,17 @@ void GENERIC_Key_F(bool bKeyPressed, bool bKeyHeld)
 			}
 #endif
 			gWasFKeyPressed = !gWasFKeyPressed;
-			if (!gWasFKeyPressed) {
-				gAnotherVoiceID = VOICE_ID_CANCEL;
-			}
 			gUpdateStatus = true;
 		}
 	} else {
 #if defined(ENABLE_FMRADIO)
 		if (gScreenToDisplay == DISPLAY_FM) {
 			if (gFM_ScanState == FM_SCAN_OFF) {
-				gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 				return;
 			}
-			gBeepToPlay = BEEP_440HZ_500MS;
 			gPttWasReleased = true;
-		} else
+		}
 #endif
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 	}
 }
 
@@ -184,7 +169,6 @@ void GENERIC_Key_PTT(bool bKeyPressed)
 		gRequestDisplayScreen = DISPLAY_FM;
 #endif
 	}
-	gAnotherVoiceID = VOICE_ID_SCANNING_STOP;
 	gPttWasPressed = true;
 }
 

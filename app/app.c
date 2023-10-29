@@ -32,7 +32,6 @@
 #include "app/uart.h"
 #endif
 #include "ARMCM0.h"
-#include "audio.h"
 #include "board.h"
 #include "bsp/dp32g030/gpio.h"
 #include "driver/backlight.h"
@@ -346,12 +345,10 @@ void APP_StartListening(FUNCTION_Type_t Function)
 					);
 			BK4819_EnableAGC();
 		}
-		if (gVoiceWriteIndex == 0) {
-			if (gRxVfo->IsAM) {
-				BK4819_SetAF(BK4819_AF_AM);
-			} else {
-				BK4819_SetAF(BK4819_AF_OPEN);
-			}
+		if (gRxVfo->IsAM) {
+			BK4819_SetAF(BK4819_AF_AM);
+		} else {
+			BK4819_SetAF(BK4819_AF_OPEN);
 		}
 		FUNCTION_Select(Function);
 		if (Function == FUNCTION_MONITOR
@@ -542,16 +539,10 @@ void APP_EndTransmission(void)
 
 void APP_Update(void)
 {
-	if (gFlagPlayQueuedVoice) {
-		AUDIO_PlayQueuedVoice();
-		gFlagPlayQueuedVoice = false;
-	}
-
 	if (gCurrentFunction == FUNCTION_TRANSMIT && gTxTimeoutReached) {
 		gTxTimeoutReached = false;
 		gFlagEndTransmission = true;
 		APP_EndTransmission();
-		AUDIO_PlayBeep(BEEP_500HZ_60MS_DOUBLE_BEEP);
 		RADIO_SetVfoState(VFO_STATE_TIMEOUT);
 		GUI_DisplayScreen();
 	}
@@ -568,7 +559,7 @@ void APP_Update(void)
 	}
 #endif
 
-	if (gScreenToDisplay != DISPLAY_SCANNER && gScanState != SCAN_OFF && gScheduleScanListen && !gPttIsPressed && gVoiceWriteIndex == 0) {
+	if (gScreenToDisplay != DISPLAY_SCANNER && gScanState != SCAN_OFF && gScheduleScanListen && !gPttIsPressed) {
 		if (IS_FREQ_CHANNEL(gNextMrChannel)) {
 			if (gCurrentFunction == FUNCTION_INCOMING) {
 				APP_StartListening(FUNCTION_RECEIVE);
@@ -587,7 +578,7 @@ void APP_Update(void)
 		gScheduleScanListen = false;
 	}
 
-	if (gCssScanMode == CSS_SCAN_MODE_SCANNING && gScheduleScanListen && gVoiceWriteIndex == 0) {
+	if (gCssScanMode == CSS_SCAN_MODE_SCANNING && gScheduleScanListen) {
 		MENU_SelectNextCode();
 		gScheduleScanListen = false;
 	}
@@ -602,7 +593,7 @@ void APP_Update(void)
 
 
 	if (gScreenToDisplay != DISPLAY_SCANNER && gEeprom.DUAL_WATCH != DUAL_WATCH_OFF) {
-		if (gScheduleDualWatch && gVoiceWriteIndex == 0) {
+		if (gScheduleDualWatch) {
 			if (gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF) {
 				if (!gPttIsPressed
 #if defined(ENABLE_FMRADIO)
@@ -653,11 +644,9 @@ void APP_Update(void)
 		gSchedulePowerSave = false;
 	}
 
-	if (gBatterySaveCountdownExpired && gCurrentFunction == FUNCTION_POWER_SAVE && gVoiceWriteIndex == 0) {
+	if (gBatterySaveCountdownExpired && gCurrentFunction == FUNCTION_POWER_SAVE) {
 		if (gRxIdleMode) {
 			BK4819_EnableRX();
-
-
 
 			if (gEeprom.DUAL_WATCH != DUAL_WATCH_OFF && gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF) {
 				DUALWATCH_Alternate();
@@ -993,9 +982,6 @@ void APP_TimeSlice500ms(void)
 				if (gVoltageMenuCountdown) {
 					gVoltageMenuCountdown--;
 					if (gVoltageMenuCountdown == 0) {
-						if (gInputBoxIndex || gDTMF_InputMode || gScreenToDisplay == DISPLAY_MENU) {
-							AUDIO_PlayBeep(BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL);
-						}
 						if (gScreenToDisplay == DISPLAY_SCANNER) {
 							BK4819_StopScan();
 							RADIO_ConfigureChannel(0, VFO_CONFIGURE_RELOAD);
@@ -1042,22 +1028,14 @@ void APP_TimeSlice500ms(void)
 		UI_DisplayBattery(gLowBatteryCountdown);
 		if (gCurrentFunction != FUNCTION_TRANSMIT) {
 			if (gLowBatteryCountdown < 30) {
-				if (gLowBatteryCountdown == 29 && !gChargingWithTypeC) {
-					AUDIO_PlayBeep(BEEP_500HZ_60MS_DOUBLE_BEEP);
-				}
 			} else {
 				gLowBatteryCountdown = 0;
 				if (!gChargingWithTypeC) {
-					AUDIO_PlayBeep(BEEP_500HZ_60MS_DOUBLE_BEEP);
-					AUDIO_SetVoiceID(0, VOICE_ID_LOW_VOLTAGE);
 					if (gBatteryDisplayLevel == 0) {
-						AUDIO_PlaySingleVoice(true);
 						gReducedService = true;
 						FUNCTION_Select(FUNCTION_POWER_SAVE);
 						ST7565_HardwareReset();
 						GPIO_ClearBit(&GPIOB->DATA, GPIOB_PIN_BACKLIGHT);
-					} else {
-						AUDIO_PlaySingleVoice(false);
 					}
 				}
 			}
@@ -1086,9 +1064,6 @@ void APP_TimeSlice500ms(void)
 		}
 		if (gDTMF_DecodeRing && gDTMF_DecodeRingCountdown) {
 			gDTMF_DecodeRingCountdown--;
-			if ((gDTMF_DecodeRingCountdown % 3) == 0) {
-				AUDIO_PlayBeep(BEEP_440HZ_500MS);
-			}
 			if (gDTMF_DecodeRingCountdown == 0) {
 				gDTMF_DecodeRing = false;
 			}
@@ -1180,7 +1155,6 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		BACKLIGHT_TurnOn();
 		if (gDTMF_DecodeRing) {
 			gDTMF_DecodeRing = false;
-			AUDIO_PlayBeep(BEEP_1KHZ_60MS_OPTIONAL);
 			if (Key != KEY_PTT) {
 				gPttWasReleased = true;
 				return;
@@ -1197,7 +1171,6 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 				if (bKeyHeld) {
 					return;
 				}
-				AUDIO_PlayBeep(BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL);
 				gKeypadLocked = 4;
 				gUpdateDisplay = true;
 				return;
@@ -1212,7 +1185,6 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			if (bKeyHeld) {
 				return;
 			}
-			AUDIO_PlayBeep(BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL);
 			gKeypadLocked = 4;
 			gUpdateDisplay = true;
 			return;
@@ -1224,7 +1196,6 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		if (!bKeyPressed || bKeyHeld) {
 			return;
 		}
-		AUDIO_PlayBeep(BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL);
 		return;
 	}
 
@@ -1323,17 +1294,10 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			}
 		} else if (gScreenToDisplay != DISPLAY_SCANNER) {
 			ACTION_Handle(Key, bKeyPressed, bKeyHeld);
-		} else if (!bKeyHeld && bKeyPressed) {
-			gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 		}
 	}
 
 Skip:
-	if (gBeepToPlay) {
-		AUDIO_PlayBeep(gBeepToPlay);
-		gBeepToPlay = BEEP_NONE;
-	}
-
 	if (gFlagAcceptSetting) {
 		MENU_AcceptSetting();
 		gFlagRefreshSetting = true;
@@ -1421,8 +1385,6 @@ Skip:
 		gFlagRefreshSetting = false;
 	}
 	if (gFlagStartScan) {
-		AUDIO_SetVoiceID(0, VOICE_ID_SCANNING_BEGIN);
-		AUDIO_PlaySingleVoice(true);
 		SCANNER_Start();
 		gRequestDisplayScreen = DISPLAY_SCANNER;
 		gFlagStartScan = false;
@@ -1430,13 +1392,6 @@ Skip:
 	if (gFlagPrepareTX) {
 		RADIO_PrepareTX();
 		gFlagPrepareTX = false;
-	}
-	if (gAnotherVoiceID != VOICE_ID_INVALID) {
-		if (gAnotherVoiceID < VOICE_ID_END) {
-			AUDIO_SetVoiceID(0, gAnotherVoiceID);
-		}
-		AUDIO_PlaySingleVoice(false);
-		gAnotherVoiceID = VOICE_ID_INVALID;
 	}
 	GUI_SelectNextDisplay(gRequestDisplayScreen);
 	gRequestDisplayScreen = DISPLAY_INVALID;

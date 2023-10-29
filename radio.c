@@ -19,7 +19,6 @@
 #if defined(ENABLE_FMRADIO)
 #include "app/fm.h"
 #endif
-#include "audio.h"
 #include "bsp/dp32g030/gpio.h"
 #include "dcs.h"
 #include "driver/bk4819.h"
@@ -677,7 +676,6 @@ void RADIO_PrepareTX(void)
 			State = VFO_STATE_TX_DISABLE;
 		}
 		RADIO_SetVfoState(State);
-		AUDIO_PlayBeep(BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL);
 		gDTMF_ReplyState = DTMF_REPLY_NONE;
 		return;
 	}

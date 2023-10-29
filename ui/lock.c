@@ -19,7 +19,6 @@
 #if defined(ENABLE_UART)
 #include "app/uart.h"
 #endif
-#include "audio.h"
 #include "driver/keyboard.h"
 #include "driver/st7565.h"
 #include "misc.h"
@@ -53,7 +52,6 @@ static void Render(void)
 void UI_DisplayLock(void)
 {
 	KEY_Code_t Key;
-	BEEP_Type_t Beep;
 
 	gUpdateDisplay = true;
 	memset(gInputBox, 10, sizeof(gInputBox));
@@ -76,21 +74,16 @@ void UI_DisplayLock(void)
 					case KEY_4: case KEY_5: case KEY_6: case KEY_7:
 					case KEY_8: case KEY_9:
 						INPUTBOX_Append(Key - KEY_0);
-						if (gInputBoxIndex < 6) {
-							Beep = BEEP_1KHZ_60MS_OPTIONAL;
-						} else {
+						if (gInputBoxIndex >= 6) {
 							uint32_t Password;
 
 							gInputBoxIndex = 0;
 							NUMBER_Get(gInputBox, &Password);
 							if ((gEeprom.POWER_ON_PASSWORD * 100) == Password) {
-								AUDIO_PlayBeep(BEEP_1KHZ_60MS_OPTIONAL);
 								return;
 							}
 							memset(gInputBox, 10, sizeof(gInputBox));
-							Beep = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 						}
-						AUDIO_PlayBeep(Beep);
 						gUpdateDisplay = true;
 						break;
 					case KEY_EXIT:
@@ -99,7 +92,6 @@ void UI_DisplayLock(void)
 							gInputBox[gInputBoxIndex] = 10;
 							gUpdateDisplay = true;
 						}
-						AUDIO_PlayBeep(BEEP_1KHZ_60MS_OPTIONAL);
 					default:
 						break;
 					}

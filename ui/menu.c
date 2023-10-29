@@ -33,28 +33,30 @@ static const char MenuList[][7] = {
 	"SQL",    "STEP",    "TXP",    "R_DCS",
 	"R_CTCS", "T_DCS",   "T_CTCS", "SFT-D",
 	// 0x08
-	"OFFSET",   "W/N",   "BCL", "WX",
-	"MEM-CH", "SAVE",  "ABR", "TDR",
+	"OFFSET", "W/N",     "SCR",    "BCL",
+	"MEM-CH", "SAVE",    "VOX",    "ABR",
 	// 0x10
-	"BEEP",  "TOT",    "VOICE",  "SC-REV",
-	"MDF",   "AUTOLK", "S-ADD1", "S-ADD2",
+	"TDR",    "WX",      "BEEP",   "TOT",
+	"VOICE",  "SC-REV",  "MDF",    "AUTOLK",
 	// 0x18
-	"STE",    "RP-STE", "MIC",    "1-CALL",
-	"S-LIST", "SLIST1", "SLIST2", "ANI-ID",
+	"S-ADD1", "S-ADD2",  "STE",    "RP-STE",
+	"MIC",    "1-CALL",  "S-LIST", "SLIST1",
 	// 0x20
-	"UPCODE", "DWCODE", "D-ST",   "D-RSP",
-	"D-HOLD", "D-PRE",  "PTT-ID", "D-DCD",
+	"SLIST2",
+		             "ANI-ID", "UPCODE",
+	"DWCODE", "D-ST",    "D-RSP",  "D-HOLD",
 	// 0x28
-	"D-LIST", "PONMSG", "ROGER", "VOL",
-	"AM",     "DEL-CH", "RESET", "350TX",
+	"D-PRE",  "PTT-ID",  "D-DCD",  "D-LIST",
+	"PONMSG", "ROGER",   "VOL",    "AM",
 	// 0x30
-	"F-LOCK", "200TX",  "500TX", "350EN",
+	          "DEL-CH",  "RESET",  "350TX",
+	"F-LOCK", "200TX",   "500TX",  "350EN",
 	// 0x38
-
+	"SCREN",
 };
 
 static const uint16_t gSubMenu_Step[] = {
-	250,
+	125,
 	500,
 	625,
 	1000,
@@ -97,12 +99,6 @@ static const char gSubMenu_CHAN[3][7] = {
 	"OFF",
 	"CHAN_A",
 	"CHAN_B",
-};
-
-static const char gSubMenu_VOICE[3][4] = {
-	"OFF",
-	"CHI",
-	"ENG",
 };
 
 static const char gSubMenu_SC_REV[3][3] = {
@@ -263,7 +259,6 @@ void UI_DisplayMenu(void)
 		strcpy(String, gSubMenu_W_N[gSubMenuSelection]);
 		break;
 
-	case MENU_SCR:
 	case MENU_ABR:
 		if (gSubMenuSelection == 0) {
 			strcpy(String, "OFF");
@@ -273,7 +268,6 @@ void UI_DisplayMenu(void)
 		break;
 
 	case MENU_BCL:
-	case MENU_BEEP:
 	case MENU_AUTOLK:
 	case MENU_S_ADD1:
 	case MENU_S_ADD2:
@@ -313,10 +307,6 @@ void UI_DisplayMenu(void)
 		} else {
 			sprintf(String, "%dmin", gSubMenuSelection);
 		}
-		break;
-
-	case MENU_VOICE:
-		strcpy(String, gSubMenu_VOICE[gSubMenuSelection]);
 		break;
 
 	case MENU_SC_REV:

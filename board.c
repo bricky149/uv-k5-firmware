@@ -553,7 +553,6 @@ void BOARD_EEPROM_Init(void)
 
 	// 0E90..0E97
 	EEPROM_ReadBuffer(0x0E90, Data, 8);
-	gEeprom.BEEP_CONTROL             = (Data[0] < 2) ? Data[0] : true;
 	gEeprom.KEY_1_SHORT_PRESS_ACTION = (Data[1] < 9) ? Data[1] : 3;
 	gEeprom.KEY_1_LONG_PRESS_ACTION  = (Data[2] < 9) ? Data[2] : 8;
 	gEeprom.KEY_2_SHORT_PRESS_ACTION = (Data[3] < 9) ? Data[3] : 1;
@@ -728,7 +727,7 @@ void BOARD_FactoryReset(bool bIsAll)
 {
 	uint8_t Template[8];
 	uint16_t i;
-
+	// DO NOT TOUCH
 	memset(Template, 0xFF, sizeof(Template));
 	for (i = 0x0C80; i < 0x1E00; i += 8) {
 		if (

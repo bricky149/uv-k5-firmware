@@ -18,7 +18,6 @@
 #include "app/fm.h"
 #endif
 #include "app/scanner.h"
-#include "audio.h"
 #include "functions.h"
 #include "helper/battery.h"
 #include "misc.h"
@@ -79,8 +78,6 @@ void SystickHandler(void)
 	}
 
 	DECREMENT_AND_TRIGGER(gTailNoteEliminationCountdown, gFlagTteComplete);
-
-	DECREMENT_AND_TRIGGER(gCountdownToPlayNextVoice, gFlagPlayQueuedVoice);
 
 #if defined(ENABLE_FMRADIO)
 	if (gFM_ScanState != FM_SCAN_OFF && gCurrentFunction != FUNCTION_MONITOR) {

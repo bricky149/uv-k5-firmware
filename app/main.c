@@ -23,7 +23,6 @@
 #include "app/generic.h"
 #include "app/main.h"
 #include "app/scanner.h"
-#include "audio.h"
 #include "dtmf.h"
 #include "frequencies.h"
 #include "misc.h"
@@ -46,8 +45,6 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		return;
 	}
 
-	gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
-
 	if (!gWasFKeyPressed) {
 		INPUTBOX_Append(Key);
 		gRequestDisplayScreen = DISPLAY_MAIN;
@@ -55,17 +52,14 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			uint16_t Channel;
 
 			if (gInputBoxIndex != 3) {
-				gAnotherVoiceID = (VOICE_ID_t)Key;
 				gRequestDisplayScreen = DISPLAY_MAIN;
 				return;
 			}
 			gInputBoxIndex = 0;
 			Channel = ((gInputBox[0] * 100) + (gInputBox[1] * 10) + gInputBox[2]) - 1;
 			if (!RADIO_CheckValidChannel(Channel, false, 0)) {
-				gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 				return;
 			}
-			gAnotherVoiceID = (VOICE_ID_t)Key;
 			gEeprom.MrChannel[Vfo] = (uint8_t)Channel;
 			gEeprom.ScreenChannel[Vfo] = (uint8_t)Channel;
 			gRequestSaveVFO = true;
@@ -76,7 +70,6 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			uint32_t Frequency;
 
 			if (gInputBoxIndex < 6) {
-				gAnotherVoiceID = (VOICE_ID_t)Key;
 				return;
 			}
 			gInputBoxIndex = 0;
@@ -86,7 +79,6 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 
 				for (i = 0; i < 7; i++) {
 					if (Frequency <= gUpperLimitFrequencyBandTable[i] && (gLowerLimitFrequencyBandTable[i] <= Frequency)) {
-						gAnotherVoiceID = (VOICE_ID_t)Key;
 						if (gTxVfo->Band != i) {
 							gTxVfo->Band = i;
 							gEeprom.ScreenChannel[Vfo] = i + FREQ_CHANNEL_FIRST;
@@ -105,30 +97,8 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 					}
 				}
 			}
-		} else {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		}
 		gRequestDisplayScreen = DISPLAY_MAIN;
-		gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 		return;
 	}
 	gWasFKeyPressed = false;
@@ -144,7 +114,6 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		if (!IS_FREQ_CHANNEL(gTxVfo->CHANNEL_SAVE)) {
 			gWasFKeyPressed = false;
 			gUpdateStatus = true;
-			gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 			return;
 		}
 		Band = gTxVfo->Band + 1;
@@ -160,7 +129,6 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		gEeprom.FreqChannel[Vfo] = FREQ_CHANNEL_FIRST + Band;
 		gRequestSaveVFO = true;
 		gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 		gRequestDisplayScreen = DISPLAY_MAIN;
 		break;
 
@@ -179,7 +147,6 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		gRequestSaveSettings = 1;
 		gFlagReconfigureVfos = true;
 		gRequestDisplayScreen = DISPLAY_MAIN;
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 		break;
 
 	case KEY_3:
@@ -188,7 +155,6 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 
 			if (IS_MR_CHANNEL(gTxVfo->CHANNEL_SAVE)) {
 				gEeprom.ScreenChannel[Vfo] = gEeprom.FreqChannel[gEeprom.TX_VFO];
-				gAnotherVoiceID = VOICE_ID_FREQUENCY_MODE;
 				gRequestSaveVFO = true;
 				gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
 				break;
@@ -196,21 +162,16 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			Channel = RADIO_FindNextChannel(gEeprom.MrChannel[gEeprom.TX_VFO], 1, false, 0);
 			if (Channel != 0xFF) {
 				gEeprom.ScreenChannel[Vfo] = Channel;
-				AUDIO_SetVoiceID(0, VOICE_ID_CHANNEL_MODE);
-				AUDIO_SetDigitVoice(1, Channel + 1);
-				gAnotherVoiceID = (VOICE_ID_t)0xFE;
 				gRequestSaveVFO = true;
 				gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
 				break;
 			}
 		}
-		gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 		break;
 
 	case KEY_4:
 		gWasFKeyPressed = false;
 		gUpdateStatus = true;
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 		gFlagStartScan = true;
 		gScanSingleFrequency = false;
 		gBackupCROSS_BAND_RX_TX = gEeprom.CROSS_BAND_RX_TX;
@@ -236,18 +197,13 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		if (RADIO_CheckValidChannel(gEeprom.CHAN_1_CALL, false, 0)) {
 			gEeprom.MrChannel[Vfo] = gEeprom.CHAN_1_CALL;
 			gEeprom.ScreenChannel[Vfo] = gEeprom.CHAN_1_CALL;
-			AUDIO_SetVoiceID(0, VOICE_ID_CHANNEL_MODE);
-			AUDIO_SetDigitVoice(1, gEeprom.CHAN_1_CALL + 1);
-			gAnotherVoiceID = (VOICE_ID_t)0xFE;
 			gRequestSaveVFO = true;
 			gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
 			break;
 		}
-		gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 		break;
 
 	default:
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 		gUpdateStatus = true;
 		gWasFKeyPressed = false;
 		break;
@@ -257,7 +213,6 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 static void MAIN_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
 {
 	if (!bKeyHeld && bKeyPressed) {
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 #if defined(ENABLE_FMRADIO)
 		if (gFmRadioMode) {
 			ACTION_FM();
@@ -270,12 +225,8 @@ static void MAIN_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
 			}
 			gInputBoxIndex--;
 			gInputBox[gInputBoxIndex] = 10;
-			if (gInputBoxIndex == 0) {
-				gAnotherVoiceID = VOICE_ID_CANCEL;
-			}
 		} else {
 			SCANNER_Stop();
-			gAnotherVoiceID = VOICE_ID_SCANNING_STOP;
 		}
 		gRequestDisplayScreen = DISPLAY_MAIN;
 	}
@@ -286,13 +237,11 @@ static void MAIN_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 	if (!bKeyHeld && bKeyPressed) {
 		bool bFlag;
 
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 		bFlag = gInputBoxIndex == 0;
 		gInputBoxIndex = 0;
 		if (bFlag) {
 			gFlagRefreshSetting = true;
 			gRequestDisplayScreen = DISPLAY_MENU;
-			gAnotherVoiceID = VOICE_ID_MENU;
 		} else {
 			gRequestDisplayScreen = DISPLAY_MAIN;
 		}
@@ -302,9 +251,6 @@ static void MAIN_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 static void MAIN_Key_STAR(bool bKeyPressed, bool bKeyHeld)
 {
 	if (gInputBoxIndex) {
-		if (!bKeyHeld && bKeyPressed) {
-			gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
-		}
 		return;
 	}
 	if (bKeyHeld || !bKeyPressed) {
@@ -326,9 +272,7 @@ static void MAIN_Key_STAR(bool bKeyPressed, bool bKeyHeld)
 			return;
 		}
 	} else {
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 		if (!gWasFKeyPressed) {
-			gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 			return;
 		}
 		gWasFKeyPressed = false;
@@ -338,8 +282,6 @@ static void MAIN_Key_STAR(bool bKeyPressed, bool bKeyHeld)
 			gScanSingleFrequency = true;
 			gBackupCROSS_BAND_RX_TX = gEeprom.CROSS_BAND_RX_TX;
 			gEeprom.CROSS_BAND_RX_TX = CROSS_BAND_OFF;
-		} else {
-			gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 		}
 		gPttWasReleased = true;
 	}
@@ -361,16 +303,12 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 			if (IS_FREQ_CHANNEL(Channel)) {
 				return;
 			}
-			AUDIO_SetDigitVoice(0, gTxVfo->CHANNEL_SAVE + 1);
-			gAnotherVoiceID = (VOICE_ID_t)0xFE;
 			return;
 		}
 	} else {
 		if (gInputBoxIndex) {
-			gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 			return;
 		}
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 	}
 
 	if (gScanState == SCAN_OFF) {
@@ -391,16 +329,6 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 			}
 			gEeprom.MrChannel[gEeprom.TX_VFO] = Next;
 			gEeprom.ScreenChannel[gEeprom.TX_VFO] = Next;
-			if (!bKeyHeld) {
-				AUDIO_SetDigitVoice(0, Next + 1);
-				gAnotherVoiceID = (VOICE_ID_t)0xFE;
-			}
-		} else {
-
-
-
-
-
 		}
 		gRequestSaveVFO = true;
 		gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
@@ -414,16 +342,12 @@ void MAIN_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
 #if defined(ENABLE_FMRADIO)
 	if (gFmRadioMode && Key != KEY_PTT && Key != KEY_EXIT) {
-		if (!bKeyHeld && bKeyPressed) {
-			gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
-		}
 		return;
 	}
 #endif
 	if (gDTMF_InputMode && !bKeyHeld && bKeyPressed) {
 		char Character = DTMF_GetCharacter(Key);
 		if (Character != 0xFF) {
-			gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 			DTMF_Append(Character);
 			gRequestDisplayScreen = DISPLAY_MAIN;
 			gPttWasReleased = true;
@@ -464,9 +388,6 @@ void MAIN_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		GENERIC_Key_PTT(bKeyPressed);
 		break;
 	default:
-		if (!bKeyHeld && bKeyPressed) {
-			gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
-		}
 		break;
 	}
 }

@@ -21,7 +21,6 @@
 #include "app/fm.h"
 #endif
 #include "app/scanner.h"
-#include "audio.h"
 #include "bsp/dp32g030/gpio.h"
 #include "driver/bk1080.h"
 #include "driver/bk4819.h"
@@ -55,7 +54,6 @@ void ACTION_Power(void)
 	}
 
 	gRequestSaveChannel = 1;
-	gAnotherVoiceID = VOICE_ID_POWER;
 	gRequestDisplayScreen = gScreenToDisplay;
 }
 
@@ -63,11 +61,6 @@ static void ACTION_Monitor(void)
 {
 	if (gCurrentFunction != FUNCTION_MONITOR) {
 		RADIO_SelectVfos();
-
-
-
-
-
 		RADIO_SetupRegisters(true);
 		APP_StartListening(FUNCTION_MONITOR);
 		return;
@@ -77,11 +70,6 @@ static void ACTION_Monitor(void)
 		gScheduleScanListen = false;
 		gScanPauseMode = true;
 	}
-
-
-
-
-
 
 	RADIO_SetupRegisters(true);
 #if defined(ENABLE_FMRADIO)
@@ -106,7 +94,6 @@ void ACTION_Scan(bool bRestart)
 			GUI_SelectNextDisplay(DISPLAY_FM);
 			if (gFM_ScanState != FM_SCAN_OFF) {
 				FM_PlayAndUpdate();
-				gAnotherVoiceID = VOICE_ID_SCANNING_STOP;
 			} else {
 				if (bRestart) {
 					gFM_AutoScan = true;
@@ -120,7 +107,6 @@ void ACTION_Scan(bool bRestart)
 				}
 				BK1080_GetFrequencyDeviation(Frequency);
 				FM_Tune(Frequency, 1, bRestart);
-				gAnotherVoiceID = VOICE_ID_SCANNING_BEGIN;
 			}
 		}
 	} else
@@ -131,11 +117,8 @@ void ACTION_Scan(bool bRestart)
 			GUI_SelectNextDisplay(DISPLAY_MAIN);
 			if (gScanState != SCAN_OFF) {
 				SCANNER_Stop();
-				gAnotherVoiceID = VOICE_ID_SCANNING_STOP;
 			} else {
 				CHANNEL_Next(true, 1);
-				AUDIO_SetVoiceID(0, VOICE_ID_SCANNING_BEGIN);
-				AUDIO_PlaySingleVoice(true);
 			}
 		}
 	}
@@ -168,7 +151,6 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 
 	if (gScreenToDisplay == DISPLAY_MAIN && gDTMF_InputMode) {
 		if (Key == KEY_SIDE1 && !bKeyHeld && bKeyPressed) {
-			gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 			if (gDTMF_InputIndex) {
 				gDTMF_InputIndex--;
 				gDTMF_InputBox[gDTMF_InputIndex] = '-';
@@ -178,7 +160,6 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 					return;
 				}
 			}
-			gAnotherVoiceID = VOICE_ID_CANCEL;
 			gRequestDisplayScreen = DISPLAY_MAIN;
 			gDTMF_InputMode = false;
 		}
@@ -194,7 +175,6 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		Long = gEeprom.KEY_2_LONG_PRESS_ACTION;
 	}
 	if (!bKeyHeld && bKeyPressed) {
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 		return;
 	}
 	if (bKeyHeld || bKeyPressed) {

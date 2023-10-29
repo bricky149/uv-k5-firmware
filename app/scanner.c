@@ -16,7 +16,6 @@
 
 #include "app/generic.h"
 #include "app/scanner.h"
-#include "audio.h"
 #include "driver/bk4819.h"
 #include "frequencies.h"
 #include "misc.h"
@@ -49,31 +48,25 @@ static void SCANNER_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		if (gScannerEditState == 1) {
 			uint16_t Channel;
 
-			gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 			INPUTBOX_Append(Key);
 			gRequestDisplayScreen = DISPLAY_SCANNER;
 			if (gInputBoxIndex < 3) {
-				gAnotherVoiceID = (VOICE_ID_t)Key;
 				return;
 			}
 			gInputBoxIndex = 0;
 			Channel = ((gInputBox[0] * 100) + (gInputBox[1] * 10) + gInputBox[2]) - 1;
 			if (IS_MR_CHANNEL(Channel)) {
-				gAnotherVoiceID = (VOICE_ID_t)Key;
 				gShowChPrefix = RADIO_CheckValidChannel(Channel, false, 0);
 				gScanChannel = (uint8_t)Channel;
 				return;
 			}
 		}
-		gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 	}
 }
 
 static void SCANNER_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
 {
 	if (!bKeyHeld && bKeyPressed) {
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
-
 		switch (gScannerEditState) {
 		case 0:
 			gRequestDisplayScreen = DISPLAY_MAIN;
@@ -82,7 +75,6 @@ static void SCANNER_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
 			gFlagStopScan = true;
 			gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
 			gFlagResetVfos = true;
-			gAnotherVoiceID = VOICE_ID_CANCEL;
 			break;
 
 		case 1:
@@ -96,7 +88,6 @@ static void SCANNER_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
 
 		case 2:
 			gScannerEditState = 0;
-			gAnotherVoiceID = VOICE_ID_CANCEL;
 			gRequestDisplayScreen = DISPLAY_SCANNER;
 			break;
 		}
@@ -114,23 +105,18 @@ static void SCANNER_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 		return;
 	}
 	if (gScanCssState == SCAN_CSS_STATE_OFF && !gScanSingleFrequency) {
-		gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 		return;
 	}
 
 	if (gScanCssState == SCAN_CSS_STATE_SCANNING) {
 		if (gScanSingleFrequency) {
-			gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 			return;
 		}
 	}
 
 	if (gScanCssState == SCAN_CSS_STATE_FAILED) {
-		gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 		return;
 	}
-
-	gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 
 	switch (gScannerEditState) {
 	case 0:
@@ -168,13 +154,11 @@ static void SCANNER_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 			gScannerEditState = 2;
 		}
 		gScanCssState = SCAN_CSS_STATE_FOUND;
-		gAnotherVoiceID = VOICE_ID_MEMORY_CHANNEL;
 		gRequestDisplayScreen = DISPLAY_SCANNER;
 		break;
 
 	case 1:
 		if (gInputBoxIndex == 0) {
-			gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 			gRequestDisplayScreen = DISPLAY_SCANNER;
 			gScannerEditState = 2;
 		}
@@ -207,14 +191,12 @@ static void SCANNER_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 		}
 		gTxVfo->CHANNEL_SAVE = Channel;
 		gEeprom.ScreenChannel[gEeprom.TX_VFO] = Channel;
-		gAnotherVoiceID = VOICE_ID_CONFIRM;
 		gRequestDisplayScreen = DISPLAY_SCANNER;
 		gRequestSaveChannel = 2;
 		gScannerEditState = 0;
 		break;
 
 	default:
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 		break;
 	}
 }
@@ -222,7 +204,6 @@ static void SCANNER_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 static void SCANNER_Key_STAR(bool bKeyPressed, bool bKeyHeld)
 {
 	if ((!bKeyHeld) && (bKeyPressed)) {
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 		gFlagStartScan = true;
 	}
 	return;
@@ -239,14 +220,11 @@ static void SCANNER_Key_UP_DOWN(bool bKeyPressed, bool pKeyHeld, int8_t Directio
 			return;
 		}
 		gInputBoxIndex = 0;
-		gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 	}
 	if (gScannerEditState == 1) {
 		gScanChannel = NUMBER_AddWithWraparound(gScanChannel, Direction, 0, 199);
 		gShowChPrefix = RADIO_CheckValidChannel(gScanChannel, false, 0);
 		gRequestDisplayScreen = DISPLAY_SCANNER;
-	} else {
-		gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 	}
 }
 
@@ -277,9 +255,6 @@ void SCANNER_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		GENERIC_Key_PTT(bKeyPressed);
 		break;
 	default:
-		if (!bKeyHeld && bKeyPressed) {
-			gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
-		}
 		break;
 	}
 }

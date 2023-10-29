@@ -53,7 +53,6 @@ OBJS += app/scanner.o
 ifeq ($(ENABLE_UART),1)
 OBJS += app/uart.o
 endif
-OBJS += audio.o
 OBJS += bitmaps.o
 OBJS += board.o
 OBJS += dcs.o
@@ -79,7 +78,6 @@ OBJS += ui/rssi.o
 OBJS += ui/scanner.o
 OBJS += ui/status.o
 OBJS += ui/ui.o
-OBJS += ui/welcome.o
 OBJS += version.o
 
 OBJS += main.o

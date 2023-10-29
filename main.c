@@ -17,7 +17,6 @@
 #include <string.h>
 #include "app/app.h"
 #include "app/dtmf.h"
-#include "audio.h"
 #include "bsp/dp32g030/gpio.h"
 #include "bsp/dp32g030/syscon.h"
 #include "board.h"
@@ -35,23 +34,20 @@
 #include "radio.h"
 #include "settings.h"
 #include "ui/lock.h"
-#include "ui/welcome.h"
 
 #if defined(ENABLE_UART)
 static const char Version[] = "UV-K5 Firmware, Open Edition, OEFW-"GIT_HASH"\r\n";
 #endif
 
+#if defined(ENABLE_UART)
 void _putchar(char c)
 {
-#if defined(ENABLE_UART)
 	UART_Send((uint8_t *)&c, 1);
-#endif
 }
+#endif
 
 void Main(void)
 {
-	uint8_t i;
-
 	// Enable clock gating of blocks we need.
 	SYSCON_DEV_CLK_GATE = 0
 		| SYSCON_DEV_CLK_GATE_GPIOA_BITS_ENABLE
@@ -88,7 +84,7 @@ void Main(void)
 	RADIO_SelectVfos();
 	RADIO_SetupRegisters(true);
 
-	for (i = 0; i < 4; i++) {
+	for (uint8_t i = 0; i < 4; i++) {
 		BOARD_ADC_GetBatteryInfo(&gBatteryVoltages[i], &gBatteryCurrent);
 	}
 
@@ -99,11 +95,8 @@ void Main(void)
 		gReducedService = true;
 	} else {
 		BOOT_Mode_t BootMode;
-		uint8_t Channel;
 
-		UI_DisplayWelcome();
 		BACKLIGHT_TurnOn();
-		SYSTEM_DelayMs(1000);
 		gMenuListCount = 49;
 
 		BootMode = BOOT_GetMode();
@@ -117,15 +110,6 @@ void Main(void)
 
 		GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_VOICE_0);
 		gUpdateStatus = true;
-		AUDIO_SetVoiceID(0, VOICE_ID_WELCOME);
-		Channel = gEeprom.ScreenChannel[gEeprom.TX_VFO];
-		if (IS_MR_CHANNEL(Channel)) {
-			AUDIO_SetVoiceID(1, VOICE_ID_CHANNEL_MODE);
-			AUDIO_SetDigitVoice(2, Channel + 1);
-		} else if (IS_FREQ_CHANNEL(Channel)) {
-			AUDIO_SetVoiceID(1, VOICE_ID_FREQUENCY_MODE);
-		}
-		AUDIO_PlaySingleVoice(0);
 	}
 
 	// Everything is initialised, set SLEEP* bits
