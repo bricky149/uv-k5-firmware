@@ -22,6 +22,7 @@
 extern char gInputBox[8];
 extern uint8_t gInputBoxIndex;
 
+uint16_t INPUTBOX_GetValue(void);
 void INPUTBOX_Append(char Digit);
 
 #endif

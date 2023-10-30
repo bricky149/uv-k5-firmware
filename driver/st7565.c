@@ -21,7 +21,8 @@
 #include "driver/spi.h"
 #include "driver/st7565.h"
 #include "driver/system.h"
-#include "misc.h"
+
+#define ARRAY_SIZE(a)    (sizeof(a) / sizeof(a[0]))
 
 uint8_t gStatusLine[128];
 uint8_t gFrameBuffer[7][128];

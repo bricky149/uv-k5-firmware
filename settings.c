@@ -22,6 +22,7 @@
 #if defined(ENABLE_UART)
 #include "driver/uart.h"
 #endif
+#include "helper/battery.h"
 #include "misc.h"
 #include "settings.h"
 
@@ -75,7 +76,7 @@ void SETTINGS_SaveVfoIndices(void)
 void SETTINGS_SaveSettings(void)
 {
 	uint8_t State[8];
-	uint32_t Password[2];
+	uint32_t Buf[2];
 
 #if defined(ENABLE_UART)
 	UART_LogSend("spub\r\n", 6);
@@ -114,10 +115,10 @@ void SETTINGS_SaveSettings(void)
 
 	EEPROM_WriteBuffer(0x0E90, State);
 
-	Password[0] = gEeprom.POWER_ON_PASSWORD;
-	Password[1] = 0xFF;
+	Buf[0] = gEeprom.POWER_ON_PASSWORD;
+	Buf[1] = 0xFF;
 
-	EEPROM_WriteBuffer(0x0E98, Password);
+	EEPROM_WriteBuffer(0x0E98, Buf);
 
 	State[0] = 0xFF;
 	State[1] = 0xFF;
@@ -151,6 +152,12 @@ void SETTINGS_SaveSettings(void)
 	State[7] = 0xFF;
 
 	EEPROM_WriteBuffer(0x0F40, State);
+
+	EEPROM_ReadBuffer(0x1F48, Buf, sizeof(Buf));
+	Buf[0] = gBatteryCalibration[4];
+	Buf[1] = gBatteryCalibration[5];
+
+	EEPROM_WriteBuffer(0x1F48, Buf);
 }
 
 void SETTINGS_SaveChannel(uint8_t Channel, uint8_t VFO, const VFO_Info_t *pVFO, uint8_t Mode)

@@ -61,7 +61,6 @@ void FUNCTION_Init(void)
 	gFoundCTCSSCountdown = 0;
 	gFoundCDCSSCountdown = 0;
 	gEndOfRxDetectedMaybe = false;
-	gSystickCountdown2 = 0;
 }
 
 void FUNCTION_Select(FUNCTION_Type_t Function)

@@ -115,7 +115,6 @@ volatile bool gNextTimeslice;
 bool gUpdateDisplay;
 bool gF_LOCK;
 uint8_t gShowChPrefix;
-volatile uint16_t gSystickCountdown2;
 volatile uint8_t gFoundCDCSSCountdown;
 volatile uint8_t gFoundCTCSSCountdown;
 volatile bool gTxTimeoutReached;

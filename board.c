@@ -500,7 +500,7 @@ void BOARD_EEPROM_Init(void)
 	// 0E70..0E77
 	EEPROM_ReadBuffer(0x0E70, Data, 8);
 	gEeprom.CHAN_1_CALL      = IS_MR_CHANNEL(Data[0]) ? Data[0] : MR_CHANNEL_FIRST;
-	gEeprom.SQUELCH_LEVEL    = (Data[1] < 10) ? Data[1] : 1;
+	gEeprom.SQUELCH_LEVEL    = (Data[1] < 10) ? Data[1] : 2;
 	gEeprom.TX_TIMEOUT_TIMER = (Data[2] < 11) ? Data[2] : 2;
 	gEeprom.KEY_LOCK         = (Data[4] <  2) ? Data[4] : 0;
 	gEeprom.MIC_SENSITIVITY  = (Data[7] <  5) ? Data[7] : 3;

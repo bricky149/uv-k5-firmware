@@ -76,6 +76,7 @@ enum {
 	MENU_500TX,
 	MENU_350EN,
 	MENU_SCREN,
+	MENU_BATCAL,
 };
 
 extern bool gIsInSubMenu;

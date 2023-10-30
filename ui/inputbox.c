@@ -20,12 +20,33 @@
 char gInputBox[8];
 uint8_t gInputBoxIndex;
 
+uint16_t INPUTBOX_GetValue(void)
+{
+	int i = gInputBoxIndex;
+	if (i > 7)
+		i = 7;
+
+	uint16_t val = 0;
+	uint16_t mul = 1;
+	while (--i >= 0)
+	{
+		if (gInputBox[i] < 10)
+		{
+			val += gInputBox[i] * mul;
+			mul *= 10;
+		}
+	}
+
+	return val;
+}
+
 void INPUTBOX_Append(char Digit)
 {
+	if (gInputBoxIndex > sizeof(gInputBox)) {
+		return;
+	}
 	if (gInputBoxIndex == 0) {
 		memset(gInputBox, 10, sizeof(gInputBox));
-	} else if (gInputBoxIndex >= sizeof(gInputBox)) {
-		return;
 	}
 	gInputBox[gInputBoxIndex++] = Digit;
 }

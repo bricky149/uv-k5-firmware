@@ -97,7 +97,7 @@ void Main(void)
 		BOOT_Mode_t BootMode;
 
 		BACKLIGHT_TurnOn();
-		gMenuListCount = 49;
+		gMenuListCount = 49; // Does not include hidden items
 
 		BootMode = BOOT_GetMode();
 		if (gEeprom.POWER_ON_PASSWORD < 1000000) {

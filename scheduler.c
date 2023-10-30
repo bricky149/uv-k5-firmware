@@ -44,11 +44,8 @@ void SystickHandler(void)
 		gNextTimeslice500ms = true;
 		DECREMENT_AND_TRIGGER(gTxTimerCountdown, gTxTimeoutReached);
 	}
-	if ((gGlobalSysTickCounter & 3) == 0) {
+	if ((gGlobalSysTickCounter % 4) == 0) {
 		gNextTimeslice40ms = true;
-	}
-	if (gSystickCountdown2) {
-		gSystickCountdown2--;
 	}
 	if (gFoundCDCSSCountdown) {
 		gFoundCDCSSCountdown--;

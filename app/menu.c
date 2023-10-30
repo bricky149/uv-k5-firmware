@@ -23,9 +23,11 @@
 #include "board.h"
 #include "bsp/dp32g030/gpio.h"
 #include "driver/backlight.h"
+#include "driver/eeprom.h"
 #include "driver/gpio.h"
 #include "driver/keyboard.h"
 #include "frequencies.h"
+#include "helper/battery.h"
 #include "misc.h"
 #include "settings.h"
 #include "ui/inputbox.h"
@@ -48,7 +50,7 @@ void MENU_StopCssScan(void)
 	RADIO_SetupRegisters(true);
 }
 
-int MENU_GetLimits(uint8_t Cursor, uint8_t *pMin, uint8_t *pMax)
+int MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 {
 	switch (Cursor) {
 	case MENU_SQL:
@@ -128,6 +130,10 @@ int MENU_GetLimits(uint8_t Cursor, uint8_t *pMin, uint8_t *pMax)
 		*pMin = 1;
 		*pMax = 16;
 		break;
+	case MENU_BATCAL:
+		*pMin = 1600;  // 0
+		*pMax = 2200;  // 2300
+		break;
 	default:
 		return -1;
 	}
@@ -137,7 +143,7 @@ int MENU_GetLimits(uint8_t Cursor, uint8_t *pMin, uint8_t *pMax)
 
 void MENU_AcceptSetting(void)
 {
-	uint8_t Min, Max;
+	uint16_t Min, Max;
 	uint8_t Code;
 	FREQ_Config_t *pConfig = &gTxVfo->ConfigRX;
 
@@ -397,6 +403,16 @@ void MENU_AcceptSetting(void)
 		gFlagResetVfos = true;
 		return;
 
+	case MENU_BATCAL:
+		gBatteryCalibration[0] = (520ul * gSubMenuSelection) / 760;  // 5.20V empty, blinking above this value, reduced functionality below
+		gBatteryCalibration[1] = (700ul * gSubMenuSelection) / 760;  // 7.00V,  ~5%, 1 bars above this value
+		gBatteryCalibration[2] = (745ul * gSubMenuSelection) / 760;  // 7.45V, ~17%, 2 bars above this value
+		gBatteryCalibration[3] =          gSubMenuSelection;         // 7.6V,  ~29%, 3 bars above this value
+		gBatteryCalibration[4] = (788ul * gSubMenuSelection) / 760;  // 7.88V, ~65%, 4 bars above this value
+		gBatteryCalibration[5] = 2300;
+		EEPROM_WriteBuffer(0x1F40, gBatteryCalibration);
+		break;
+
 	default:
 		return;
 	}
@@ -444,7 +460,7 @@ void MENU_SelectNextCode(void)
 
 static void MENU_ClampSelection(int8_t Direction)
 {
-	uint8_t Min, Max;
+	uint16_t Min, Max;
 
 	if (!MENU_GetLimits(gMenuCursor, &Min, &Max)) {
 		uint8_t Selection = gSubMenuSelection;
@@ -668,6 +684,10 @@ void MENU_ShowCurrentSetting(void)
 	case MENU_350EN:
 		gSubMenuSelection = gSetting_350EN;
 		break;
+
+	case MENU_BATCAL:
+		gSubMenuSelection = gBatteryCalibration[3];
+		break;
 	}
 }
 
@@ -731,8 +751,18 @@ static void MENU_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 				gSubMenuSelection = Value;
 				return;
 			}
+		}
+		if (gMenuCursor == MENU_BATCAL) {
+			gSubMenuSelection = INPUTBOX_GetValue();
+
+			if (gInputBoxIndex < 4)
+			{	// not yet enough characters
+				return;
+			}
+			gInputBoxIndex = 0;
+			return;
 		} else {
-			uint8_t Min, Max;
+			uint16_t Min, Max;
 
 			if (!MENU_GetLimits(gMenuCursor, &Min, &Max)) {
 				uint8_t Offset;
@@ -953,8 +983,11 @@ void MENU_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	default:
 		break;
 	}
-	if (gScreenToDisplay == DISPLAY_MENU && gMenuCursor == MENU_VOL) {
-		gVoltageMenuCountdown = 0x20;
+	if (gScreenToDisplay == DISPLAY_MENU) {
+		if (gMenuCursor == MENU_VOL || gMenuCursor == MENU_BATCAL)
+		{
+			gVoltageMenuCountdown = 0x20;
+		}
 	}
 }
 

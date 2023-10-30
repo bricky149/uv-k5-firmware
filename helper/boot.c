@@ -57,7 +57,7 @@ void BOOT_ProcessMode(BOOT_Mode_t Mode)
 		gMenuCursor = MENU_350TX;
 		gSubMenuSelection = gSetting_350TX;
 		GUI_SelectNextDisplay(DISPLAY_MENU);
-		gMenuListCount = 55;
+		gMenuListCount = 56; // Does include hidden items
 		gF_LOCK = true;
 	} else {
 		GUI_SelectNextDisplay(DISPLAY_MAIN);

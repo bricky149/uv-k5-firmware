@@ -52,7 +52,7 @@ static const char MenuList[][7] = {
 	          "DEL-CH",  "RESET",  "350TX",
 	"F-LOCK", "200TX",   "500TX",  "350EN",
 	// 0x38
-	"SCREN",
+	"SCREN", "BATCAL",
 };
 
 static const uint16_t gSubMenu_Step[] = {
@@ -385,6 +385,14 @@ void UI_DisplayMenu(void)
 
 	case MENU_F_LOCK:
 		strcpy(String, gSubMenu_F_LOCK[gSubMenuSelection]);
+		break;
+
+	case MENU_BATCAL:
+		const uint16_t vol = (uint32_t)gBatteryVoltageAverage * gBatteryCalibration[3] / gSubMenuSelection;
+		if (!gIsInSubMenu)
+			sprintf(String, "%u.%02uV\n%d", vol / 100, vol % 100, gSubMenuSelection);
+		else
+			sprintf(String, "%u.%02uV\n(%#4d)\n%#4d", vol / 100, vol % 100, gBatteryCalibration[3], gSubMenuSelection);
 		break;
 	}
 

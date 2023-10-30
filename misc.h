@@ -20,8 +20,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define ARRAY_SIZE(a)    (sizeof(a) / sizeof(a[0]))
-
 #define IS_MR_CHANNEL(x) ((x) <= MR_CHANNEL_LAST)
 #define IS_FREQ_CHANNEL(x) ((x) >= FREQ_CHANNEL_FIRST && (x) <= FREQ_CHANNEL_LAST)
 #define IS_VALID_CHANNEL(x) ((x) < LAST_CHANNEL)
@@ -155,7 +153,6 @@ extern volatile bool gNextTimeslice;
 extern bool gUpdateDisplay;
 extern bool gF_LOCK;
 extern uint8_t gShowChPrefix;
-extern volatile uint16_t gSystickCountdown2;
 extern volatile uint8_t gFoundCDCSSCountdown;
 extern volatile uint8_t gFoundCTCSSCountdown;
 extern volatile bool gTxTimeoutReached;
