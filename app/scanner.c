@@ -42,28 +42,6 @@ bool gScanUseCssResult;
 int8_t gScanState;
 bool bScanKeepFrequency;
 
-static void SCANNER_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
-{
-	if (!bKeyHeld && bKeyPressed) {
-		if (gScannerEditState == 1) {
-			uint16_t Channel;
-
-			INPUTBOX_Append(Key);
-			gRequestDisplayScreen = DISPLAY_SCANNER;
-			if (gInputBoxIndex < 3) {
-				return;
-			}
-			gInputBoxIndex = 0;
-			Channel = ((gInputBox[0] * 100) + (gInputBox[1] * 10) + gInputBox[2]) - 1;
-			if (IS_MR_CHANNEL(Channel)) {
-				gShowChPrefix = RADIO_CheckValidChannel(Channel, false, 0);
-				gScanChannel = (uint8_t)Channel;
-				return;
-			}
-		}
-	}
-}
-
 static void SCANNER_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
 {
 	if (!bKeyHeld && bKeyPressed) {
@@ -201,14 +179,6 @@ static void SCANNER_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 	}
 }
 
-static void SCANNER_Key_STAR(bool bKeyPressed, bool bKeyHeld)
-{
-	if ((!bKeyHeld) && (bKeyPressed)) {
-		gFlagStartScan = true;
-	}
-	return;
-}
-
 static void SCANNER_Key_UP_DOWN(bool bKeyPressed, bool pKeyHeld, int8_t Direction)
 {
 	if (pKeyHeld) {
@@ -231,11 +201,6 @@ static void SCANNER_Key_UP_DOWN(bool bKeyPressed, bool pKeyHeld, int8_t Directio
 void SCANNER_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
 	switch (Key) {
-	case KEY_0: case KEY_1: case KEY_2: case KEY_3:
-	case KEY_4: case KEY_5: case KEY_6: case KEY_7:
-	case KEY_8: case KEY_9:
-		SCANNER_Key_DIGITS(Key, bKeyPressed, bKeyHeld);
-		break;
 	case KEY_MENU:
 		SCANNER_Key_MENU(bKeyPressed, bKeyHeld);
 		break;
@@ -248,11 +213,8 @@ void SCANNER_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	case KEY_EXIT:
 		SCANNER_Key_EXIT(bKeyPressed, bKeyHeld);
 		break;
-	case KEY_STAR:
-		SCANNER_Key_STAR(bKeyPressed, bKeyHeld);
-		break;
-	case KEY_PTT:
-		GENERIC_Key_PTT(bKeyPressed);
+	case KEY_F:
+		GENERIC_Key_F(bKeyPressed, bKeyHeld);
 		break;
 	default:
 		break;
@@ -267,12 +229,6 @@ void SCANNER_Start(void)
 	BK4819_StopScan();
 	RADIO_SelectVfos();
 
-
-
-
-
-
-
 	BackupStep = gRxVfo->STEP_SETTING;
 	BackupFrequency = gRxVfo->StepFrequency;
 
@@ -282,9 +238,6 @@ void SCANNER_Start(void)
 	gRxVfo->StepFrequency = BackupFrequency;
 
 	RADIO_SetupRegisters(true);
-
-
-
 
 	if (gScanSingleFrequency) {
 		gScanCssState = SCAN_CSS_STATE_SCANNING;

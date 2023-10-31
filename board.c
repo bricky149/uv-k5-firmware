@@ -550,10 +550,10 @@ void BOARD_EEPROM_Init(void)
 	EEPROM_ReadBuffer(0x0E90, Data, 7);
 	gEeprom.KEY_1_SHORT_PRESS_ACTION = (Data[1] < 6) ? Data[1] : 3;
 	gEeprom.KEY_1_LONG_PRESS_ACTION  = (Data[2] < 6) ? Data[2] : 4;
-	gEeprom.KEY_2_SHORT_PRESS_ACTION = (Data[3] < 6) ? Data[3] : 1;
-	gEeprom.KEY_2_LONG_PRESS_ACTION  = (Data[4] < 6) ? Data[4] : 2;
+	gEeprom.KEY_2_SHORT_PRESS_ACTION = (Data[3] < 6) ? Data[3] : 2;
+	gEeprom.KEY_2_LONG_PRESS_ACTION  = (Data[4] < 6) ? Data[4] : 1;
 	gEeprom.SCAN_RESUME_MODE         = (Data[5] < 3) ? Data[5] : SCAN_RESUME_CO;
-	gEeprom.AUTO_KEYPAD_LOCK         = (Data[6] < 2) ? Data[6] : 1;
+	gEeprom.AUTO_KEYPAD_LOCK         = (Data[6] < 2) ? Data[6] : 0;
 
 	// 0E98..0E9F
 	EEPROM_ReadBuffer(0x0E98, Data, 4);

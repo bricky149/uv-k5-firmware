@@ -648,6 +648,8 @@ void RADIO_PrepareTX(void)
 			State = VFO_STATE_BAT_LOW;
 		} else if (gBatteryDisplayLevel == 6) {
 			State = VFO_STATE_VOL_HIGH;
+		} else if (gEeprom.KEY_LOCK) {
+			State = VFO_STATE_DISALLOWED;
 		} else {
 			goto Skip;
 		}

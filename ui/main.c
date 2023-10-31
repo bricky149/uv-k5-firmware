@@ -180,13 +180,10 @@ void UI_DisplayMain(void)
 			}
 		}
 		if (State) {
-			uint8_t Width = 10;
-
 			memset(String, 0, sizeof(String));
 			switch (State) {
 			case 1:
 				strcpy(String, "BUSY");
-				Width = 15;
 				break;
 			case 2:
 				strcpy(String, "BAT LOW");
@@ -197,12 +194,14 @@ void UI_DisplayMain(void)
 			case 4:
 				strcpy(String, "TIMEOUT");
 				break;
+			case 5:
+				sprintf(String, "DISALLOW");
+				break;
 			case 6:
 				sprintf(String, "VOL HIGH");
-				Width = 8;
 				break;
 			}
-			UI_PrintString(String, 31, 111, i * 4, Width, true);
+			UI_PrintString(String, 31, 111, i * 4, 10, true);
 		} else {
 			if (gInputBoxIndex && IS_FREQ_CHANNEL(gEeprom.ScreenChannel[i]) && gEeprom.TX_VFO == i) {
 				UI_DisplayFrequency(gInputBox, 31, i * 4, true, false);

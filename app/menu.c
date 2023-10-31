@@ -842,26 +842,6 @@ static void MENU_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 	}
 }
 
-static void MENU_Key_STAR(bool bKeyPressed, bool bKeyHeld)
-{
-	if (!bKeyHeld && bKeyPressed) {
-		RADIO_SelectVfos();
-		if (!gRxVfo->IsAM) {
-			if (gMenuCursor == MENU_R_CTCS || gMenuCursor == MENU_R_DCS) {
-				if (gCssScanMode == CSS_SCAN_MODE_OFF) {
-					MENU_StartCssScan(1);
-					gRequestDisplayScreen = DISPLAY_MENU;
-				} else {
-					MENU_StopCssScan();
-					gRequestDisplayScreen = DISPLAY_MENU;
-				}
-			}
-			gPttWasReleased = true;
-			return;
-		}
-	}
-}
-
 static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 {
 	if (!bKeyPressed) {
@@ -954,14 +934,8 @@ void MENU_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	case KEY_EXIT:
 		MENU_Key_EXIT(bKeyPressed, bKeyHeld);
 		break;
-	case KEY_STAR:
-		MENU_Key_STAR(bKeyPressed, bKeyHeld);
-		break;
 	case KEY_F:
 		GENERIC_Key_F(bKeyPressed, bKeyHeld);
-		break;
-	case KEY_PTT:
-		GENERIC_Key_PTT(bKeyPressed);
 		break;
 	default:
 		break;

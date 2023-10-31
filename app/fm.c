@@ -468,9 +468,6 @@ void FM_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	case KEY_F:
 		GENERIC_Key_F(bKeyPressed, bKeyHeld);
 		break;
-	case KEY_PTT:
-		GENERIC_Key_PTT(bKeyPressed);
-		break;
 	default:
 		break;
 	}

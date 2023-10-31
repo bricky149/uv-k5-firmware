@@ -184,6 +184,7 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			return;
 		}
 	}
+
 	switch (Short) {
 	case 1:
 		ACTION_FlashLight();
@@ -195,7 +196,11 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		ACTION_Monitor();
 		break;
 	case 4:
-		ACTION_Scan(true);
+		// Work around bug where unlocking does
+		// not work while scan is running
+		if (!gEeprom.KEY_LOCK) {
+			ACTION_Scan(true);
+		}
 		break;
 	case 5:
 #if defined(ENABLE_FMRADIO)

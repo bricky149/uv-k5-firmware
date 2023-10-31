@@ -499,7 +499,7 @@ void APP_Update(void)
 		APP_HandleFunction();
 	}
 #if defined(ENABLE_FMRADIO)
-	if (gFmRadioCountdown) {
+	if (gFmRadioCountdown > 0) {
 		return;
 	}
 #endif
@@ -713,10 +713,10 @@ void APP_TimeSlice10ms(void)
 	// Skipping authentic device checks
 
 #if defined(ENABLE_FMRADIO)
-	if (gFmRadioCountdown) {
+	if (gFmRadioCountdown > 0) {
 		return;
 	}
-	if (gFmRadioMode && gFM_RestoreCountdown) {
+	if (gFmRadioMode && gFM_RestoreCountdown > 0) {
 		gFM_RestoreCountdown--;
 		if (gFM_RestoreCountdown == 0) {
 			FM_Start();
@@ -725,17 +725,12 @@ void APP_TimeSlice10ms(void)
 	}
 #endif
 
-	// Ignore keys when scan is due
 	if (gScanDelay != 0) {
 		gScanDelay--;
 		APP_CheckKeys();
 		return;
 	}
-	if (gScannerEditState != 0) {
-		APP_CheckKeys();
-		return;
-	}
-	if (gScreenToDisplay != DISPLAY_SCANNER) {
+	if (gScannerEditState != 0 || gScreenToDisplay != DISPLAY_SCANNER) {
 		APP_CheckKeys();
 		return;
 	}
@@ -821,9 +816,9 @@ void APP_TimeSlice500ms(void)
 {
 	// Skipped authentic device check
 
-	if (gKeypadLocked) {
+	if (gKeypadLocked > 0) {
 		gKeypadLocked--;
-		if (!gKeypadLocked) {
+		if (gKeypadLocked == 0) {
 			gUpdateDisplay = true;
 		}
 	}
@@ -831,7 +826,7 @@ void APP_TimeSlice500ms(void)
 	// Skipped authentic device check
 
 #if defined(ENABLE_FMRADIO)
-	if (gFmRadioCountdown) {
+	if (gFmRadioCountdown > 0) {
 		gFmRadioCountdown--;
 		return;
 	}
@@ -873,14 +868,14 @@ void APP_TimeSlice500ms(void)
 				}
 			}
 			if (gScreenToDisplay != DISPLAY_SCANNER || (gScanCssState >= SCAN_CSS_STATE_FOUND)) {
-				if (gEeprom.AUTO_KEYPAD_LOCK && gKeyLockCountdown && !gDTMF_InputMode) {
+				if (gEeprom.AUTO_KEYPAD_LOCK && gKeyLockCountdown > 0 && !gDTMF_InputMode) {
 					gKeyLockCountdown--;
 					if (gKeyLockCountdown == 0) {
 						gEeprom.KEY_LOCK = true;
 					}
 					gUpdateStatus = true;
 				}
-				if (gVoltageMenuCountdown) {
+				if (gVoltageMenuCountdown > 0) {
 					gVoltageMenuCountdown--;
 					if (gVoltageMenuCountdown == 0) {
 						if (gScreenToDisplay == DISPLAY_SCANNER) {
@@ -912,7 +907,7 @@ void APP_TimeSlice500ms(void)
 	}
 
 #if defined(ENABLE_FMRADIO)
-	if (!gPttIsPressed && gFM_ResumeCountdown) {
+	if (!gPttIsPressed && gFM_ResumeCountdown > 0) {
 		gFM_ResumeCountdown--;
 		if (gFM_ResumeCountdown == 0) {
 			RADIO_SetVfoState(VFO_STATE_NORMAL);
@@ -963,7 +958,7 @@ void APP_TimeSlice500ms(void)
 				gUpdateDisplay = true;
 			}
 		}
-		if (gDTMF_DecodeRing && gDTMF_DecodeRingCountdown) {
+		if (gDTMF_DecodeRing && gDTMF_DecodeRingCountdown > 0) {
 			gDTMF_DecodeRingCountdown--;
 			if (gDTMF_DecodeRingCountdown == 0) {
 				gDTMF_DecodeRing = false;
@@ -971,7 +966,7 @@ void APP_TimeSlice500ms(void)
 		}
 	}
 
-	if (gDTMF_IsTx && gDTMF_TxStopCountdown) {
+	if (gDTMF_IsTx && gDTMF_TxStopCountdown > 0) {
 		gDTMF_TxStopCountdown--;
 		if (gDTMF_TxStopCountdown == 0) {
 			gDTMF_IsTx = false;
