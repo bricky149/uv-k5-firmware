@@ -135,13 +135,9 @@ uint8_t gIsLocked = 0xFF;
 
 void NUMBER_Get(char *pDigits, uint32_t *pInteger)
 {
-	uint32_t Value;
-	uint32_t Multiplier;
-	uint8_t i;
-
-	Multiplier = 10000000;
-	Value = 0;
-	for (i = 0; i < 8; i++) {
+	uint32_t Value = 0;
+	uint32_t Multiplier = 10000000;
+	for (uint8_t i = 0; i < 8; i++) {
 		if (pDigits[i] > 9) {
 			break;
 		}
@@ -153,27 +149,23 @@ void NUMBER_Get(char *pDigits, uint32_t *pInteger)
 
 void NUMBER_ToDigits(uint32_t Value, char *pDigits)
 {
-	uint8_t i;
-
-	for (i = 0; i < 8; i++) {
+	for (uint8_t i = 0; i < 8; i++) {
 		uint32_t Result = Value / 10U;
-
 		pDigits[7 - i] = Value - (Result * 10U);
 		Value = Result;
 	}
 }
 
-uint8_t NUMBER_AddWithWraparound(uint8_t Base, int8_t Add, uint8_t LowerLimit, uint8_t UpperLimit)
+uint16_t NUMBER_AddWithWraparound(uint16_t Base, int8_t Add, uint16_t LowerLimit, uint16_t UpperLimit)
 {
 	Base += Add;
-	if (Base == 0xFF || Base < LowerLimit) {
+	// BatCal has the max value allowed (2200)
+	if (Base > 0x0898 || Base < LowerLimit) {
 		return UpperLimit;
 	}
-
 	if (Base > UpperLimit) {
 		return LowerLimit;
 	}
-
 	return Base;
 }
 

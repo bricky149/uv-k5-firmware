@@ -16,9 +16,6 @@
 
 #include <string.h>
 #include "app/action.h"
-
-
-
 #include "app/app.h"
 #include "app/dtmf.h"
 #if defined(ENABLE_FMRADIO)
@@ -444,21 +441,14 @@ static void DUALWATCH_Alternate(void)
 
 void APP_CheckRadioInterrupts(void)
 {
-	if (gScreenToDisplay == DISPLAY_SCANNER) {
-		return;
-	}
-
 	while (BK4819_ReadRegister(BK4819_REG_0C) & 1U) {
-		uint16_t Mask;
-
 		BK4819_WriteRegister(BK4819_REG_02, 0);
-		Mask = BK4819_ReadRegister(BK4819_REG_02);
+		uint16_t Mask = BK4819_ReadRegister(BK4819_REG_02);
 		if (Mask & BK4819_REG_02_DTMF_5TONE_FOUND) {
 			gDTMF_RequestPending = true;
 			gDTMF_RecvTimeout = 5;
 			if (gDTMF_WriteIndex > 15) {
-				uint8_t i;
-				for (i = 0; i < sizeof(gDTMF_Received) - 1; i++) {
+				for (uint8_t i = 0; i < sizeof(gDTMF_Received) - 1; i++) {
 					gDTMF_Received[i] = gDTMF_Received[i + 1];
 				}
 				gDTMF_WriteIndex = 15;
@@ -702,15 +692,15 @@ void APP_TimeSlice10ms(void)
 	if (gReducedService) {
 		return;
 	}
-
+	if ((gCurrentFunction != FUNCTION_POWER_SAVE || !gRxIdleMode) && gScreenToDisplay != DISPLAY_SCANNER) {
+		APP_CheckRadioInterrupts();
+	}
+	if (gFlashLightState == FLASHLIGHT_BLINK && (gFlashLightBlinkCounter & 15U) == 0) {
+		GPIO_FlipBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
+	}
 	if (gRxVfo->IsAM) {
 		BK4819_NaiveAGC();
 	}
-
-	if (gCurrentFunction != FUNCTION_POWER_SAVE || !gRxIdleMode) {
-		APP_CheckRadioInterrupts();
-	}
-
 	if (gCurrentFunction != FUNCTION_TRANSMIT) {
 		if (gUpdateStatus) {
 			UI_DisplayStatus();
@@ -720,6 +710,14 @@ void APP_TimeSlice10ms(void)
 			GUI_DisplayScreen();
 			gUpdateDisplay = false;
 		}
+	} else {
+		if (gRTTECountdown > 0) {
+			gRTTECountdown--;
+		}
+		if (gRTTECountdown == 0) {
+			FUNCTION_Select(FUNCTION_FOREGROUND);
+			gUpdateDisplay = true;
+		}
 	}
 
 	// Skipping authentic device checks
@@ -728,21 +726,6 @@ void APP_TimeSlice10ms(void)
 	if (gFmRadioCountdown) {
 		return;
 	}
-#endif
-
-	if (gFlashLightState == FLASHLIGHT_BLINK && (gFlashLightBlinkCounter & 15U) == 0) {
-		GPIO_FlipBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
-	}
-	if (gCurrentFunction == FUNCTION_TRANSMIT) {
-		if (gRTTECountdown) {
-			gRTTECountdown--;
-			if (gRTTECountdown == 0) {
-				FUNCTION_Select(FUNCTION_FOREGROUND);
-				gUpdateDisplay = true;
-			}
-		}
-	}
-#if defined(ENABLE_FMRADIO)
 	if (gFmRadioMode && gFM_RestoreCountdown) {
 		gFM_RestoreCountdown--;
 		if (gFM_RestoreCountdown == 0) {
@@ -751,29 +734,68 @@ void APP_TimeSlice10ms(void)
 		}
 	}
 #endif
-	if (gScreenToDisplay == DISPLAY_SCANNER) {
-		uint32_t Result;
-		int32_t Delta;
-		BK4819_CssScanResult_t ScanResult;
-		uint16_t CtcssFreq;
 
-		if (gScanDelay) {
-			gScanDelay--;
-			APP_CheckKeys();
-			return;
-		}
-		if (gScannerEditState != 0) {
-			APP_CheckKeys();
-			return;
-		}
+	if (gScanDelay != 0) {
+		gScanDelay--;
+		APP_CheckKeys();
+		return;
+	}
+	if (gScannerEditState != 0) {
+		APP_CheckKeys();
+		return;
+	}
+	if (gScreenToDisplay != DISPLAY_SCANNER) {
+		APP_CheckKeys();
+		return;
+	}
 
-		switch (gScanCssState) {
+	uint32_t Result;
+	uint16_t CtcssFreq;
+
+	switch (gScanCssState) {
+		case SCAN_CSS_STATE_SCANNING:
+			BK4819_CssScanResult_t ScanResult = BK4819_GetCxCSSScanResult(&Result, &CtcssFreq);
+			if (ScanResult == BK4819_CSS_RESULT_NOT_FOUND) {
+				break;
+			}
+			BK4819_Disable();
+			if (ScanResult == BK4819_CSS_RESULT_CDCSS) {
+				uint8_t Code = DCS_GetCdcssCode(Result);
+				if (Code != 0xFF) {
+					gScanCssResultCode = Code;
+					gScanCssResultType = CODE_TYPE_DIGITAL;
+					gScanCssState = SCAN_CSS_STATE_FOUND;
+					gScanUseCssResult = true;
+				}
+			} else if (ScanResult == BK4819_CSS_RESULT_CTCSS) {
+				uint8_t Code = DCS_GetCtcssCode(CtcssFreq);
+				if (Code != 0xFF) {
+					if (Code == gScanCssResultCode && gScanCssResultType == CODE_TYPE_CONTINUOUS_TONE) {
+						gScanHitCount++;
+						if (gScanHitCount >= 2) {
+							gScanCssState = SCAN_CSS_STATE_FOUND;
+							gScanUseCssResult = true;
+						}
+					} else {
+						gScanHitCount = 0;
+					}
+					gScanCssResultType = CODE_TYPE_CONTINUOUS_TONE;
+					gScanCssResultCode = Code;
+				}
+			}
+			if (gScanCssState < SCAN_CSS_STATE_FOUND) {
+				BK4819_SetScanFrequency(gScanFrequency);
+				gScanDelay = 21;
+				break;
+			}
+			GUI_SelectNextDisplay(DISPLAY_SCANNER);
+			break;
+
 		case SCAN_CSS_STATE_OFF:
 			if (!BK4819_GetFrequencyScanResult(&Result)) {
 				break;
 			}
-
-			Delta = Result - gScanFrequency;
+			int32_t Delta = Result - gScanFrequency;
 			gScanFrequency = Result;
 			if (Delta < 0) {
 				Delta = -Delta;
@@ -799,53 +821,9 @@ void APP_TimeSlice10ms(void)
 			gScanDelay = 21;
 			break;
 
-		case SCAN_CSS_STATE_SCANNING:
-			ScanResult = BK4819_GetCxCSSScanResult(&Result, &CtcssFreq);
-			if (ScanResult == BK4819_CSS_RESULT_NOT_FOUND) {
-				break;
-			}
-			BK4819_Disable();
-			if (ScanResult == BK4819_CSS_RESULT_CDCSS) {
-				uint8_t Code;
-
-				Code = DCS_GetCdcssCode(Result);
-				if (Code != 0xFF) {
-					gScanCssResultCode = Code;
-					gScanCssResultType = CODE_TYPE_DIGITAL;
-					gScanCssState = SCAN_CSS_STATE_FOUND;
-					gScanUseCssResult = true;
-				}
-			} else if (ScanResult == BK4819_CSS_RESULT_CTCSS) {
-				uint8_t Code;
-
-				Code = DCS_GetCtcssCode(CtcssFreq);
-				if (Code != 0xFF) {
-					if (Code == gScanCssResultCode && gScanCssResultType == CODE_TYPE_CONTINUOUS_TONE) {
-						gScanHitCount++;
-						if (gScanHitCount >= 2) {
-							gScanCssState = SCAN_CSS_STATE_FOUND;
-							gScanUseCssResult = true;
-						}
-					} else {
-						gScanHitCount = 0;
-					}
-					gScanCssResultType = CODE_TYPE_CONTINUOUS_TONE;
-					gScanCssResultCode = Code;
-				}
-			}
-			if (gScanCssState < SCAN_CSS_STATE_FOUND) {
-				BK4819_SetScanFrequency(gScanFrequency);
-				gScanDelay = 21;
-				break;
-			}
-			GUI_SelectNextDisplay(DISPLAY_SCANNER);
-			break;
 		default:
 			break;
-		}
 	}
-
-	APP_CheckKeys();
 }
 
 void APP_TimeSlice500ms(void)

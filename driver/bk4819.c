@@ -167,13 +167,14 @@ void BK4819_WriteU16(uint16_t Data)
 void BK4819_NaiveAGC(void)
 {
 	// Check if we need to adjust gain
-	unsigned int rssi = BK4819_GetRSSI();
-	if (rssi >= 138 && rssi <= 143)
+	uint16_t rssi = BK4819_GetRSSI();
+	if (rssi >= 138 && rssi <= 143) {
 		return;
+	}
 	// Beken's AGC is not helpful in AM mode
 	// We can keep the sensitivity of high LNA
 	// while adjusting PGA to control distortion
-	unsigned int gain_index = 4;
+	uint8_t gain_index = 4;
 	do {
 		BK4819_WriteRegister(0x13,
 			(3u << 8) |         // LNA Short
@@ -182,12 +183,13 @@ void BK4819_NaiveAGC(void)
 			(gain_index << 0)); // PGA
 		// 000000 11 111 11 <111..000>
 		rssi = BK4819_GetRSSI();
-		if (rssi < 138)
+		if (rssi < 138) {
 			gain_index++;
-		else if (rssi > 143)
+		} else if (rssi > 143) {
 			gain_index--;
-		else
+		} else {
 			break;
+		}
 	} while (gain_index <= 7);
 }
 
@@ -222,8 +224,14 @@ void BK4819_DisableAGC(void)
 	BK4819_WriteRegister(BK4819_REG_7C, 0x595E);
 	BK4819_WriteRegister(BK4819_REG_20, 0x8DEF);
 
-	for (uint8_t i = 0; i < 8; i++)
+	// fagci
+	for (uint8_t i = 0; i < 8; i++) {
 		BK4819_WriteRegister(BK4819_REG_06, (i & 7) << 13 | 0x4A << 7 | 0x36);
+	}
+	//for (i = 0; i < 8; i++) {
+	//	// Bug? The bit 0x2000 below overwrites the (i << 13)
+	//	BK4819_WriteRegister(BK4819_REG_06, ((i << 13) | 0x2500U) + 0x36U);
+	//}
 }
 
 void BK4819_ToggleGpioOut(BK4819_GPIO_PIN_t Pin, bool bSet)

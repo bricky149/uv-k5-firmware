@@ -173,7 +173,7 @@ extern uint8_t gIsLocked;
 
 void NUMBER_Get(char *pDigits, uint32_t *pInteger);
 void NUMBER_ToDigits(uint32_t Value, char *pDigits);
-uint8_t NUMBER_AddWithWraparound(uint8_t Base, int8_t Add, uint8_t LowerLimit, uint8_t UpperLimit);
+uint16_t NUMBER_AddWithWraparound(uint16_t Base, int8_t Add, uint16_t LowerLimit, uint16_t UpperLimit);
 
 #endif
 

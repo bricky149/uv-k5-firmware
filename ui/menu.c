@@ -127,12 +127,6 @@ static const char gSubMenu_PTT_ID[4][5] = {
 	"BOTH",
 };
 
-static const char gSubMenu_PONMSG[3][5] = {
-	"FULL",
-	"MSG",
-	"VOL",
-};
-
 static const char gSubMenu_ROGER[3][6] = {
 	"OFF",
 	"ROGER",
@@ -161,10 +155,7 @@ uint32_t gSubMenuSelection;
 
 void UI_DisplayMenu(void)
 {
-	char String[16];
-	char Contact[16];
 	uint8_t i;
-
 	memset(gFrameBuffer, 0, sizeof(gFrameBuffer));
 
 	for (i = 0; i < 3; i++) {
@@ -182,13 +173,15 @@ void UI_DisplayMenu(void)
 		gFrameBuffer[i][48] = 0xFF;
 		gFrameBuffer[i][49] = 0xFF;
 	}
-	NUMBER_ToDigits(gMenuCursor + 1, String);
-	UI_DisplaySmallDigits(2, String + 6, 33, 6);
 	if (gIsInSubMenu) {
 		memcpy(gFrameBuffer[0] + 50, BITMAP_CurrentIndicator, sizeof(BITMAP_CurrentIndicator));
 	}
 
+	char String[16];
+	NUMBER_ToDigits(gMenuCursor + 1, String);
+	UI_DisplaySmallDigits(2, String + 6, 33, 6);
 	memset(String, 0, sizeof(String));
+	char Contact[16];
 
 	switch (gMenuCursor) {
 	case MENU_SQL:
@@ -367,16 +360,8 @@ void UI_DisplayMenu(void)
 		}
 		break;
 
-	case MENU_PONMSG:
-		strcpy(String, gSubMenu_PONMSG[gSubMenuSelection]);
-		break;
-
 	case MENU_ROGER:
 		strcpy(String, gSubMenu_ROGER[gSubMenuSelection]);
-		break;
-
-	case MENU_VOL:
-		sprintf(String, "%.2fV", gBatteryVoltageAverage * 0.01);
 		break;
 
 	case MENU_RESET:
@@ -388,83 +373,93 @@ void UI_DisplayMenu(void)
 		break;
 
 	case MENU_BATCAL:
-		const uint16_t vol = (uint32_t)gBatteryVoltageAverage * gBatteryCalibration[3] / gSubMenuSelection;
-		if (!gIsInSubMenu)
-			sprintf(String, "%u.%02uV\n%d", vol / 100, vol % 100, gSubMenuSelection);
-		else
-			sprintf(String, "%u.%02uV\n(%#4d)\n%#4d", vol / 100, vol % 100, gBatteryCalibration[3], gSubMenuSelection);
+		uint32_t vol = gBatteryVoltageAverage * gBatteryCalibration[3] / gSubMenuSelection;
+		sprintf(String, "%u.%02uV-%#4d", vol / 100, vol % 100, gSubMenuSelection);
 		break;
 	}
-
 	UI_PrintString(String, 50, 127, 2, 8, true);
 
-	if (gMenuCursor == MENU_OFFSET) {
+	switch (gMenuCursor) {
+	case MENU_OFFSET:
 		UI_PrintString("MHz", 50, 127, 4, 8, true);
-	}
+		break;
 
-	if ((gMenuCursor == MENU_RESET || gMenuCursor == MENU_MEM_CH || gMenuCursor == MENU_DEL_CH) && gAskForConfirmation) {
-		if (gAskForConfirmation == 1) {
-			strcpy(String, "SURE?");
-		} else {
-			strcpy(String, "WAIT!");
-		}
-		UI_PrintString(String, 50, 127, 4, 8, true);
-	}
-
-	if ((gMenuCursor == MENU_R_CTCS || gMenuCursor == MENU_R_DCS) && gCssScanMode != CSS_SCAN_MODE_OFF) {
-		UI_PrintString("SCAN", 50, 127, 4, 8, true);
-	}
-
-	if (gMenuCursor == MENU_UPCODE) {
-		if (strlen(gEeprom.DTMF_UP_CODE) > 8) {
-			UI_PrintString(gEeprom.DTMF_UP_CODE + 8, 50, 127, 4, 8, true);
-		}
-	}
-	if (gMenuCursor == MENU_DWCODE) {
-		if (strlen(gEeprom.DTMF_DOWN_CODE) > 8) {
-			UI_PrintString(gEeprom.DTMF_DOWN_CODE + 8, 50, 127, 4, 8, true);
-		}
-	}
-	if (gMenuCursor == MENU_D_LIST && gIsDtmfContactValid) {
-		Contact[11] = 0;
-		memcpy(&gDTMF_ID, Contact + 8, 4);
-		sprintf(String, "ID:%s", Contact + 8);
-		UI_PrintString(String, 50, 127, 4, 8, true);
-	}
-
-	if (gMenuCursor == MENU_R_CTCS || gMenuCursor == MENU_T_CTCS ||
-		gMenuCursor == MENU_R_DCS || gMenuCursor == MENU_T_DCS || gMenuCursor == MENU_D_LIST) {
-			uint8_t Offset;
-
-			NUMBER_ToDigits((uint8_t)gSubMenuSelection, String);
-			Offset = (gMenuCursor == MENU_D_LIST) ? 2 : 3;
-			UI_DisplaySmallDigits(Offset, String + (8 - Offset), 105, 0);
-	}
-
-	if (gMenuCursor == MENU_SLIST1 || gMenuCursor == MENU_SLIST2) {
-		i = gMenuCursor - MENU_SLIST1;
-
-		if (gSubMenuSelection == 0xFF) {
-			sprintf(String, "NULL");
-		} else {
-			UI_GenerateChannelStringEx(String, true, (uint8_t)gSubMenuSelection);
-		}
-
-		if (gSubMenuSelection == 0xFF || !gEeprom.SCAN_LIST_ENABLED[i]) {
-			UI_PrintString(String, 50, 127, 2, 8, true);
-		} else {
-			UI_PrintString(String, 50, 127, 0, 8, true);
-			if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH1[i])) {
-				sprintf(String, "PRI1:%d", gEeprom.SCANLIST_PRIORITY_CH1[i] + 1);
-				UI_PrintString(String, 50, 127, 2, 8, true);
+	case MENU_RESET:
+	case MENU_MEM_CH:
+	case MENU_DEL_CH:
+		if (gAskForConfirmation > 0) {
+			if (gAskForConfirmation == 1) {
+				strcpy(String, "SURE?");
+			} else {
+				strcpy(String, "WAIT!");
 			}
-			if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH2[i])) {
-				sprintf(String, "PRI2:%d", gEeprom.SCANLIST_PRIORITY_CH2[i] + 1);
+			UI_PrintString(String, 50, 127, 4, 8, true);
+		}
+		break;
+
+		case MENU_R_CTCS:
+		case MENU_R_DCS:
+			if (gCssScanMode != CSS_SCAN_MODE_OFF) {
+				UI_PrintString("SCAN", 50, 127, 4, 8, true);
+			}
+			break;
+
+		case MENU_UPCODE:
+			if (strlen(gEeprom.DTMF_UP_CODE) > 8) {
+				UI_PrintString(gEeprom.DTMF_UP_CODE + 8, 50, 127, 4, 8, true);
+			}
+			break;
+
+		case MENU_DWCODE:
+			if (strlen(gEeprom.DTMF_DOWN_CODE) > 8) {
+				UI_PrintString(gEeprom.DTMF_DOWN_CODE + 8, 50, 127, 4, 8, true);
+			}
+			break;
+
+		case MENU_D_LIST:
+			if (gIsDtmfContactValid) {
+				Contact[11] = 0;
+				memcpy(&gDTMF_ID, Contact + 8, 4);
+				sprintf(String, "ID:%s", Contact + 8);
 				UI_PrintString(String, 50, 127, 4, 8, true);
 			}
-		}
+			break;
 	}
 
+	switch (gMenuCursor) {
+		case MENU_R_CTCS:
+		case MENU_T_CTCS:
+		case MENU_R_DCS:
+		case MENU_T_DCS:
+		case MENU_D_LIST:
+			NUMBER_ToDigits((uint8_t)gSubMenuSelection, String);
+			uint8_t Offset = (gMenuCursor == MENU_D_LIST) ? 2 : 3;
+			UI_DisplaySmallDigits(Offset, String + (8 - Offset), 105, 0);
+			break;
+
+		case MENU_SLIST1:
+		case MENU_SLIST2:
+			if (gSubMenuSelection == 0xFF) {
+				sprintf(String, "NULL");
+			} else {
+				UI_GenerateChannelStringEx(String, true, (uint8_t)gSubMenuSelection);
+			}
+			i = gMenuCursor - MENU_SLIST1;
+			if (gSubMenuSelection == 0xFF || !gEeprom.SCAN_LIST_ENABLED[i]) {
+				UI_PrintString(String, 50, 127, 2, 8, true);
+			} else {
+				UI_PrintString(String, 50, 127, 0, 8, true);
+				if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH1[i])) {
+					sprintf(String, "PRI1:%d", gEeprom.SCANLIST_PRIORITY_CH1[i] + 1);
+					UI_PrintString(String, 50, 127, 2, 8, true);
+				}
+				if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH2[i])) {
+					sprintf(String, "PRI2:%d", gEeprom.SCANLIST_PRIORITY_CH2[i] + 1);
+					UI_PrintString(String, 50, 127, 4, 8, true);
+				}
+			}
+			break;
+	}
 	ST7565_BlitFullScreen();
 }
 

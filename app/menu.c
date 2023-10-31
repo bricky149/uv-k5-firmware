@@ -50,7 +50,7 @@ void MENU_StopCssScan(void)
 	RADIO_SetupRegisters(true);
 }
 
-int MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
+bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 {
 	switch (Cursor) {
 	case MENU_SQL:
@@ -71,7 +71,7 @@ int MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 	case MENU_TXP: case MENU_SFT_D:
 	case MENU_TDR: case MENU_WX:
 	case MENU_SC_REV:
-	case MENU_MDF: case MENU_PONMSG:
+	case MENU_MDF:
 	case MENU_ROGER:
 		*pMin = 0;
 		*pMax = 2;
@@ -135,25 +135,25 @@ int MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 		*pMax = 2200;  // 2300
 		break;
 	default:
-		return -1;
+		return false;
 	}
 
-	return 0;
+	return true;
 }
 
 void MENU_AcceptSetting(void)
 {
 	uint16_t Min, Max;
-	uint8_t Code;
-	FREQ_Config_t *pConfig = &gTxVfo->ConfigRX;
-
-	if (!MENU_GetLimits(gMenuCursor, &Min, &Max)) {
+	if (MENU_GetLimits(gMenuCursor, &Min, &Max)) {
 		if (gSubMenuSelection < Min) {
 			gSubMenuSelection = Min;
 		} else if (gSubMenuSelection > Max) {
 			gSubMenuSelection = Max;
 		}
 	}
+
+	uint8_t Code;
+	FREQ_Config_t *pConfig = &gTxVfo->ConfigRX;
 
 	switch (gMenuCursor) {
 	case MENU_SQL:
@@ -458,22 +458,6 @@ void MENU_SelectNextCode(void)
 	gUpdateDisplay = true;
 }
 
-static void MENU_ClampSelection(int8_t Direction)
-{
-	uint16_t Min, Max;
-
-	if (!MENU_GetLimits(gMenuCursor, &Min, &Max)) {
-		uint8_t Selection = gSubMenuSelection;
-
-		if (Selection < Min) {
-			Selection = Min;
-		} else if (Selection > Max) {
-			Selection = Max;
-		}
-		gSubMenuSelection = NUMBER_AddWithWraparound(Selection, Direction, Min, Max);
-	}
-}
-
 void MENU_ShowCurrentSetting(void)
 {
 	switch (gMenuCursor) {
@@ -695,17 +679,14 @@ void MENU_ShowCurrentSetting(void)
 
 static void MENU_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
-	uint16_t Value = 0;
-
-	if (bKeyHeld) {
-		return;
-	}
-	if (!bKeyPressed) {
+	if (bKeyHeld || !bKeyPressed) {
 		return;
 	}
 
 	INPUTBOX_Append(Key);
+	uint16_t Value = 0;
 	gRequestDisplayScreen = DISPLAY_MENU;
+
 	if (!gIsInSubMenu) {
 		switch (gInputBoxIndex) {
 		case 1:
@@ -716,6 +697,7 @@ static void MENU_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 				return;
 			}
 			break;
+
 		case 2:
 			gInputBoxIndex = 0;
 			Value = (gInputBox[0] * 10) + gInputBox[1];
@@ -728,19 +710,21 @@ static void MENU_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		}
 		gInputBoxIndex = 0;
 	} else {
-		if (gMenuCursor == MENU_OFFSET) {
-			uint32_t Frequency;
-
+		switch (gMenuCursor) {
+		case MENU_OFFSET:
 			if (gInputBoxIndex < 6) {
 				return;
 			}
 			gInputBoxIndex = 0;
+			uint32_t Frequency;
 			NUMBER_Get(gInputBox, &Frequency);
 			Frequency += 75;
 			gSubMenuSelection = FREQUENCY_FloorToStep(Frequency, gTxVfo->StepFrequency, 0);
-			return;
-		}
-		if (gMenuCursor == MENU_MEM_CH || gMenuCursor == MENU_DEL_CH || gMenuCursor == MENU_1_CALL) {
+			break;
+
+		case MENU_MEM_CH:
+		case MENU_DEL_CH:
+		case MENU_1_CALL:
 			if (gInputBoxIndex < 3) {
 				gRequestDisplayScreen = DISPLAY_MENU;
 				return;
@@ -749,54 +733,51 @@ static void MENU_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			Value = ((gInputBox[0] * 100) + (gInputBox[1] * 10) + gInputBox[2]) - 1;
 			if (IS_MR_CHANNEL(Value)) {
 				gSubMenuSelection = Value;
-				return;
 			}
-		}
-		if (gMenuCursor == MENU_BATCAL) {
-			gSubMenuSelection = INPUTBOX_GetValue();
+			break;
 
-			if (gInputBoxIndex < 4)
-			{	// not yet enough characters
+		case MENU_BATCAL:
+			gSubMenuSelection = INPUTBOX_GetValue();
+			// not yet enough characters
+			if (gInputBoxIndex < 4) {
 				return;
 			}
 			gInputBoxIndex = 0;
-			return;
-		} else {
+			break;
+
+		default:
 			uint16_t Min, Max;
-
 			if (!MENU_GetLimits(gMenuCursor, &Min, &Max)) {
-				uint8_t Offset;
+				gInputBoxIndex = 0;
+				return;
+			}
+			uint8_t Offset = 2;
+			if (Max < 10) {
+				Offset = 1;
+			}
+			if (Max >= 100) {
+				Offset = 3;
+			}
+			switch (gInputBoxIndex) {
+			case 1:
+				Value = gInputBox[0];
+				break;
 
-				if (Max < 100) {
-					if (Max < 10) {
-						Offset = 1;
-					} else {
-						Offset = 2;
-					}
-				} else {
-					Offset = 3;
-				}
-				switch (gInputBoxIndex) {
-				case 1:
-					Value = gInputBox[0];
-					break;
-				case 2:
-					Value = (gInputBox[0] * 10) + gInputBox[1];
-					break;
-				case 3:
-					Value = (gInputBox[0] * 100) + (gInputBox[1] * 10) + gInputBox[2];
-					break;
-				}
-				if (Offset == gInputBoxIndex) {
-					gInputBoxIndex = 0;
-				}
-				if (Value <= Max) {
-					gSubMenuSelection = Value;
-					return;
-				}
-			} else {
+			case 2:
+				Value = (gInputBox[0] * 10) + gInputBox[1];
+				break;
+
+			case 3:
+				Value = (gInputBox[0] * 100) + (gInputBox[1] * 10) + gInputBox[2];
+				break;
+			}
+			if (Offset == gInputBoxIndex) {
 				gInputBoxIndex = 0;
 			}
+			if (Value <= Max) {
+				gSubMenuSelection = Value;
+			}
+			break;
 		}
 	}
 }
@@ -882,26 +863,18 @@ static void MENU_Key_STAR(bool bKeyPressed, bool bKeyHeld)
 
 static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 {
-	uint8_t VFO;
-	uint8_t Channel;
-	bool bCheckScanList;
-
-	if (!bKeyHeld) {
-		if (!bKeyPressed) {
-			return;
-		}
-		gInputBoxIndex = 0;
-	} else if (!bKeyPressed) {
+	if (!bKeyPressed) {
 		return;
 	}
-
+	if (!bKeyHeld) {
+		gInputBoxIndex = 0;
+	}
 	if (gCssScanMode != CSS_SCAN_MODE_OFF) {
 		MENU_StartCssScan(Direction);
 		gPttWasReleased = true;
 		gRequestDisplayScreen = DISPLAY_MENU;
 		return;
 	}
-
 	if (!gIsInSubMenu) {
 		gMenuCursor = NUMBER_AddWithWraparound(gMenuCursor, -Direction, 0, gMenuListCount - 1);
 		gFlagRefreshSetting = true;
@@ -909,42 +882,51 @@ static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 		return;
 	}
 
-	if (gMenuCursor == MENU_OFFSET) {
-		int32_t Offset;
+	bool bCheckScanList;
+	uint8_t VFO = 0;
 
-		Offset = (Direction * gTxVfo->StepFrequency) + gSubMenuSelection;
-		if (Offset < 99999990) {
-			if (Offset < 0) {
-				Offset = 99999990;
-			}
-		} else {
+	switch (gMenuCursor) {
+	case MENU_OFFSET:
+		int32_t Offset = (Direction * gTxVfo->StepFrequency) + gSubMenuSelection;
+		if (Offset < 0) {
+			Offset = 99999990;
+		} else if (Offset > 99999990) {
 			Offset = 0;
 		}
 		gSubMenuSelection = FREQUENCY_FloorToStep(Offset, gTxVfo->StepFrequency, 0);
 		gRequestDisplayScreen = DISPLAY_MENU;
 		return;
-	}
 
-	VFO = 0;
-
-	switch (gMenuCursor) {
 	case MENU_DEL_CH:
 	case MENU_1_CALL:
 		bCheckScanList = false;
 		break;
+
 	case MENU_SLIST2:
 		VFO = 1;
 		// Fallthrough
 	case MENU_SLIST1:
 		bCheckScanList = true;
 		break;
+
 	default:
-		MENU_ClampSelection(Direction);
+		//MENU_ClampSelection(Direction) called once
+		uint16_t Min, Max;
+		if (MENU_GetLimits(gMenuCursor, &Min, &Max)) {
+			uint16_t Selection = gSubMenuSelection;
+			if (Selection < Min) {
+				Selection = Min;
+			}
+			if (Selection > Max) {
+				Selection = Max;
+			}
+			gSubMenuSelection = NUMBER_AddWithWraparound(Selection, Direction, Min, Max);
+		}
 		gRequestDisplayScreen = DISPLAY_MENU;
 		return;
 	}
 
-	Channel = RADIO_FindNextChannel(gSubMenuSelection + Direction, Direction, bCheckScanList, VFO);
+	uint8_t Channel = RADIO_FindNextChannel(gSubMenuSelection + Direction, Direction, bCheckScanList, VFO);
 	if (Channel != 0xFF) {
 		gSubMenuSelection = Channel;
 	}
@@ -983,11 +965,8 @@ void MENU_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	default:
 		break;
 	}
-	if (gScreenToDisplay == DISPLAY_MENU) {
-		if (gMenuCursor == MENU_VOL || gMenuCursor == MENU_BATCAL)
-		{
-			gVoltageMenuCountdown = 0x20;
-		}
+	if (gScreenToDisplay == DISPLAY_MENU && gMenuCursor == MENU_BATCAL) {
+		gVoltageMenuCountdown = 0x20;
 	}
 }
 
