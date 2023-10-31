@@ -789,6 +789,7 @@ static void MENU_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
 			if (gIsInSubMenu) {
 				if (gInputBoxIndex == 0 || gMenuCursor != MENU_OFFSET) {
 					gIsInSubMenu = false;
+					gAskForConfirmation = 0;
 					gInputBoxIndex = 0;
 					gFlagRefreshSetting = true;
 				} else {
@@ -822,7 +823,7 @@ static void MENU_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 					break;
 				case 1:
 					gAskForConfirmation = 2;
-					UI_DisplayMenu();
+					UI_DisplayMenu(); // Needed for "WAIT!" string
 					if (gMenuCursor == MENU_RESET) {
 						MENU_AcceptSetting();
 						NVIC_SystemReset();

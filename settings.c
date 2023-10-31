@@ -31,12 +31,10 @@ EEPROM_Config_t gEeprom;
 #if defined(ENABLE_FMRADIO)
 void SETTINGS_SaveFM(void)
 {
-	uint8_t i;
 	struct {
 		uint16_t Frequency;
 		uint8_t Channel;
 		bool IsChannelSelected;
-		uint8_t Padding[4];
 	} State;
 
 #if defined(ENABLE_UART)
@@ -49,7 +47,7 @@ void SETTINGS_SaveFM(void)
 	State.IsChannelSelected = gEeprom.FM_IsMrMode;
 
 	EEPROM_WriteBuffer(0x0E88, &State);
-	for (i = 0; i < 5; i++) {
+	for (uint8_t i = 0; i < 5; i++) {
 		EEPROM_WriteBuffer(0x0E40 + (i * 8), &gFM_Channels[i * 4]);
 	}
 }

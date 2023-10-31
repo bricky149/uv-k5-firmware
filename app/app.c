@@ -58,9 +58,6 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld);
 
 static void APP_CheckForIncoming(void)
 {
-	if (!g_SquelchLost) {
-		return;
-	}
 	if (gScanState == SCAN_OFF) {
 		if (gCssScanMode != CSS_SCAN_MODE_OFF && gRxReceptionMode == RX_MODE_NONE) {
 			ScanPauseDelayIn10msec = 100;
@@ -89,55 +86,13 @@ static void APP_CheckForIncoming(void)
 	FUNCTION_Select(FUNCTION_INCOMING);
 }
 
-static void APP_HandleIncoming(void)
-{
-	bool bFlag;
-
-	if (!g_SquelchLost) {
-		FUNCTION_Select(FUNCTION_FOREGROUND);
-		gUpdateDisplay = true;
-		return;
-	}
-
-	bFlag = (gScanState == SCAN_OFF && gCurrentCodeType == CODE_TYPE_OFF);
-
-	if (g_CTCSS_Lost && gCurrentCodeType == CODE_TYPE_CONTINUOUS_TONE) {
-		bFlag = true;
-		gFoundCTCSS = false;
-	}
-	if (g_CDCSS_Lost && gCDCSSCodeType == CDCSS_POSITIVE_CODE && (gCurrentCodeType == CODE_TYPE_DIGITAL || gCurrentCodeType == CODE_TYPE_REVERSE_DIGITAL)) {
-		gFoundCDCSS = false;
-	} else if (!bFlag) {
-		return;
-	}
-
-	DTMF_HandleRequest();
-
-	if (gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF) {
-		if (gRxVfo->DTMF_DECODING_ENABLE) {
-			if (gDTMF_CallState == DTMF_CALL_STATE_NONE) {
-				if (gRxReceptionMode == RX_MODE_DETECTED) {
-					gDualWatchCountdown = 500;
-					gScheduleDualWatch = false;
-					gRxReceptionMode = RX_MODE_LISTENING;
-				}
-				return;
-			}
-		}
-	}
-
-	APP_StartListening(FUNCTION_RECEIVE);
-}
-
 static void APP_HandleReceive(void)
 {
-	uint8_t Mode;
-
 #define END_OF_RX_MODE_SKIP 0
 #define END_OF_RX_MODE_END  1
 #define END_OF_RX_MODE_TTE  2
 
-	Mode = END_OF_RX_MODE_SKIP;
+	uint8_t Mode = END_OF_RX_MODE_SKIP;
 
 	if (gFlagTteComplete) {
 		Mode = END_OF_RX_MODE_END;
@@ -259,19 +214,54 @@ static void APP_HandleFunction(void)
 {
 	switch (gCurrentFunction) {
 	case FUNCTION_FOREGROUND:
-		APP_CheckForIncoming();
-		break;
-	case FUNCTION_POWER_SAVE:
-		if (!gRxIdleMode) {
+		if (g_SquelchLost) {
 			APP_CheckForIncoming();
 		}
 		break;
-	case FUNCTION_INCOMING:
-		APP_HandleIncoming();
+
+	case FUNCTION_POWER_SAVE:
+		if (!gRxIdleMode && g_SquelchLost) {
+			APP_CheckForIncoming();
+		}
 		break;
+
+	case FUNCTION_INCOMING:
+		// APP_HandleIncoming() called once
+		if (!g_SquelchLost) {
+			FUNCTION_Select(FUNCTION_FOREGROUND);
+			gUpdateDisplay = true;
+			return;
+		}
+		bool bFlag = (gScanState == SCAN_OFF && gCurrentCodeType == CODE_TYPE_OFF);
+		if (g_CTCSS_Lost && gCurrentCodeType == CODE_TYPE_CONTINUOUS_TONE) {
+			bFlag = true;
+			gFoundCTCSS = false;
+		}
+		if (g_CDCSS_Lost && gCDCSSCodeType == CDCSS_POSITIVE_CODE && (gCurrentCodeType == CODE_TYPE_DIGITAL || gCurrentCodeType == CODE_TYPE_REVERSE_DIGITAL)) {
+			gFoundCDCSS = false;
+		} else if (!bFlag) {
+			return;
+		}
+		DTMF_HandleRequest();
+		if (gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF) {
+			if (gRxVfo->DTMF_DECODING_ENABLE) {
+				if (gDTMF_CallState == DTMF_CALL_STATE_NONE) {
+					if (gRxReceptionMode == RX_MODE_DETECTED) {
+						gDualWatchCountdown = 500;
+						gScheduleDualWatch = false;
+						gRxReceptionMode = RX_MODE_LISTENING;
+					}
+					return;
+				}
+			}
+		}
+		APP_StartListening(FUNCTION_RECEIVE);
+		break;
+
 	case FUNCTION_RECEIVE:
 		APP_HandleReceive();
 		break;
+		
 	default:
 		break;
 	}
@@ -713,10 +703,10 @@ void APP_TimeSlice10ms(void)
 	} else {
 		if (gRTTECountdown > 0) {
 			gRTTECountdown--;
-		}
-		if (gRTTECountdown == 0) {
-			FUNCTION_Select(FUNCTION_FOREGROUND);
-			gUpdateDisplay = true;
+			if (gRTTECountdown == 0) {
+				FUNCTION_Select(FUNCTION_FOREGROUND);
+				gUpdateDisplay = true;
+			}
 		}
 	}
 
@@ -735,6 +725,7 @@ void APP_TimeSlice10ms(void)
 	}
 #endif
 
+	// Ignore keys when scan is due
 	if (gScanDelay != 0) {
 		gScanDelay--;
 		APP_CheckKeys();
@@ -875,7 +866,7 @@ void APP_TimeSlice500ms(void)
 			(gFM_ScanState == FM_SCAN_OFF || gAskToSave) &&
 #endif
 			gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF) {
-			if (gBacklightCountdown) {
+			if (gBacklightCountdown > 0) {
 				gBacklightCountdown--;
 				if (gBacklightCountdown == 0) {
 					GPIO_ClearBit(&GPIOB->DATA, GPIOB_PIN_BACKLIGHT);
@@ -1023,8 +1014,6 @@ void CHANNEL_Next(bool bBackup, int8_t Direction)
 
 static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
-	bool bFlag;
-
 	if (gCurrentFunction == FUNCTION_POWER_SAVE) {
 		FUNCTION_Select(FUNCTION_FOREGROUND);
 	}
@@ -1032,6 +1021,7 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	if (gEeprom.AUTO_KEYPAD_LOCK) {
 		gKeyLockCountdown = 30;
 	}
+
 	if (!bKeyPressed) {
 		if (gFlagSaveVfo) {
 			SETTINGS_SaveVfoIndices();
@@ -1078,9 +1068,6 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 				if (!bKeyPressed) {
 					return;
 				}
-				if (bKeyHeld) {
-					return;
-				}
 				gKeypadLocked = 4;
 				gUpdateDisplay = true;
 				return;
@@ -1089,10 +1076,7 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 				return;
 			}
 		} else if (Key != KEY_SIDE1 && Key != KEY_SIDE2) {
-			if (!bKeyPressed) {
-				return;
-			}
-			if (bKeyHeld) {
+			if (!bKeyPressed || bKeyHeld) {
 				return;
 			}
 			gKeypadLocked = 4;
@@ -1107,7 +1091,7 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		return;
 	}
 
-	bFlag = false;
+	bool bFlag = false;
 
 	if (gPttWasPressed && Key == KEY_PTT) {
 		bFlag = bKeyHeld;
@@ -1116,7 +1100,6 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			gPttWasPressed = false;
 		}
 	}
-
 	if (gPttWasReleased && Key != KEY_PTT) {
 		if (bKeyHeld) {
 			bFlag = true;
@@ -1131,53 +1114,42 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		gWasFKeyPressed = false;
 		gUpdateStatus = true;
 	}
-
 	if (gF_LOCK) {
-		if (Key == KEY_PTT) {
-			return;
-		}
-		if (Key == KEY_SIDE2) {
-			return;
-		}
-		if (Key == KEY_SIDE1) {
+		if (Key == KEY_PTT || Key == KEY_SIDE2 || Key == KEY_SIDE1) {
 			return;
 		}
 	}
 
 	if (!bFlag) {
 		if (gCurrentFunction == FUNCTION_TRANSMIT) {
-			if (1) {
-				if (Key == KEY_PTT) {
-					GENERIC_Key_PTT(bKeyPressed);
+			if (Key == KEY_PTT) {
+				GENERIC_Key_PTT(bKeyPressed);
+			} else {
+				char Code;
+
+				if (Key == KEY_SIDE2) {
+					Code = 0xFE;
 				} else {
-					char Code;
-
-					if (Key == KEY_SIDE2) {
-						Code = 0xFE;
-					} else {
-						Code = DTMF_GetCharacter(Key);
-						if (Code == 0xFF) {
-							goto Skip;
-						}
+					Code = DTMF_GetCharacter(Key);
+					if (Code == 0xFF) {
+						goto Skip;
 					}
-
-					if (bKeyHeld || !bKeyPressed) {
-						if (!bKeyPressed) {
-							GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
-							gEnableSpeaker = false;
-							BK4819_ExitDTMF_TX(false);
-						}
+				}
+				if (bKeyHeld || !bKeyPressed) {
+					if (!bKeyPressed) {
+						GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
+						gEnableSpeaker = false;
+						BK4819_ExitDTMF_TX(false);
+					}
+				} else {
+					if (gEeprom.DTMF_SIDE_TONE) {
+						GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
+						gEnableSpeaker = true;
+					}
+					if (Code == 0xFE) {
+						BK4819_TransmitTone(gEeprom.DTMF_SIDE_TONE, 1750);
 					} else {
-						if (gEeprom.DTMF_SIDE_TONE) {
-							GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
-							gEnableSpeaker = true;
-						}
-
-						if (Code == 0xFE) {
-							BK4819_TransmitTone(gEeprom.DTMF_SIDE_TONE, 1750);
-						} else {
-							BK4819_PlayDTMFEx(gEeprom.DTMF_SIDE_TONE, Code);
-						}
+						BK4819_PlayDTMFEx(gEeprom.DTMF_SIDE_TONE, Code);
 					}
 				}
 			}
@@ -1216,7 +1188,7 @@ Skip:
 		gFlagStopScan = false;
 	}
 	if (gRequestSaveSettings) {
-		if (bKeyHeld == 0) {
+		if (!bKeyHeld) {
 			SETTINGS_SaveSettings();
 		} else {
 			gFlagSaveSettings = 1;

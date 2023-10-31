@@ -113,18 +113,18 @@ void RADIO_InitInfo(VFO_Info_t *pInfo, uint8_t ChannelSave, uint8_t Band, uint32
 {
 	memset(pInfo, 0, sizeof(*pInfo));
 	pInfo->Band = Band;
-	pInfo->SCANLIST1_PARTICIPATION = true;
-	pInfo->SCANLIST2_PARTICIPATION = true;
-	pInfo->STEP_SETTING = STEP_25_0kHz;
-	pInfo->StepFrequency = 2500;
+	pInfo->SCANLIST1_PARTICIPATION = false;
+	pInfo->SCANLIST2_PARTICIPATION = false;
+	pInfo->STEP_SETTING = STEP_6_25kHz;
+	pInfo->StepFrequency = StepFrequencyTable[3];
 	pInfo->CHANNEL_SAVE = ChannelSave;
 	pInfo->FrequencyReverse = false;
-	pInfo->OUTPUT_POWER = OUTPUT_POWER_HIGH;
+	pInfo->OUTPUT_POWER = OUTPUT_POWER_LOW;
 	pInfo->ConfigRX.Frequency = Frequency;
 	pInfo->ConfigTX.Frequency = Frequency;
 	pInfo->pRX = &pInfo->ConfigRX;
 	pInfo->pTX = &pInfo->ConfigTX;
-	pInfo->FREQUENCY_OF_DEVIATION = 1000000;
+	pInfo->FREQUENCY_OF_DEVIATION = 0;
 	RADIO_ConfigureSquelchAndOutputPower(pInfo);
 }
 
@@ -267,7 +267,7 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		if (Data[4] == 0xFF) {
 			gEeprom.VfoInfo[VFO].FrequencyReverse = false;
 			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BK4819_FILTER_BW_WIDE;
-			gEeprom.VfoInfo[VFO].OUTPUT_POWER = OUTPUT_POWER_HIGH;
+			gEeprom.VfoInfo[VFO].OUTPUT_POWER = OUTPUT_POWER_LOW;
 			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = false;
 		} else {
 			gEeprom.VfoInfo[VFO].FrequencyReverse = !!(Data[4] & 0x01);
@@ -287,8 +287,7 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 			uint32_t Frequency;
 			uint32_t Offset;
 		} Info;
-
-		EEPROM_ReadBuffer(Base, &Info, 8);
+		EEPROM_ReadBuffer(Base, &Info, sizeof(Info));
 
 		pRadio->ConfigRX.Frequency = Info.Frequency;
 		if (Info.Offset >= 100000000) {
@@ -459,7 +458,6 @@ void RADIO_SelectVfos(void)
 
 void RADIO_SetupRegisters(bool bSwitchToFunction0)
 {
-	BK4819_FilterBandwidth_t Bandwidth;
 	uint16_t Status;
 	uint16_t InterruptMask;
 	uint32_t Frequency;
@@ -468,11 +466,7 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 	gEnableSpeaker = false;
 	BK4819_ToggleGpioOut(BK4819_GPIO6_PIN2_GREEN, false);
 
-	if (gRxVfo->CHANNEL_BANDWIDTH == BK4819_FILTER_BW_WIDE) {
-		Bandwidth = gRxVfo->CHANNEL_BANDWIDTH;
-	} else {
-		Bandwidth = BK4819_FILTER_BW_NARROW;
-	}
+	BK4819_FilterBandwidth_t Bandwidth = gRxVfo->CHANNEL_BANDWIDTH;
 	BK4819_SetFilterBandwidth(Bandwidth);
 
 	BK4819_ToggleGpioOut(BK4819_GPIO5_PIN1_RED, false);
@@ -566,18 +560,13 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 
 void RADIO_SetTxParameters(void)
 {
-	BK4819_FilterBandwidth_t Bandwidth;
-
 	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
-
 	gEnableSpeaker = false;
-
 	BK4819_ToggleGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE, false);
-	Bandwidth = gCurrentVfo->CHANNEL_BANDWIDTH;
-	if (Bandwidth != BK4819_FILTER_BW_WIDE) {
-		Bandwidth = BK4819_FILTER_BW_NARROW;
-	}
+
+	BK4819_FilterBandwidth_t Bandwidth = gCurrentVfo->CHANNEL_BANDWIDTH;
 	BK4819_SetFilterBandwidth(Bandwidth);
+
 	BK4819_SetFrequency(gCurrentVfo->pTX->Frequency);
 	BK4819_PrepareTransmit();
 	SYSTEM_DelayMs(10);
@@ -649,26 +638,25 @@ void RADIO_PrepareTX(void)
 		gRxVfoIsActive = true;
 	}
 	RADIO_SelectCurrentVfo();
-	if (1) {
-		VfoState_t State;
 
-		if (!FREQUENCY_Check(gCurrentVfo)) {
-			if (gCurrentVfo->BUSY_CHANNEL_LOCK && gCurrentFunction == FUNCTION_RECEIVE) {
-				State = VFO_STATE_BUSY;
-			} else if (gBatteryDisplayLevel == 0) {
-				State = VFO_STATE_BAT_LOW;
-			} else if (gBatteryDisplayLevel == 6) {
-				State = VFO_STATE_VOL_HIGH;
-			} else {
-				goto Skip;
-			}
+	VfoState_t State;
+
+	if (!FREQUENCY_Check(gCurrentVfo)) {
+		if (gCurrentVfo->BUSY_CHANNEL_LOCK && gCurrentFunction == FUNCTION_RECEIVE) {
+			State = VFO_STATE_BUSY;
+		} else if (gBatteryDisplayLevel == 0) {
+			State = VFO_STATE_BAT_LOW;
+		} else if (gBatteryDisplayLevel == 6) {
+			State = VFO_STATE_VOL_HIGH;
 		} else {
-			State = VFO_STATE_TX_DISABLE;
+			goto Skip;
 		}
-		RADIO_SetVfoState(State);
-		gDTMF_ReplyState = DTMF_REPLY_NONE;
-		return;
+	} else {
+		State = VFO_STATE_TX_DISABLE;
 	}
+	RADIO_SetVfoState(State);
+	gDTMF_ReplyState = DTMF_REPLY_NONE;
+	return;
 
 Skip:
 	if (gDTMF_ReplyState == DTMF_REPLY_ANI) {

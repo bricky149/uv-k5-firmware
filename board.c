@@ -493,8 +493,6 @@ void BOARD_Init(void)
 void BOARD_EEPROM_Init(void)
 {
 	uint8_t Data[16];
-	uint8_t i;
-
 	memset(Data, 0, sizeof(Data));
 
 	// 0E70..0E77
@@ -516,7 +514,7 @@ void BOARD_EEPROM_Init(void)
 	gEeprom.VFO_OPEN              = (Data[7] < 2) ? Data[7] : 1;
 
 	// 0E80..0E87
-	EEPROM_ReadBuffer(0x0E80, Data, 8);
+	EEPROM_ReadBuffer(0x0E80, Data, 6);
 	gEeprom.ScreenChannel[0] = IS_VALID_CHANNEL(Data[0]) ? Data[0] : (FREQ_CHANNEL_FIRST + BAND6_400MHz);
 	gEeprom.ScreenChannel[1] = IS_VALID_CHANNEL(Data[3]) ? Data[3] : (FREQ_CHANNEL_FIRST + BAND6_400MHz);
 	gEeprom.MrChannel[0]     = IS_MR_CHANNEL(Data[1])    ? Data[1] : MR_CHANNEL_FIRST;
@@ -529,11 +527,10 @@ void BOARD_EEPROM_Init(void)
 	struct {
 		uint16_t SelectedFrequency;
 		uint8_t SelectedChannel;
-		uint8_t IsMrMode;
-		uint8_t Padding[8];
+		bool IsMrMode;
 	} FM;
+	EEPROM_ReadBuffer(0x0E88, &FM, sizeof(FM));
 
-	EEPROM_ReadBuffer(0x0E88, &FM, 8);
 	gEeprom.FM_LowerLimit = 760;
 	gEeprom.FM_UpperLimit = 1080;
 	if (FM.SelectedFrequency < gEeprom.FM_LowerLimit || FM.SelectedFrequency > gEeprom.FM_UpperLimit) {
@@ -541,9 +538,8 @@ void BOARD_EEPROM_Init(void)
 	} else {
 		gEeprom.FM_SelectedFrequency = FM.SelectedFrequency;
 	}
-
 	gEeprom.FM_SelectedChannel = FM.SelectedChannel;
-	gEeprom.FM_IsMrMode = (FM.IsMrMode < 2) ? FM.IsMrMode : false;
+	gEeprom.FM_IsMrMode = FM.IsMrMode;
 
 	// 0E40..0E67
 	EEPROM_ReadBuffer(0x0E40, gFM_Channels, sizeof(gFM_Channels));
@@ -551,23 +547,23 @@ void BOARD_EEPROM_Init(void)
 #endif
 
 	// 0E90..0E97
-	EEPROM_ReadBuffer(0x0E90, Data, 8);
-	gEeprom.KEY_1_SHORT_PRESS_ACTION = (Data[1] < 9) ? Data[1] : 3;
-	gEeprom.KEY_1_LONG_PRESS_ACTION  = (Data[2] < 9) ? Data[2] : 8;
-	gEeprom.KEY_2_SHORT_PRESS_ACTION = (Data[3] < 9) ? Data[3] : 1;
-	gEeprom.KEY_2_LONG_PRESS_ACTION  = (Data[4] < 9) ? Data[4] : 6;
+	EEPROM_ReadBuffer(0x0E90, Data, 7);
+	gEeprom.KEY_1_SHORT_PRESS_ACTION = (Data[1] < 6) ? Data[1] : 3;
+	gEeprom.KEY_1_LONG_PRESS_ACTION  = (Data[2] < 6) ? Data[2] : 4;
+	gEeprom.KEY_2_SHORT_PRESS_ACTION = (Data[3] < 6) ? Data[3] : 1;
+	gEeprom.KEY_2_LONG_PRESS_ACTION  = (Data[4] < 6) ? Data[4] : 2;
 	gEeprom.SCAN_RESUME_MODE         = (Data[5] < 3) ? Data[5] : SCAN_RESUME_CO;
 	gEeprom.AUTO_KEYPAD_LOCK         = (Data[6] < 2) ? Data[6] : 1;
 
 	// 0E98..0E9F
-	EEPROM_ReadBuffer(0x0E98, Data, 8);
+	EEPROM_ReadBuffer(0x0E98, Data, 4);
 	memcpy(&gEeprom.POWER_ON_PASSWORD, Data, 4);
 
 	// 0EA0..0EA7
 	//EEPROM_ReadBuffer(0x0EA0, Data, 8);
 
 	// 0EA8..0EAF
-	EEPROM_ReadBuffer(0x0EA8, Data, 8);
+	EEPROM_ReadBuffer(0x0EA8, Data, 4);
 	gEeprom.ROGER                          = (Data[1] <  3) ? Data[1] : ROGER_MODE_OFF;
 	gEeprom.REPEATER_TAIL_TONE_ELIMINATION = (Data[2] < 11) ? Data[2] : 0;
 	gEeprom.TX_VFO                         = (Data[3] <  2) ? Data[3] : 0;
@@ -584,7 +580,7 @@ void BOARD_EEPROM_Init(void)
 	gEeprom.DTMF_HASH_CODE_PERSIST_TIME  = (Data[7] < 101) ? Data[7] * 10 : 100;
 
 	// 0ED8..0EDF
-	EEPROM_ReadBuffer(0x0ED8, Data, 8);
+	EEPROM_ReadBuffer(0x0ED8, Data, 2);
 	gEeprom.DTMF_CODE_PERSIST_TIME  = (Data[0] < 101) ? Data[0] * 10 : 100;
 	gEeprom.DTMF_CODE_INTERVAL_TIME = (Data[1] < 101) ? Data[1] * 10 : 100;
 
@@ -620,11 +616,9 @@ void BOARD_EEPROM_Init(void)
 	}
 
 	// 0F18..0F1F
-	EEPROM_ReadBuffer(0x0F18, Data, 8);
-
-	gEeprom.SCAN_LIST_DEFAULT = (Data[0] < 2) ? Data[0] : false;
-
-	for (i = 0; i < 2; i++) {
+	EEPROM_ReadBuffer(0x0F18, Data, 7);
+	gEeprom.SCAN_LIST_DEFAULT        = (Data[0] < 2) ? Data[0] : false;
+	for (uint8_t i = 0; i < 2; i++) {
 		uint8_t j = (i * 3) + 1;
 		gEeprom.SCAN_LIST_ENABLED[i]     = (Data[j] < 2) ? Data[j] : false;
 		gEeprom.SCANLIST_PRIORITY_CH1[i] = Data[j + 1];
@@ -632,7 +626,7 @@ void BOARD_EEPROM_Init(void)
 	}
 
 	// 0F40..0F47
-	EEPROM_ReadBuffer(0x0F40, Data, 8);
+	EEPROM_ReadBuffer(0x0F40, Data, 6);
 	gSetting_F_LOCK         = (Data[0] < 6) ? Data[0] : F_LOCK_OFF;
 
 	gUpperLimitFrequencyBandTable = UpperLimitFrequencyBandTable;
@@ -653,21 +647,17 @@ void BOARD_EEPROM_Init(void)
 
 	// 0F30..0F3F
 	EEPROM_ReadBuffer(0x0F30, gCustomAesKey, sizeof(gCustomAesKey));
-
-	for (i = 0; i < 4; i++) {
-		if (gCustomAesKey[i] != 0xFFFFFFFFU) {
-			bHasCustomAesKey = true;
-			return;
-		}
+	if (gCustomAesKey[0] != 0xFFFFFFFFU || gCustomAesKey[1] != 0xFFFFFFFFU ||
+		gCustomAesKey[2] != 0xFFFFFFFFU || gCustomAesKey[3] != 0xFFFFFFFFU)
+	{
+		bHasCustomAesKey = true;
+		return;
 	}
-
 	bHasCustomAesKey = false;
 }
 
 void BOARD_EEPROM_LoadCalibration(void)
 {
-	uint8_t Mic;
-
 	EEPROM_ReadBuffer(0x1EC0, gEEPROM_RSSI_CALIB[3], 8);
 	memcpy(gEEPROM_RSSI_CALIB[4], gEEPROM_RSSI_CALIB[3], 8);
 	memcpy(gEEPROM_RSSI_CALIB[5], gEEPROM_RSSI_CALIB[3], 8);
@@ -677,14 +667,14 @@ void BOARD_EEPROM_LoadCalibration(void)
 	memcpy(gEEPROM_RSSI_CALIB[1], gEEPROM_RSSI_CALIB[0], 8);
 	memcpy(gEEPROM_RSSI_CALIB[2], gEEPROM_RSSI_CALIB[0], 8);
 
-	EEPROM_ReadBuffer(0x1F40, gBatteryCalibration, 12);
+	EEPROM_ReadBuffer(0x1F40, gBatteryCalibration, sizeof(gBatteryCalibration));
 	if (gBatteryCalibration[0] >= 5000) {
 		gBatteryCalibration[0] = 1900;
 		gBatteryCalibration[1] = 2000;
 	}
 	gBatteryCalibration[5] = 2300;
 
-
+	uint8_t Mic;
 	EEPROM_ReadBuffer(0x1F80 + gEeprom.MIC_SENSITIVITY, &Mic, 1);
 	gEeprom.MIC_SENSITIVITY_TUNING = (Mic < 32) ? Mic : 15;
 
@@ -695,13 +685,11 @@ void BOARD_EEPROM_LoadCalibration(void)
 		uint8_t VOLUME_GAIN;
 		uint8_t DAC_GAIN;
 	} Misc;
+	EEPROM_ReadBuffer(0x1F88, &Misc, sizeof(Misc));
 
-	EEPROM_ReadBuffer(0x1F88, &Misc, 8);
 	gEeprom.BK4819_XTAL_FREQ_LOW = (Misc.BK4819_XtalFreqLow + 1000 < 2000) ? Misc.BK4819_XtalFreqLow : 0;
-
 	gEEPROM_1F8A = Misc.EEPROM_1F8A & 0x01FF;
 	gEEPROM_1F8C = Misc.EEPROM_1F8C & 0x01FF;
-
 	gEeprom.VOLUME_GAIN = (Misc.VOLUME_GAIN < 64) ? Misc.VOLUME_GAIN : 58;
 	gEeprom.DAC_GAIN    = (Misc.DAC_GAIN    < 16) ? Misc.DAC_GAIN : 8;
 
@@ -710,11 +698,10 @@ void BOARD_EEPROM_LoadCalibration(void)
 
 void BOARD_FactoryReset(bool bIsAll)
 {
-	uint8_t Template[8];
-	uint16_t i;
 	// DO NOT TOUCH
-	memset(Template, 0xFF, sizeof(Template));
-	for (i = 0x0C80; i < 0x1E00; i += 8) {
+	uint8_t Template[8];
+	memset(Template, 0xFF, 8);
+	for (uint16_t i = 0x0C80; i < 0x1E00; i += 8) {
 		if (
 			!(i >= 0x0EE0 && i < 0x0F18) && // ANI ID + DTMF codes
 			!(i >= 0x0F30 && i < 0x0F50) && // AES KEY + F LOCK + Scramble Enable

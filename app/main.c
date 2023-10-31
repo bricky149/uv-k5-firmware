@@ -33,17 +33,11 @@
 
 static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
-	uint8_t Vfo;
-	uint8_t Band;
-
-	Vfo = gEeprom.TX_VFO;
-
-	if (bKeyHeld) {
+	if (bKeyHeld || !bKeyPressed) {
 		return;
 	}
-	if (!bKeyPressed) {
-		return;
-	}
+
+	uint8_t Vfo = gEeprom.TX_VFO;
 
 	if (!gWasFKeyPressed) {
 		INPUTBOX_Append(Key);
@@ -115,7 +109,7 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			gUpdateStatus = true;
 			return;
 		}
-		Band = gTxVfo->Band + 1;
+		uint8_t Band = gTxVfo->Band + 1;
 		if (gSetting_350EN || Band != BAND5_350MHz) {
 			if (BAND7_470MHz < Band) {
 				Band = BAND1_50MHz;
@@ -342,11 +336,6 @@ void MAIN_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			gPttWasReleased = true;
 			return;
 		}
-	}
-
-	// TODO: ???
-	if (KEY_PTT < Key) {
-		Key = KEY_SIDE2;
 	}
 
 	switch (Key) {

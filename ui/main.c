@@ -136,16 +136,14 @@ void UI_DisplayMain(void)
 		uint32_t LevelMode = LEVEL_MODE_OFF;
 
 		if (gCurrentFunction == FUNCTION_TRANSMIT) {
-			if (1) {
-				if (gEeprom.CROSS_BAND_RX_TX == CROSS_BAND_OFF) {
-					Channel = gEeprom.RX_VFO;
-				} else {
-					Channel = gEeprom.TX_VFO;
-				}
-				if (Channel == i) {
-					LevelMode = LEVEL_MODE_TX;
-					memcpy(pLine0 + 14, BITMAP_TX, sizeof(BITMAP_TX));
-				}
+			if (gEeprom.CROSS_BAND_RX_TX == CROSS_BAND_OFF) {
+				Channel = gEeprom.RX_VFO;
+			} else {
+				Channel = gEeprom.TX_VFO;
+			}
+			if (Channel == i) {
+				LevelMode = LEVEL_MODE_TX;
+				memcpy(pLine0 + 14, BITMAP_TX, sizeof(BITMAP_TX));
 			}
 		} else {
 			LevelMode = LEVEL_MODE_RSSI;

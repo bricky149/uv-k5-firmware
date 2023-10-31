@@ -47,10 +47,10 @@ enum PTT_ID_t {
 typedef enum PTT_ID_t PTT_ID_t;
 
 enum STEP_Setting_t {
+	STEP_1_25kHz,
 	STEP_2_5kHz,
 	STEP_5_0kHz,
 	STEP_6_25kHz,
-	STEP_10_0kHz,
 	STEP_12_5kHz,
 	STEP_25_0kHz,
 	STEP_8_33kHz,
@@ -105,7 +105,7 @@ typedef struct VFO_Info_t {
 	uint8_t AM_CHANNEL_MODE;
 	bool IsAM;
 	char Name[16];
-	uint8_t _pad[1];
+	uint8_t Padding[1];
 } VFO_Info_t;
 
 extern VFO_Info_t *gTxVfo;

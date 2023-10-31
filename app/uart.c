@@ -86,7 +86,7 @@ typedef struct {
 	uint8_t Size;
 	bool bAllowPassword;
 	uint32_t Timestamp;
-	uint8_t Data[1];
+	uint8_t Data[8];
 } CMD_051D_t;
 
 typedef struct {

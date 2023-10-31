@@ -49,10 +49,10 @@ const uint32_t UpperLimitFrequencyBandTable[7] = {
 };
 
 const uint16_t StepFrequencyTable[7] = {
+	125,
 	250,
 	500,
 	625,
-	1000,
 	1250,
 	2500,
 	833,

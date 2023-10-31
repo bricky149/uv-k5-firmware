@@ -176,12 +176,11 @@ void BK4819_NaiveAGC(void)
 	// while adjusting PGA to control distortion
 	uint8_t gain_index = 4;
 	do {
-		BK4819_WriteRegister(0x13,
-			(3u << 8) |         // LNA Short
-			(7u << 5) |         // LNA
-			(3u << 3) |         // MIXER
-			(gain_index << 0)); // PGA
-		// 000000 11 111 11 <111..000>
+		BK4819_WriteRegister(0x13, // 1o11
+			(3u << 8) |            // LNA Short
+			(7u << 5) |            // LNA
+			(3u << 3) |            // MIXER
+			(gain_index << 0));    // PGA
 		rssi = BK4819_GetRSSI();
 		if (rssi < 138) {
 			gain_index++;
@@ -312,7 +311,7 @@ void BK4819_SetFilterBandwidth(BK4819_FilterBandwidth_t Bandwidth)
 {
 	if (Bandwidth == BK4819_FILTER_BW_WIDE) {
 		BK4819_WriteRegister(BK4819_REG_43, 0x3028);
-	} else if (Bandwidth == BK4819_FILTER_BW_NARROW) {
+	} else {
 		BK4819_WriteRegister(BK4819_REG_43, 0x4048);
 	}
 }
@@ -348,7 +347,12 @@ void BK4819_SetupSquelch(uint8_t SquelchOpenRSSIThresh, uint8_t SquelchCloseRSSI
 	BK4819_WriteRegister(BK4819_REG_70, 0);
 	BK4819_WriteRegister(BK4819_REG_4D, 0xA000 | SquelchCloseGlitchThresh);
 	// 0x6f = 0110 1111 meaning the default sql delays from the datasheet are used (101 and 111)
-	BK4819_WriteRegister(BK4819_REG_4E, 0x6F00 | SquelchOpenGlitchThresh);
+	//BK4819_WriteRegister(BK4819_REG_4E, 0x6F00 | SquelchOpenGlitchThresh);
+	BK4819_WriteRegister(BK4819_REG_4E,      // 1o11
+			(1u << 14) |                     // 1 ???
+			(4u << 11) |                     // 5 squelch = open delay .. 0 ~ 7
+			(2u <<  9) |                     // 3 squelch = close delay .. 0 ~ 3
+			(SquelchOpenGlitchThresh << 0)); // 0 ~ 255
 	BK4819_WriteRegister(BK4819_REG_4F, (SquelchCloseNoiseThresh << 8) | SquelchOpenNoiseThresh);
 	BK4819_WriteRegister(BK4819_REG_78, (SquelchOpenRSSIThresh << 8) | SquelchCloseRSSIThresh);
 	BK4819_SetAF(BK4819_AF_MUTE);

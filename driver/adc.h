@@ -58,7 +58,7 @@ typedef struct {
 	uint8_t DMA_EN;
 	uint8_t IE_FIFO_HFULL;
 	uint8_t IE_FIFO_FULL;
-	uint8_t _pad[1];
+	uint8_t Padding[1];
 } ADC_Config_t;
 
 uint8_t ADC_GetChannelNumber(ADC_CH_MASK Mask);

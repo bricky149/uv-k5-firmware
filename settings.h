@@ -152,7 +152,7 @@ typedef struct {
 	uint8_t field77_0x95;
 	uint8_t field78_0x96;
 	uint8_t field79_0x97;
-	uint16_t _pad[1];
+	uint8_t Padding[2];
 } EEPROM_Config_t;
 
 extern EEPROM_Config_t gEeprom;

@@ -144,9 +144,6 @@ void ACTION_FM(void)
 
 void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
-	uint8_t Short;
-	uint8_t Long;
-
 	if (gScreenToDisplay == DISPLAY_MAIN && gDTMF_InputMode) {
 		if (Key == KEY_SIDE1 && !bKeyHeld && bKeyPressed) {
 			if (gDTMF_InputIndex) {
@@ -164,7 +161,12 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		gPttWasReleased = true;
 		return;
 	}
+	if (!bKeyHeld && bKeyPressed) {
+		return;
+	}
 
+	uint8_t Short;
+	uint8_t Long;
 	if (Key == KEY_SIDE1) {
 		Short = gEeprom.KEY_1_SHORT_PRESS_ACTION;
 		Long = gEeprom.KEY_1_LONG_PRESS_ACTION;
@@ -172,9 +174,7 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		Short = gEeprom.KEY_2_SHORT_PRESS_ACTION;
 		Long = gEeprom.KEY_2_LONG_PRESS_ACTION;
 	}
-	if (!bKeyHeld && bKeyPressed) {
-		return;
-	}
+
 	if (bKeyHeld || bKeyPressed) {
 		if (!bKeyHeld) {
 			return;
@@ -197,7 +197,7 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	case 4:
 		ACTION_Scan(true);
 		break;
-	case 7:
+	case 5:
 #if defined(ENABLE_FMRADIO)
 		ACTION_FM();
 #endif

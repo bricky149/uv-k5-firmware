@@ -37,9 +37,7 @@
 
 #if defined(ENABLE_UART)
 static const char Version[] = "UV-K5 Firmware, Open Edition, OEFW-"GIT_HASH"\r\n";
-#endif
 
-#if defined(ENABLE_UART)
 void _putchar(char c)
 {
 	UART_Send((uint8_t *)&c, 1);
@@ -75,7 +73,6 @@ void Main(void)
 	gDTMF_String[14] = 0;
 
 	BK4819_Init();
-	BOARD_ADC_GetBatteryInfo(&gBatteryCurrentVoltage, &gBatteryCurrent);
 	BOARD_EEPROM_Init();
 	BOARD_EEPROM_LoadCalibration();
 
@@ -84,35 +81,30 @@ void Main(void)
 	RADIO_SelectVfos();
 	RADIO_SetupRegisters(true);
 
+	BOARD_ADC_GetBatteryInfo(&gBatteryCurrentVoltage, &gBatteryCurrent);
 	for (uint8_t i = 0; i < 4; i++) {
 		BOARD_ADC_GetBatteryInfo(&gBatteryVoltages[i], &gBatteryCurrent);
 	}
-
 	BATTERY_GetReadings(false);
-	if (!gChargingWithTypeC && !gBatteryDisplayLevel) {
+
+	if (!gChargingWithTypeC && gBatteryDisplayLevel == 0) {
 		FUNCTION_Select(FUNCTION_POWER_SAVE);
 		GPIO_ClearBit(&GPIOB->DATA, GPIOB_PIN_BACKLIGHT);
 		gReducedService = true;
 	} else {
-		BOOT_Mode_t BootMode;
-
 		BACKLIGHT_TurnOn();
 		gMenuListCount = 49; // Does not include hidden items
-
-		BootMode = BOOT_GetMode();
+		BOOT_Mode_t BootMode = BOOT_GetMode();
 		if (gEeprom.POWER_ON_PASSWORD < 1000000) {
 			bIsInLockScreen = true;
 			UI_DisplayLock();
 			bIsInLockScreen = false;
 		}
-
 		BOOT_ProcessMode(BootMode);
-
-		GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_VOICE_0);
 		gUpdateStatus = true;
 	}
 
-	// Everything is initialised, set SLEEP* bits
+	// Everything is initialised, set SLEEP* bits to save power
 	SYSCON_REGISTER |= SYSCON_REGISTER_SLEEPONEXIT_BITS_ENABLE;
 	SYSCON_REGISTER |= SYSCON_REGISTER_SLEEPDEEP_BITS_ENABLE;
 

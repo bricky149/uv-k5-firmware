@@ -57,9 +57,9 @@ static const char MenuList[][7] = {
 
 static const uint16_t gSubMenu_Step[] = {
 	125,
+	250,
 	500,
 	625,
-	1000,
 	1250,
 	2500,
 	833,
@@ -243,9 +243,9 @@ void UI_DisplayMenu(void)
 		}
 		String[7] = '-';
 		String[8] = '-';
-		String[9] = 0;
-		String[10] = 0;
-		String[11] = 0;
+		String[9] = '0';
+		String[10] = '0';
+		String[11] = '0';
 		break;
 
 	case MENU_W_N:
