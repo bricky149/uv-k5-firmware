@@ -1,9 +1,10 @@
 TARGET = firmware
 
 ENABLE_FMRADIO := 1
-ENABLE_LTO := 0
 ENABLE_SWD := 0
 ENABLE_UART := 1
+# Broken above -O1
+ENABLE_LTO := 0
 
 BSP_DEFINITIONS := $(wildcard hardware/*/*.def)
 BSP_HEADERS := $(patsubst hardware/%,bsp/%,$(BSP_DEFINITIONS))
@@ -106,10 +107,10 @@ CFLAGS += -DGIT_HASH=\"$(GIT_HASH)\"
 ifeq ($(ENABLE_FMRADIO),1)
 CFLAGS += -DENABLE_FMRADIO
 endif
-ifeq ($(ENABLE_LTO),1)
-CFLAGS += -DENABLE_LTO -flto=2
-else
+ifeq ($(ENABLE_LTO),0)
 CFLAGS += -ffunction-sections -fdata-sections
+else
+CFLAGS += -flto=2
 endif
 ifeq ($(ENABLE_SWD),1)
 CFLAGS += -DENABLE_SWD

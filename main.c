@@ -93,13 +93,13 @@ void Main(void)
 		gReducedService = true;
 	} else {
 		BACKLIGHT_TurnOn();
-		gMenuListCount = 49; // Does not include hidden items
-		BOOT_Mode_t BootMode = BOOT_GetMode();
 		if (gEeprom.POWER_ON_PASSWORD < 1000000) {
 			bIsInLockScreen = true;
 			UI_DisplayLock();
 			bIsInLockScreen = false;
 		}
+		gMenuListCount = 49; // Does not include hidden items
+		BOOT_Mode_t BootMode = BOOT_GetMode();
 		BOOT_ProcessMode(BootMode);
 		gUpdateStatus = true;
 	}
@@ -109,11 +109,14 @@ void Main(void)
 	SYSCON_REGISTER |= SYSCON_REGISTER_SLEEPDEEP_BITS_ENABLE;
 
 	while (1) {
-		APP_Update();
-		if (gNextTimeslice) {
-			APP_TimeSlice10ms();
-			gNextTimeslice = false;
+		// Original evaluates both if-statements
+		if (!gNextTimeslice) {
+			continue;
 		}
+		APP_Update(); // Does not rely on sub-10ms timings
+		APP_TimeSlice10ms();
+		gNextTimeslice = false;
+
 		if (gNextTimeslice500ms) {
 			APP_TimeSlice500ms();
 			gNextTimeslice500ms = false;

@@ -54,13 +54,13 @@ void BK4819_Init(void);
 uint16_t BK4819_ReadRegister(BK4819_REGISTER_t Register);
 void BK4819_WriteRegister(BK4819_REGISTER_t Register, uint16_t Data);
 void BK4819_WriteU8(uint8_t Data);
-void BK4819_WriteU16(uint16_t Data);
 
 void BK4819_NaiveAGC(void);
 void BK4819_EnableAGC(void);
 void BK4819_DisableAGC(void);
 
-void BK4819_ToggleGpioOut(BK4819_GPIO_PIN_t Pin, bool bSet);
+void BK4819_SetGpioOut(BK4819_GPIO_PIN_t Pin);
+void BK4819_ClearGpioOut(BK4819_GPIO_PIN_t Pin);
 
 void BK4819_SetCDCSSCodeWord(uint32_t CodeWord);
 void BK4819_SetCTCSSFrequency(uint32_t BaudRate);
@@ -78,7 +78,6 @@ void BK4819_SetAF(BK4819_AF_Type_t AF);
 void BK4819_RX_TurnOn(void);
 void BK4819_SelectFilter(uint32_t Frequency);
 
-
 void BK4819_DisableDTMF(void);
 void BK4819_EnableDTMF(void);
 void BK4819_PlayTone(uint16_t Frequency, bool bTuningGainSwitch);
@@ -87,8 +86,6 @@ void BK4819_ExitTxMute(void);
 void BK4819_Sleep(void);
 void BK4819_TurnsOffTones_TurnsOnRX(void);
 
-
-void BK4819_Idle(void);
 void BK4819_ExitBypass(void);
 void BK4819_PrepareTransmit(void);
 void BK4819_TxOn_Beep(void);
@@ -119,21 +116,16 @@ void BK4819_SetScanFrequency(uint32_t Frequency);
 
 void BK4819_Disable(void);
 
-void BK4819_StopScan(void);
-
 uint8_t BK4819_GetDTMF_5TONE_Code(void);
 
 uint8_t BK4819_GetCDCSSCodeType(void);
 uint8_t BK4819_GetCTCType(void);
-
 
 void BK4819_PlayRoger(void);
 void BK4819_PlayRogerMDC(void);
 
 void BK4819_Enable_AfDac_DiscMode_TxDsp(void);
 
-
-void BK4819_SetScrambleFrequencyControlWord(uint32_t Frequency);
 void BK4819_PlayDTMFEx(bool bLocalLoopback, char Code);
 
 #endif

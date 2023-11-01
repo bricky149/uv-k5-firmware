@@ -61,6 +61,7 @@ void BK4819_Init(void)
 	BK4819_WriteRegister(BK4819_REG_09, 0xF09F);
 	BK4819_WriteRegister(BK4819_REG_1F, 0x5454);
 	BK4819_WriteRegister(BK4819_REG_3E, 0xA037);
+
 	gBK4819_GpioOutState = 0x9000;
 	BK4819_WriteRegister(BK4819_REG_33, gBK4819_GpioOutState);
 	BK4819_WriteRegister(BK4819_REG_3F, 0);
@@ -79,9 +80,7 @@ static uint16_t BK4819_ReadU16(void)
 		Value <<= 1;
 		Value |= GPIO_CheckBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
 		GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-		
 		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-		
 	}
 	PORTCON_PORTC_IE = (PORTCON_PORTC_IE & ~PORTCON_PORTC_IE_C2_MASK) | PORTCON_PORTC_IE_C2_BITS_DISABLE;
 	GPIOC->DIR = (GPIOC->DIR & ~GPIO_DIR_2_MASK) | GPIO_DIR_2_BITS_OUTPUT;
@@ -114,52 +113,40 @@ void BK4819_WriteRegister(BK4819_REGISTER_t Register, uint16_t Data)
 {
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCN);
 	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-	
 	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCN);
 	BK4819_WriteU8(Register);
-	
-	BK4819_WriteU16(Data);
-	
-	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCN);
-	
-	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
-}
 
-void BK4819_WriteU8(uint8_t Data)
-{
-	uint8_t i;
-
+	//BK4819_WriteU16(Data);
 	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-	for (i = 0; i < 8; i++) {
-		if ((Data & 0x80U) == 0) {
-			GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
-		} else {
-			GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
-		}
-		
-		GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-		
-		Data <<= 1;
-		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-	}
-}
-
-void BK4819_WriteU16(uint16_t Data)
-{
-	uint8_t i;
-
-	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
-	for (i = 0; i < 16; i++) {
+	for (uint8_t i = 0; i < 16; i++) {
 		if ((Data & 0x8000U) == 0U) {
 			GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
 		} else {
 			GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
 		}
-		
+
 		GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
 		Data <<= 1;
-		
+		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
+	}
+
+	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCN);
+	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
+	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
+	SYSTEM_DelayMs(1);
+}
+
+void BK4819_WriteU8(uint8_t Data)
+{
+	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
+	for (uint8_t i = 0; i < 8; i++) {
+		if ((Data & 0x80U) == 0) {
+			GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
+		} else {
+			GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
+		}
+		GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
+		Data <<= 1;
 		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
 	}
 }
@@ -233,13 +220,16 @@ void BK4819_DisableAGC(void)
 	//}
 }
 
-void BK4819_ToggleGpioOut(BK4819_GPIO_PIN_t Pin, bool bSet)
+void BK4819_SetGpioOut(BK4819_GPIO_PIN_t Pin)
 {
-	if (bSet) {
-		gBK4819_GpioOutState |= (0x40U >> Pin);
-	} else {
-		gBK4819_GpioOutState &= ~(0x40U >> Pin);
-	}
+	gBK4819_GpioOutState |= (0x40U >> Pin);
+
+	BK4819_WriteRegister(BK4819_REG_33, gBK4819_GpioOutState);
+}
+
+void BK4819_ClearGpioOut(BK4819_GPIO_PIN_t Pin)
+{
+	gBK4819_GpioOutState &= ~(0x40U >> Pin);
 
 	BK4819_WriteRegister(BK4819_REG_33, gBK4819_GpioOutState);
 }
@@ -332,7 +322,7 @@ void BK4819_SetupPowerAmplifier(uint16_t Bias, uint32_t Frequency)
 		// Gain 2 = 2
 		Gain = 0x22U;
 	}
-	// Enable PACTLoutput
+	// Enable PACTL output
 	BK4819_WriteRegister(BK4819_REG_36, (Bias << 8) | 0x80U | Gain);
 }
 
@@ -400,14 +390,14 @@ void BK4819_RX_TurnOn(void)
 void BK4819_SelectFilter(uint32_t Frequency)
 {
 	if (Frequency < 28000000) {
-		BK4819_ToggleGpioOut(BK4819_GPIO4_PIN32_VHF_LNA, true);
-		BK4819_ToggleGpioOut(BK4819_GPIO3_PIN31_UHF_LNA, false);
+		BK4819_SetGpioOut(BK4819_GPIO4_PIN32_VHF_LNA);
+		BK4819_ClearGpioOut(BK4819_GPIO3_PIN31_UHF_LNA);
 	} else if (Frequency == 0xFFFFFFFF) {
-		BK4819_ToggleGpioOut(BK4819_GPIO4_PIN32_VHF_LNA, false);
-		BK4819_ToggleGpioOut(BK4819_GPIO3_PIN31_UHF_LNA, false);
+		BK4819_ClearGpioOut(BK4819_GPIO4_PIN32_VHF_LNA);
+		BK4819_ClearGpioOut(BK4819_GPIO3_PIN31_UHF_LNA);
 	} else {
-		BK4819_ToggleGpioOut(BK4819_GPIO4_PIN32_VHF_LNA, false);
-		BK4819_ToggleGpioOut(BK4819_GPIO3_PIN31_UHF_LNA, true);
+		BK4819_ClearGpioOut(BK4819_GPIO4_PIN32_VHF_LNA);
+		BK4819_SetGpioOut(BK4819_GPIO3_PIN31_UHF_LNA);
 	}
 }
 
@@ -447,6 +437,7 @@ void BK4819_PlayTone(uint16_t Frequency, bool bTuningGainSwitch)
 	}
 	BK4819_WriteRegister(BK4819_REG_70, ToneConfig);
 
+	BK4819_WriteRegister(BK4819_REG_30, 0);
 	BK4819_WriteRegister(BK4819_REG_30, 0
 			| BK4819_REG_30_ENABLE_AF_DAC
 			| BK4819_REG_30_ENABLE_DISC_MODE
@@ -478,6 +469,7 @@ void BK4819_TurnsOffTones_TurnsOnRX(void)
 	BK4819_SetAF(BK4819_AF_MUTE);
 	BK4819_ExitTxMute();
 
+	BK4819_WriteRegister(BK4819_REG_30, 0);
 	BK4819_WriteRegister(BK4819_REG_30, 0
 			| BK4819_REG_30_ENABLE_VCO_CALIB
 			| BK4819_REG_30_ENABLE_RX_LINK
@@ -488,26 +480,15 @@ void BK4819_TurnsOffTones_TurnsOnRX(void)
 			);
 }
 
-void BK4819_Idle(void)
-{
-	BK4819_WriteRegister(BK4819_REG_30, 0x0000);
-}
-
-void BK4819_ExitBypass(void)
-{
-	BK4819_SetAF(BK4819_AF_MUTE);
-	BK4819_WriteRegister(BK4819_REG_7E, 0x302E);
-}
-
 void BK4819_PrepareTransmit(void)
 {
-	BK4819_ExitBypass();
-	BK4819_ExitTxMute();
-	BK4819_TxOn_Beep();
-}
+	//BK4819_ExitBypass();
+	BK4819_SetAF(BK4819_AF_MUTE);
+	BK4819_WriteRegister(BK4819_REG_7E, 0x302E);
 
-void BK4819_TxOn_Beep(void)
-{
+	BK4819_ExitTxMute();
+
+	//BK4819_TxOn_Beep();
 	BK4819_WriteRegister(BK4819_REG_37, 0x1D0F);
 	BK4819_WriteRegister(BK4819_REG_52, 0x028F);
 	BK4819_WriteRegister(BK4819_REG_30, 0x0000);
@@ -522,7 +503,7 @@ void BK4819_ExitSubAu(void)
 void BK4819_EnableRX(void)
 {
 	if (gRxIdleMode) {
-		BK4819_ToggleGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE, true);
+		BK4819_SetGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE);
 		BK4819_RX_TurnOn();
 	}
 }
@@ -786,12 +767,6 @@ void BK4819_Disable(void)
 	BK4819_WriteRegister(BK4819_REG_30, 0);
 }
 
-void BK4819_StopScan(void)
-{
-	BK4819_DisableFrequencyScan();
-	BK4819_Disable();
-}
-
 uint8_t BK4819_GetDTMF_5TONE_Code(void)
 {
 	return (BK4819_ReadRegister(BK4819_REG_0B) >> 8) & 0x0F;
@@ -857,11 +832,6 @@ void BK4819_Enable_AfDac_DiscMode_TxDsp(void)
 {
 	BK4819_WriteRegister(BK4819_REG_30, 0x0000);
 	BK4819_WriteRegister(BK4819_REG_30, 0x0302);
-}
-
-void BK4819_SetScrambleFrequencyControlWord(uint32_t Frequency)
-{
-	BK4819_WriteRegister(BK4819_REG_71, (uint16_t)(Frequency * 10.32444));
 }
 
 void BK4819_PlayDTMFEx(bool bLocalLoopback, char Code)

@@ -95,7 +95,7 @@ void FM_TurnOff(void)
 	gFM_RestoreCountdown = 0;
 	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
 	gEnableSpeaker = false;
-	BK1080_Init(0, false);
+	BK1080_Sleep();
 	gUpdateStatus = true;
 }
 
@@ -157,52 +157,49 @@ void FM_PlayAndUpdate(void)
 	gEnableSpeaker = true;
 }
 
-int FM_CheckFrequencyLock(uint16_t Frequency, uint16_t LowerLimit)
+bool FM_CheckFrequencyLock(uint16_t Frequency, uint16_t LowerLimit)
 {
-	uint16_t Test2;
-	uint16_t Deviation;
-	int ret = -1;
-
-	Test2 = BK1080_ReadRegister(BK1080_REG_07);
+	uint16_t Test2 = BK1080_ReadRegister(BK1080_REG_07);
 	// This is supposed to be a signed value, but above function is unsigned
-	Deviation = BK1080_REG_07_GET_FREQD(Test2);
+	uint16_t Deviation = BK1080_REG_07_GET_FREQD(Test2);
 
 	if (BK1080_REG_07_GET_SNR(Test2) >= 2) {
-		uint16_t Status;
+		uint16_t Status = BK1080_ReadRegister(BK1080_REG_10);
 
-		Status = BK1080_ReadRegister(BK1080_REG_10);
 		if ((Status & BK1080_REG_10_MASK_AFCRL) == BK1080_REG_10_AFCRL_NOT_RAILED && BK1080_REG_10_GET_RSSI(Status) >= 10) {
 			// if (Deviation > -281 && Deviation < 280)
 			if (Deviation < 280 || Deviation > 3815) {
 				// not BLE(less than or equal)
 				if (Frequency > LowerLimit && (Frequency - BK1080_BaseFrequency) == 1) {
 					if (BK1080_FrequencyDeviation & 0x800) {
-						goto Bail;
+						BK1080_FrequencyDeviation = Deviation;
+						BK1080_BaseFrequency = Frequency;
+						return true;
 					}
 					if (BK1080_FrequencyDeviation < 20) {
-						goto Bail;
+						BK1080_FrequencyDeviation = Deviation;
+						BK1080_BaseFrequency = Frequency;
+						return true;
 					}
 				}
 				// not BLT(less than)
 				if (Frequency >= LowerLimit && (BK1080_BaseFrequency - Frequency) == 1) {
 					if ((BK1080_FrequencyDeviation & 0x800) == 0) {
-						goto Bail;
+						BK1080_FrequencyDeviation = Deviation;
+						BK1080_BaseFrequency = Frequency;
+						return true;
 					}
 					// if (BK1080_FrequencyDeviation > -21) {
 					if (BK1080_FrequencyDeviation > 4075) {
-						goto Bail;
+						BK1080_FrequencyDeviation = Deviation;
+						BK1080_BaseFrequency = Frequency;
+						return true;
 					}
 				}
-				ret = 0;
 			}
 		}
 	}
-
-Bail:
-	BK1080_FrequencyDeviation = Deviation;
-	BK1080_BaseFrequency = Frequency;
-
-	return ret;
+	return false;
 }
 
 static void FM_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
@@ -422,7 +419,9 @@ static void FM_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Step)
 
 		Channel = FM_FindNextChannel(gEeprom.FM_SelectedChannel + Step, Step);
 		if (Channel == 0xFF || gEeprom.FM_SelectedChannel == Channel) {
-			goto Bail;
+			BK1080_SetFrequency(gEeprom.FM_FrequencyPlaying);
+			gRequestDisplayScreen = DISPLAY_FM;
+			return;
 		}
 		gEeprom.FM_SelectedChannel = Channel;
 		gEeprom.FM_FrequencyPlaying = gFM_Channels[Channel];
@@ -440,7 +439,6 @@ static void FM_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Step)
 	}
 	gRequestSaveFM = true;
 
-Bail:
 	BK1080_SetFrequency(gEeprom.FM_FrequencyPlaying);
 	gRequestDisplayScreen = DISPLAY_FM;
 }
@@ -475,7 +473,7 @@ void FM_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 
 void FM_Play(void)
 {
-	if (!FM_CheckFrequencyLock(gEeprom.FM_FrequencyPlaying, gEeprom.FM_LowerLimit)) {
+	if (FM_CheckFrequencyLock(gEeprom.FM_FrequencyPlaying, gEeprom.FM_LowerLimit)) {
 		if (!gFM_AutoScan) {
 			gFmPlayCountdown = 0;
 			gFM_FoundFrequency = true;
@@ -511,7 +509,8 @@ void FM_Start(void)
 	gFmRadioMode = true;
 	gFM_ScanState = FM_SCAN_OFF;
 	gFM_RestoreCountdown = 0;
-	BK1080_Init(gEeprom.FM_FrequencyPlaying, true);
+	BK1080_Enable();
+	BK1080_SetFrequency(gEeprom.FM_FrequencyPlaying);
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
 	gEnableSpeaker = true;
 	gUpdateStatus = true;

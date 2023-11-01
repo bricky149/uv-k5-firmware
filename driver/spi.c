@@ -24,8 +24,6 @@ void SPI0_Init(void)
 {
 	SPI_Config_t Config;
 
-	SPI_Disable(&SPI0->CR);
-
 	Config.TXFIFO_EMPTY = 0;
 	Config.RXFIFO_HFULL = 0;
 	Config.RXFIFO_FULL = 0;
@@ -43,18 +41,24 @@ void SPI0_Init(void)
 	SPI_Enable(&SPI0->CR);
 }
 
+void SPI1_Init(void)
+{
+	// Original does not use SPI1
+	SPI_Disable(&SPI1->CR);
+	//NVIC_DisableIRQ(DP32_SPI1_IRQn);
+	//SPI_Enable(&SPI1->CR);
+}
+
 void SPI_WaitForUndocumentedTxFifoStatusBit(void)
 {
-	uint32_t Timeout;
-
-	Timeout = 0;
+	uint16_t Timeout = 0;
 	do {
 		// Undocumented bit!
 		if ((SPI0->IF & 0x20) == 0) {
 			break;
 		}
 		Timeout++;
-	} while (Timeout <= 100000);
+	} while (Timeout < 65535);
 }
 
 void SPI_Disable(volatile uint32_t *pCR)
@@ -100,13 +104,14 @@ void SPI_Configure(volatile SPI_Port_t *pPort, SPI_Config_t *pConfig)
 	}
 }
 
-void SPI_ToggleMasterMode(volatile uint32_t *pCR, bool bIsMaster)
+void SPI_EnableMasterMode(volatile uint32_t *pCR)
 {
-	if (bIsMaster) {
-		*pCR = (*pCR & ~SPI_CR_MSR_SSN_MASK) | SPI_CR_MSR_SSN_BITS_ENABLE;
-	} else {
-		*pCR = (*pCR & ~SPI_CR_MSR_SSN_MASK) | SPI_CR_MSR_SSN_BITS_DISABLE;
-	}
+	*pCR = (*pCR & ~SPI_CR_MSR_SSN_MASK) | SPI_CR_MSR_SSN_BITS_ENABLE;
+}
+
+void SPI_DisableMasterMode(volatile uint32_t *pCR)
+{
+	*pCR = (*pCR & ~SPI_CR_MSR_SSN_MASK) | SPI_CR_MSR_SSN_BITS_DISABLE;
 }
 
 void SPI_Enable(volatile uint32_t *pCR)

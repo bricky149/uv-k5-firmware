@@ -330,6 +330,9 @@ void UI_DisplayMain(void)
 			}
 		}
 
+		if (gEeprom.VfoInfo[i].FrequencyReverse) {
+			memcpy(pLine1 + 128 + 64, BITMAP_ReverseMode, sizeof(BITMAP_ReverseMode));
+		}
 		if (gEeprom.VfoInfo[i].CHANNEL_BANDWIDTH == BANDWIDTH_NARROW) {
 			memcpy(pLine1 + 128 + 74, BITMAP_NarrowBand, sizeof(BITMAP_NarrowBand));
 		}
@@ -337,7 +340,6 @@ void UI_DisplayMain(void)
 			memcpy(pLine1 + 128 + 84, BITMAP_DTMF, sizeof(BITMAP_DTMF));
 		}
 	}
-
 	ST7565_BlitFullScreen();
 }
 

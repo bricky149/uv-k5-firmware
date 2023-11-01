@@ -348,11 +348,9 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 
 void RADIO_ConfigureSquelchAndOutputPower(VFO_Info_t *pInfo)
 {
-	uint8_t Txp[3];
 	uint16_t Base;
-	FREQUENCY_Band_t Band;
 
-	Band = FREQUENCY_GetBand(pInfo->pRX->Frequency);
+	FREQUENCY_Band_t Band = FREQUENCY_GetBand(pInfo->pRX->Frequency);
 	if (Band < BAND4_174MHz) {
 		Base = 0x1E60;
 	} else {
@@ -382,8 +380,16 @@ void RADIO_ConfigureSquelchAndOutputPower(VFO_Info_t *pInfo)
 		}
 	}
 
+	uint8_t Txp[3];
 	Band = FREQUENCY_GetBand(pInfo->pTX->Frequency);
 	EEPROM_ReadBuffer(0x1ED0 + (Band * 0x10) + (pInfo->OUTPUT_POWER * 3), Txp, 3);
+	// 1o11
+	// make low even lower
+	if (pInfo->OUTPUT_POWER == OUTPUT_POWER_LOW) {
+		Txp[0] /= 6;
+		Txp[1] /= 6;
+		Txp[2] /= 6;
+	}
 	pInfo->TXP_CalculatedSetting =
 		FREQUENCY_CalculateOutputPower(
 				Txp[0],
@@ -464,14 +470,14 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 
 	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
 	gEnableSpeaker = false;
-	BK4819_ToggleGpioOut(BK4819_GPIO6_PIN2_GREEN, false);
+	BK4819_ClearGpioOut(BK4819_GPIO6_PIN2_GREEN);
 
 	BK4819_FilterBandwidth_t Bandwidth = gRxVfo->CHANNEL_BANDWIDTH;
 	BK4819_SetFilterBandwidth(Bandwidth);
 
-	BK4819_ToggleGpioOut(BK4819_GPIO5_PIN1_RED, false);
+	BK4819_ClearGpioOut(BK4819_GPIO5_PIN1_RED);
 	BK4819_SetupPowerAmplifier(0, 0);
-	BK4819_ToggleGpioOut(BK4819_GPIO1_PIN29_PA_ENABLE, false);
+	BK4819_ClearGpioOut(BK4819_GPIO1_PIN29_PA_ENABLE);
 
 	while (1) {
 		Status = BK4819_ReadRegister(BK4819_REG_0C);
@@ -479,7 +485,6 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 			break;
 		}
 		BK4819_WriteRegister(BK4819_REG_02, 0);
-		SYSTEM_DelayMs(1);
 	}
 	BK4819_WriteRegister(BK4819_REG_3F, 0);
 	BK4819_WriteRegister(BK4819_REG_7D, gEeprom.MIC_SENSITIVITY_TUNING | 0xE940);
@@ -490,7 +495,7 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 			gRxVfo->SquelchOpenNoise, gRxVfo->SquelchCloseNoise,
 			gRxVfo->SquelchCloseGlitch, gRxVfo->SquelchOpenGlitch);
 	BK4819_SelectFilter(Frequency);
-	BK4819_ToggleGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE, true);
+	BK4819_SetGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE);
 	BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
 
 	InterruptMask = 0
@@ -562,21 +567,18 @@ void RADIO_SetTxParameters(void)
 {
 	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
 	gEnableSpeaker = false;
-	BK4819_ToggleGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE, false);
+	BK4819_ClearGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE);
 
 	BK4819_FilterBandwidth_t Bandwidth = gCurrentVfo->CHANNEL_BANDWIDTH;
 	BK4819_SetFilterBandwidth(Bandwidth);
 
 	BK4819_SetFrequency(gCurrentVfo->pTX->Frequency);
 	BK4819_PrepareTransmit();
-	SYSTEM_DelayMs(10);
 
 	BK4819_SelectFilter(gCurrentVfo->pTX->Frequency);
-	BK4819_ToggleGpioOut(BK4819_GPIO1_PIN29_PA_ENABLE, true);
-	SYSTEM_DelayMs(5);
+	BK4819_SetGpioOut(BK4819_GPIO1_PIN29_PA_ENABLE);
 
 	BK4819_SetupPowerAmplifier(gCurrentVfo->TXP_CalculatedSetting, gCurrentVfo->pTX->Frequency);
-	SYSTEM_DelayMs(10);
 
 	switch (gCurrentVfo->pTX->CodeType) {
 	case CODE_TYPE_CONTINUOUS_TONE:
@@ -651,16 +653,18 @@ void RADIO_PrepareTX(void)
 		} else if (gEeprom.KEY_LOCK) {
 			State = VFO_STATE_DISALLOWED;
 		} else {
-			goto Skip;
+			State = VFO_STATE_NORMAL;
 		}
 	} else {
 		State = VFO_STATE_TX_DISABLE;
 	}
-	RADIO_SetVfoState(State);
-	gDTMF_ReplyState = DTMF_REPLY_NONE;
-	return;
 
-Skip:
+	if (State != VFO_STATE_NORMAL) {
+		RADIO_SetVfoState(State);
+		gDTMF_ReplyState = DTMF_REPLY_NONE;
+		return;
+	}
+
 	if (gDTMF_ReplyState == DTMF_REPLY_ANI) {
 		if (gDTMF_CallMode == DTMF_CALL_MODE_DTMF) {
 			gDTMF_IsTx = true;

@@ -226,7 +226,8 @@ void SCANNER_Start(void)
 	uint8_t BackupStep;
 	uint16_t BackupFrequency;
 
-	BK4819_StopScan();
+	BK4819_DisableFrequencyScan();
+	BK4819_Disable();
 	RADIO_SelectVfos();
 
 	BackupStep = gRxVfo->STEP_SETTING;

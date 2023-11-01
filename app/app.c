@@ -94,38 +94,6 @@ static void APP_HandleReceive(void)
 
 	uint8_t Mode = END_OF_RX_MODE_SKIP;
 
-	if (gFlagTteComplete) {
-		Mode = END_OF_RX_MODE_END;
-		goto Skip;
-	} else if (gScanState != SCAN_OFF && IS_FREQ_CHANNEL(gNextMrChannel)) {
-		if (g_SquelchLost) {
-			return;
-		}
-		Mode = END_OF_RX_MODE_END;
-		goto Skip;
-	}
-	switch (gCurrentCodeType) {
-	case CODE_TYPE_CONTINUOUS_TONE:
-		if (gFoundCTCSS && gFoundCTCSSCountdown == 0) {
-			gFoundCTCSS = false;
-			gFoundCDCSS = false;
-			Mode = END_OF_RX_MODE_END;
-			goto Skip;
-		}
-		break;
-	case CODE_TYPE_DIGITAL:
-	case CODE_TYPE_REVERSE_DIGITAL:
-		if (gFoundCDCSS && gFoundCDCSSCountdown == 0) {
-			gFoundCTCSS = false;
-			gFoundCDCSS = false;
-			Mode = END_OF_RX_MODE_END;
-			goto Skip;
-		}
-		break;
-	default:
-		break;
-	}
-
 	if (g_SquelchLost) {
 		if (!gEndOfRxDetectedMaybe) {
 			switch (gCurrentCodeType) {
@@ -175,13 +143,43 @@ static void APP_HandleReceive(void)
 		Mode = END_OF_RX_MODE_END;
 	}
 
+	if (gFlagTteComplete) {
+		Mode = END_OF_RX_MODE_END;
+	} else if (gScanState != SCAN_OFF && IS_FREQ_CHANNEL(gNextMrChannel)) {
+		if (g_SquelchLost) {
+			return;
+		}
+		Mode = END_OF_RX_MODE_END;
+	}
+
+	switch (gCurrentCodeType) {
+	case CODE_TYPE_CONTINUOUS_TONE:
+		if (gFoundCTCSS && gFoundCTCSSCountdown == 0) {
+			gFoundCTCSS = false;
+			gFoundCDCSS = false;
+			Mode = END_OF_RX_MODE_END;
+		}
+		break;
+
+	case CODE_TYPE_DIGITAL:
+	case CODE_TYPE_REVERSE_DIGITAL:
+		if (gFoundCDCSS && gFoundCDCSSCountdown == 0) {
+			gFoundCTCSS = false;
+			gFoundCDCSS = false;
+			Mode = END_OF_RX_MODE_END;
+		}
+		break;
+
+	default:
+		break;
+	}
+
 	if (!gEndOfRxDetectedMaybe && Mode == END_OF_RX_MODE_SKIP && gNextTimeslice40ms && gEeprom.TAIL_NOTE_ELIMINATION && (gCurrentCodeType == CODE_TYPE_DIGITAL || gCurrentCodeType == CODE_TYPE_REVERSE_DIGITAL) && BK4819_GetCTCType() == 1) {
 		Mode = END_OF_RX_MODE_TTE;
 	} else {
 		gNextTimeslice40ms = false;
 	}
 
-Skip:
 	switch (Mode) {
 	case END_OF_RX_MODE_END:
 		RADIO_SetupRegisters(true);
@@ -198,12 +196,13 @@ Skip:
 			}
 		}
 		break;
+
 	case END_OF_RX_MODE_TTE:
 		if (gEeprom.TAIL_NOTE_ELIMINATION) {
 			GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
+			gEnableSpeaker = false;
 			gTailNoteEliminationCountdown = 20;
 			gFlagTteComplete = false;
-			gEnableSpeaker = false;
 			gEndOfRxDetectedMaybe = true;
 		}
 		break;
@@ -226,7 +225,7 @@ static void APP_HandleFunction(void)
 		break;
 
 	case FUNCTION_INCOMING:
-		// APP_HandleIncoming() called once
+		// APP_HandleIncoming();
 		if (!g_SquelchLost) {
 			FUNCTION_Select(FUNCTION_FOREGROUND);
 			gUpdateDisplay = true;
@@ -272,7 +271,7 @@ void APP_StartListening(FUNCTION_Type_t Function)
 
 #if defined(ENABLE_FMRADIO)
 		if (gFmRadioMode) {
-			BK1080_Init(0, false);
+			BK1080_Sleep();
 		}
 #endif
 	gVFO_RSSI_Level[!gEeprom.RX_VFO] = 0;
@@ -466,11 +465,11 @@ void APP_CheckRadioInterrupts(void)
 		}
 		if (Mask & BK4819_REG_02_SQUELCH_LOST) {
 			g_SquelchLost = true;
-			BK4819_ToggleGpioOut(BK4819_GPIO6_PIN2_GREEN, true);
+			BK4819_SetGpioOut(BK4819_GPIO6_PIN2_GREEN);
 		}
 		if (Mask & BK4819_REG_02_SQUELCH_FOUND) {
 			g_SquelchLost = false;
-			BK4819_ToggleGpioOut(BK4819_GPIO6_PIN2_GREEN, false);
+			BK4819_ClearGpioOut(BK4819_GPIO6_PIN2_GREEN);
 		}
 	}
 }
@@ -590,7 +589,7 @@ void APP_Update(void)
 			gRxIdleMode = true;
 
 			BK4819_Sleep();
-			BK4819_ToggleGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE, false);
+			BK4819_ClearGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE);
 			// Authentic device checked removed
 		} else {
 			DUALWATCH_Alternate();
@@ -879,7 +878,8 @@ void APP_TimeSlice500ms(void)
 					gVoltageMenuCountdown--;
 					if (gVoltageMenuCountdown == 0) {
 						if (gScreenToDisplay == DISPLAY_SCANNER) {
-							BK4819_StopScan();
+							BK4819_DisableFrequencyScan();
+							BK4819_Disable();
 							RADIO_ConfigureChannel(0, VFO_CONFIGURE_RELOAD);
 							RADIO_ConfigureChannel(1, VFO_CONFIGURE_RELOAD);
 							RADIO_SetupRegisters(true);
@@ -1127,7 +1127,7 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 				} else {
 					Code = DTMF_GetCharacter(Key);
 					if (Code == 0xFF) {
-						goto Skip;
+						return;
 					}
 				}
 				if (bKeyHeld || !bKeyPressed) {
@@ -1172,14 +1172,14 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		}
 	}
 
-Skip:
 	if (gFlagAcceptSetting) {
 		MENU_AcceptSetting();
 		gFlagRefreshSetting = true;
 		gFlagAcceptSetting = false;
 	}
 	if (gFlagStopScan) {
-		BK4819_StopScan();
+		BK4819_DisableFrequencyScan();
+		BK4819_Disable();
 		gFlagStopScan = false;
 	}
 	if (gRequestSaveSettings) {

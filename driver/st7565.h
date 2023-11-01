@@ -26,7 +26,6 @@ extern uint8_t gFrameBuffer[7][128];
 void ST7565_DrawLine(uint8_t Column, uint8_t Line, uint16_t Size, const uint8_t *pBitmap, bool bIsClearMode);
 void ST7565_BlitFullScreen(void);
 void ST7565_BlitStatusLine(void);
-void ST7565_FillScreen(uint8_t Value);
 void ST7565_Init(void);
 void ST7565_HardwareReset(void);
 void ST7565_SelectColumnAndLine(uint8_t Column, uint8_t Line);

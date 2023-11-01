@@ -19,7 +19,7 @@
 #include "settings.h"
 
 const uint32_t LowerLimitFrequencyBandTable[7] = {
-	 5000000,
+	 1800000,
 	10800000,
 	13600000,
 	17400000,
@@ -29,7 +29,7 @@ const uint32_t LowerLimitFrequencyBandTable[7] = {
 };
 
 const uint32_t MiddleFrequencyBandTable[7] = {
-	 6500000,
+	 4700000,
 	12200000,
 	15000000,
 	26000000,
@@ -45,7 +45,7 @@ const uint32_t UpperLimitFrequencyBandTable[7] = {
 	34999990,
 	39999990,
 	46999990,
-	60000000,
+	63000000,
 };
 
 const uint16_t StepFrequencyTable[7] = {
@@ -110,83 +110,82 @@ uint32_t FREQUENCY_FloorToStep(uint32_t Upper, uint32_t Step, uint32_t Lower)
 	return Lower + (Step * Index);
 }
 
-int FREQUENCY_Check(VFO_Info_t *pInfo)
+bool FREQUENCY_Check(VFO_Info_t *pInfo)
 {
 	uint32_t Frequency;
 
 	if (pInfo->CHANNEL_SAVE > FREQ_CHANNEL_LAST) {
-		return -1;
+		return true;
 	}
 	Frequency = pInfo->pTX->Frequency;
 	switch (gSetting_F_LOCK) {
 	case F_LOCK_FCC:
 		if (Frequency >= 14400000 && Frequency <= 14799990) {
-			return 0;
+			return false;
 		}
 		if (Frequency >= 42000000 && Frequency <= 44999990) {
-			return 0;
+			return false;
 		}
 		break;
 
 	case F_LOCK_CE:
 		if (Frequency >= 14400000 && Frequency <= 14599990) {
-			return 0;
+			return false;
 		}
 		break;
 
 	case F_LOCK_GB:
 		if (Frequency >= 14400000 && Frequency <= 14799990) {
-			return 0;
+			return false;
 		}
 		if (Frequency >= 43000000 && Frequency <= 43999990) {
-			return 0;
+			return false;
 		}
 		break;
 
 	case F_LOCK_430:
 		if (Frequency >= 13600000 && Frequency <= 17399990) {
-			return 0;
+			return false;
 		}
 		if (Frequency >= 40000000 && Frequency <= 42999990) {
-			return 0;
+			return false;
 		}
 		break;
 
 	case F_LOCK_438:
 		if (Frequency >= 13600000 && Frequency <= 17399990) {
-			return 0;
+			return false;
 		}
 		if (Frequency >= 40000000 && Frequency <= 43799990) {
-			return 0;
+			return false;
 		}
 		break;
 
 	default:
 		if (Frequency >= 13600000 && Frequency <= 17399990) {
-			return 0;
+			return false;
 		}
 		if (Frequency >= 35000000 && Frequency <= 39999990) {
 			if (gSetting_350TX && gSetting_350EN) {
-				return 0;
+				return false;
 			}
 		}
 		if (Frequency >= 40000000 && Frequency <= 46999990) {
-			return 0;
+			return false;
 		}
 		if (Frequency >= 17400000 && Frequency <= 34999990) {
 			if (gSetting_200TX) {
-				return 0;
+				return false;
 			}
 		}
-
 		if (Frequency >= 47000000 && Frequency <= 60000000) {
 			if (gSetting_500TX) {
-				return 0;
+				return false;
 			}
 		}
 		break;
 	}
 
-	return -1;
+	return true;
 }
 

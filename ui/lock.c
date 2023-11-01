@@ -30,13 +30,13 @@
 static void Render(void)
 {
 	char String[7];
-	uint8_t i;
 
 	memset(gStatusLine, 0, sizeof(gStatusLine));
 	memset(gFrameBuffer, 0, sizeof(gFrameBuffer));
 	strcpy(String, "LOCK");
 	UI_PrintString(String, 0, 127, 1, 10, true);
-	for (i = 0; i < 6; i++) {
+
+	for (uint8_t i = 0; i < 6; i++) {
 		if (gInputBox[i] == 10) {
 			String[i] = '-';
 		} else {
@@ -45,7 +45,7 @@ static void Render(void)
 	}
 	String[6] = 0;
 	UI_PrintString(String, 0, 127, 3, 12, true);
-	ST7565_BlitStatusLine();
+
 	ST7565_BlitFullScreen();
 }
 

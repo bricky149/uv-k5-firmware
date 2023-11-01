@@ -462,13 +462,13 @@ void BOARD_ADC_Init(void)
 	Config.IE_FIFO_FULL = SARADC_IE_FIFO_FULL_VALUE_DISABLE;
 	Config.IE_FIFO_HFULL = SARADC_IE_FIFO_HFULL_VALUE_DISABLE;
 	ADC_Configure(&Config);
-	ADC_Enable();
+
 	ADC_SoftReset();
 }
 
 void BOARD_ADC_GetBatteryInfo(uint16_t *pVoltage, uint16_t *pCurrent)
 {
-	ADC_Start();
+	ADC_Start(); // Delayed start needed or else screen displays garbage
 
 	while (!ADC_CheckEndOfConversion(ADC_CH9)) {
 	}
@@ -483,7 +483,7 @@ void BOARD_Init(void)
 	BOARD_ADC_Init();
 	ST7565_Init();
 #if defined(ENABLE_FMRADIO)
-	BK1080_Init(0, false);
+	BK1080_Sleep();
 #endif
 #if defined(ENABLE_UART)
 	CRC_Init();

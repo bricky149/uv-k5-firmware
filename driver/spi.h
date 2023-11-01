@@ -36,11 +36,13 @@ typedef struct {
 } SPI_Config_t;
 
 void SPI0_Init(void);
+void SPI1_Init(void);
 void SPI_WaitForUndocumentedTxFifoStatusBit(void);
 
 void SPI_Disable(volatile uint32_t *pCR);
 void SPI_Configure(volatile SPI_Port_t *pPort, SPI_Config_t *pConfig);
-void SPI_ToggleMasterMode(volatile uint32_t *pCr, bool bIsMaster);
+void SPI_EnableMasterMode(volatile uint32_t *pCr);
+void SPI_DisableMasterMode(volatile uint32_t *pCr);
 void SPI_Enable(volatile uint32_t *pCR);
 
 #endif

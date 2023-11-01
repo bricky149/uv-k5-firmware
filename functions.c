@@ -111,7 +111,7 @@ void FUNCTION_Select(FUNCTION_Type_t Function)
 		gRxIdleMode = true;
 
 		BK4819_Sleep();
-		BK4819_ToggleGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE, false);
+		BK4819_ClearGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE);
 		gBatterySaveCountdownExpired = false;
 		gUpdateStatus = true;
 		GUI_SelectNextDisplay(DISPLAY_MAIN);
@@ -120,13 +120,13 @@ void FUNCTION_Select(FUNCTION_Type_t Function)
 	case FUNCTION_TRANSMIT:
 #if defined(ENABLE_FMRADIO)
 		if (gFmRadioMode) {
-			BK1080_Init(0, false);
+			BK1080_Sleep();
 		}
 #endif
 
 		GUI_DisplayScreen();
 		RADIO_SetTxParameters();
-		BK4819_ToggleGpioOut(BK4819_GPIO5_PIN1_RED, true);
+		BK4819_SetGpioOut(BK4819_GPIO5_PIN1_RED);
 
 		DTMF_Reply();
 
