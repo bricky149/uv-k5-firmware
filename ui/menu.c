@@ -47,7 +47,7 @@ static const char MenuList[][7] = {
 	"DWCODE", "D-ST",    "D-RSP",  "D-HOLD",
 	// 0x28
 	"D-PRE",  "PTT-ID",  "D-DCD",  "D-LIST",
-	"PONMSG", "ROGER",   "VOL",    "AM",
+	"PONMSG", "ROGER",   "COMPND", "AM",
 	// 0x30
 	          "DEL-CH",  "RESET",  "350TX",
 	"F-LOCK", "200TX",   "500TX",  "350EN",
@@ -131,6 +131,13 @@ static const char gSubMenu_ROGER[3][6] = {
 	"OFF",
 	"ROGER",
 	"MDC",
+};
+
+static const char gSubMenu_COMPND[4][6] = {
+	"OFF",
+	"TX",
+	"RX",
+	"TX/RX",
 };
 
 static const char gSubMenu_RESET[2][4] = {
@@ -362,6 +369,10 @@ void UI_DisplayMenu(void)
 
 	case MENU_ROGER:
 		strcpy(String, gSubMenu_ROGER[gSubMenuSelection]);
+		break;
+
+	case MENU_COMPND:
+		strcpy(String, gSubMenu_COMPND[gSubMenuSelection]);
 		break;
 
 	case MENU_RESET:

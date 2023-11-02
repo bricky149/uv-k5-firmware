@@ -19,7 +19,7 @@
 #include "driver/i2c.h"
 #include "driver/system.h"
 
-void EEPROM_ReadBuffer(uint16_t Address, void *pBuffer, uint8_t Size)
+void EEPROM_ReadBuffer(uint16_t Address, const void *pBuffer, uint8_t Size)
 {
 	I2C_Start();
 	I2C_Write(0xA0);
@@ -38,6 +38,7 @@ void EEPROM_WriteBuffer(uint16_t Address, const void *pBuffer)
 	// EEPROM wear reduction
 	// only write the data if it's different to what's already there
 	uint8_t Buf[8];
+	memset(Buf, 0, sizeof(Buf));
 	EEPROM_ReadBuffer(Address, Buf, 8);
 	if (memcmp(pBuffer, Buf, 8) == 0) {
 		return;

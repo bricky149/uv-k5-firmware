@@ -40,7 +40,7 @@ void DATA_Init(void)
 {
 	volatile uint32_t *pDataRam = (volatile uint32_t *)sram_data_start;
 	volatile uint32_t *pDataFlash = (volatile uint32_t *)flash_data_start;
-	uint32_t Size = (uint32_t)sram_data_end - (uint32_t)sram_data_start;
+	uint32_t Size = sram_data_end - sram_data_start;
 	uint32_t i;
 
 	for (i = 0; i < Size / 4; i++) {

@@ -27,6 +27,7 @@
 #include "settings.h"
 
 EEPROM_Config_t gEeprom;
+const EEPROM_Calibration_t gCalibration;
 
 #if defined(ENABLE_FMRADIO)
 void SETTINGS_SaveFM(void)
@@ -198,6 +199,7 @@ void SETTINGS_SaveChannel(uint8_t Channel, uint8_t VFO, const VFO_Info_t *pVFO, 
 			;
 		State8[5] = (pVFO->DTMF_PTT_ID_TX_MODE << 1) | pVFO->DTMF_DECODING_ENABLE;
 		State8[6] = pVFO->STEP_SETTING;
+		State8[7] = pVFO->CompanderMode;
 
 		EEPROM_WriteBuffer(OffsetVFO + 8, State8);
 

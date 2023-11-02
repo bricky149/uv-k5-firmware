@@ -401,6 +401,57 @@ void BK4819_SelectFilter(uint32_t Frequency)
 	}
 }
 
+void BK4819_SetCompander(uint8_t Mode)
+{
+	// 1o11
+	if (Mode == 1 || Mode == 3) {
+		// REG_29
+		//
+		// <15:14> 10 Compress (AF Tx) Ratio
+		//         00 = Disable
+		//         01 = 1.333:1
+		//         10 = 2:1
+		//         11 = 4:1
+		//
+		// <13:7>  86 Compress (AF Tx) 0 dB point (dB)
+		//
+		// <6:0>   64 Compress (AF Tx) noise point (dB)
+		//
+		BK4819_WriteRegister(BK4819_REG_29,
+			(2u << 14) |  // compress ratio 2:1
+			(86u <<  7) | // compress 0dB
+			(64u <<  0)); // compress noise dB
+	}
+	if (Mode == 2 || Mode == 3) {
+		// REG_28
+		//
+		// <15:14> 01 Expander (AF Rx) Ratio
+		//         00 = Disable
+		//         01 = 1:2
+		//         10 = 1:3
+		//         11 = 1:4
+		//
+		// <13:7>  86 Expander (AF Rx) 0 dB point (dB)
+		//
+		// <6:0>   56 Expander (AF Rx) noise point (dB)
+		//
+		BK4819_WriteRegister(BK4819_REG_28,
+			(1u << 14) |  // expander ratio 1:2
+			(86u <<  7) | // expander 0dB
+			(56u <<  0)); // expander noise dB
+	}
+	// mode 0 .. OFF
+	// mode 1 .. TX
+	// mode 2 .. RX
+	// mode 3 .. TX and RX
+	//
+	if (Mode == 0) {
+		BK4819_WriteRegister(BK4819_REG_31, (0u << 3));
+	} else {
+		BK4819_WriteRegister(BK4819_REG_31, (1u << 3));
+	}
+}
+
 void BK4819_DisableDTMF(void)
 {
 	BK4819_WriteRegister(BK4819_REG_24, 0);

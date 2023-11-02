@@ -125,6 +125,7 @@ void RADIO_InitInfo(VFO_Info_t *pInfo, uint8_t ChannelSave, uint8_t Band, uint32
 	pInfo->pRX = &pInfo->ConfigRX;
 	pInfo->pTX = &pInfo->ConfigTX;
 	pInfo->FREQUENCY_OF_DEVIATION = 0;
+	pInfo->CompanderMode = 0;
 	RADIO_ConfigureSquelchAndOutputPower(pInfo);
 }
 
@@ -136,7 +137,6 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 	uint8_t Band;
 	bool bParticipation2;
 	uint16_t Base;
-	uint8_t Data[8];
 	uint8_t Tmp;
 	uint32_t Frequency;
 
@@ -205,24 +205,9 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 	}
 
 	if (Configure == VFO_CONFIGURE_RELOAD || Channel >= FREQ_CHANNEL_FIRST) {
+		uint8_t Data[8];
+		memset(Data, 0, sizeof(Data));
 		EEPROM_ReadBuffer(Base + 8, Data, 8);
-
-		Tmp = Data[3] & 0x0F;
-		if (Tmp > 2) {
-			Tmp = 0;
-		}
-		gEeprom.VfoInfo[VFO].FREQUENCY_DEVIATION_SETTING = Tmp;
-		gEeprom.VfoInfo[VFO].AM_CHANNEL_MODE = !!(Data[3] & 0x10);
-
-		Tmp = Data[6];
-		if (Tmp > STEP_8_33kHz) {
-			Tmp = STEP_25_0kHz;
-		}
-		gEeprom.VfoInfo[VFO].STEP_SETTING = Tmp;
-		gEeprom.VfoInfo[VFO].StepFrequency = StepFrequencyTable[Tmp];
-
-		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = (Data[2] >> 0) & 0x0F;
-		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = (Data[2] >> 4) & 0x0F;
 
 		Tmp = Data[0];
 		switch (gEeprom.VfoInfo[VFO].ConfigRX.CodeType) {
@@ -264,6 +249,16 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		}
 		gEeprom.VfoInfo[VFO].ConfigTX.Code = Tmp;
 
+		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = (Data[2] >> 0) & 0x0F;
+		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = (Data[2] >> 4) & 0x0F;
+
+		Tmp = Data[3] & 0x0F;
+		if (Tmp > 2) {
+			Tmp = 0;
+		}
+		gEeprom.VfoInfo[VFO].FREQUENCY_DEVIATION_SETTING = Tmp;
+		gEeprom.VfoInfo[VFO].AM_CHANNEL_MODE = !!(Data[3] & 0x10);
+
 		if (Data[4] == 0xFF) {
 			gEeprom.VfoInfo[VFO].FrequencyReverse = false;
 			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BK4819_FILTER_BW_WIDE;
@@ -275,6 +270,7 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 			gEeprom.VfoInfo[VFO].OUTPUT_POWER = (Data[4] >> 2) & 0x03;
 			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = !!(Data[4] & 0x10);
 		}
+
 		if (Data[5] == 0xFF) {
 			gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = false;
 			gEeprom.VfoInfo[VFO].DTMF_PTT_ID_TX_MODE = PTT_ID_OFF;
@@ -282,6 +278,19 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 			gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = !!(Data[5] & 1);
 			gEeprom.VfoInfo[VFO].DTMF_PTT_ID_TX_MODE = (Data[5] >> 0x01) & 0x03;
 		}
+
+		Tmp = Data[6];
+		if (Tmp > STEP_8_33kHz) {
+			Tmp = STEP_25_0kHz;
+		}
+		gEeprom.VfoInfo[VFO].STEP_SETTING = Tmp;
+		gEeprom.VfoInfo[VFO].StepFrequency = StepFrequencyTable[Tmp];
+
+		Tmp = Data[7];
+		if (Tmp > 3) {
+			Tmp = 0;
+		}
+		gEeprom.VfoInfo[VFO].CompanderMode = Tmp;
 
 		struct {
 			uint32_t Frequency;
@@ -334,12 +343,15 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		}
 	}
 
-	if (gEeprom.VfoInfo[VFO].Band == BAND2_108MHz && gEeprom.VfoInfo[VFO].AM_CHANNEL_MODE) {
+	if (gEeprom.VfoInfo[VFO].Band == BAND2_108MHz) {
+		gEeprom.VfoInfo[VFO].AM_CHANNEL_MODE = 1;
 		gEeprom.VfoInfo[VFO].IsAM = true;
 		gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = false;
 		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
 		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
 	} else {
+		// Override AM mode when entering/leaving Band2
+		gEeprom.VfoInfo[VFO].AM_CHANNEL_MODE = 0;
 		gEeprom.VfoInfo[VFO].IsAM = false;
 	}
 

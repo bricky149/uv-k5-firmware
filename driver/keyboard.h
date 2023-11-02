@@ -41,7 +41,7 @@ enum KEY_Code_t {
 	KEY_PTT = 21,
 	KEY_SIDE2 = 22,
 	KEY_SIDE1 = 23,
-	KEY_INVALID = 255,
+	KEY_INVALID = 31,
 };
 
 typedef enum KEY_Code_t KEY_Code_t;

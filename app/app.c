@@ -268,7 +268,6 @@ static void APP_HandleFunction(void)
 
 void APP_StartListening(FUNCTION_Type_t Function)
 {
-
 #if defined(ENABLE_FMRADIO)
 		if (gFmRadioMode) {
 			BK1080_Sleep();
@@ -306,18 +305,17 @@ void APP_StartListening(FUNCTION_Type_t Function)
 	}
 	if (gRxVfo->IsAM) {
 		BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
-		// https://www.eecg.utoronto.ca/~kphang/papers/2001/martin_AGC.pdf
 		BK4819_DisableAGC();
-	} else {
-		BK4819_WriteRegister(BK4819_REG_48, 0xB000
-				| (gEeprom.VOLUME_GAIN << 4)
-				| (gEeprom.DAC_GAIN << 0)
-				);
-		BK4819_EnableAGC();
-	}
-	if (gRxVfo->IsAM) {
+		// Override compander mode when entering/leaving AM
+		BK4819_SetCompander(0);
 		BK4819_SetAF(BK4819_AF_AM);
 	} else {
+		BK4819_WriteRegister(BK4819_REG_48, 0xB000
+				| (gCalibration.VOLUME_GAIN << 4)
+				| (gCalibration.DAC_GAIN << 0)
+				);
+		BK4819_EnableAGC();
+		BK4819_SetCompander(gRxVfo->CompanderMode);
 		BK4819_SetAF(BK4819_AF_OPEN);
 	}
 	FUNCTION_Select(Function);
@@ -736,10 +734,11 @@ void APP_TimeSlice10ms(void)
 
 	uint32_t Result;
 	uint16_t CtcssFreq;
+	BK4819_CssScanResult_t ScanResult;
 
 	switch (gScanCssState) {
 		case SCAN_CSS_STATE_SCANNING:
-			BK4819_CssScanResult_t ScanResult = BK4819_GetCxCSSScanResult(&Result, &CtcssFreq);
+			ScanResult = BK4819_GetCxCSSScanResult(&Result, &CtcssFreq);
 			if (ScanResult == BK4819_CSS_RESULT_NOT_FOUND) {
 				break;
 			}
@@ -1120,12 +1119,12 @@ static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			if (Key == KEY_PTT) {
 				GENERIC_Key_PTT(bKeyPressed);
 			} else {
-				char Code;
+				uint8_t Code;
 
 				if (Key == KEY_SIDE2) {
 					Code = 0xFE;
 				} else {
-					Code = DTMF_GetCharacter(Key);
+					Code = (uint8_t)DTMF_GetCharacter(Key);
 					if (Code == 0xFF) {
 						return;
 					}

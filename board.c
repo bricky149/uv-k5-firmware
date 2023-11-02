@@ -678,22 +678,8 @@ void BOARD_EEPROM_LoadCalibration(void)
 	EEPROM_ReadBuffer(0x1F80 + gEeprom.MIC_SENSITIVITY, &Mic, 1);
 	gEeprom.MIC_SENSITIVITY_TUNING = (Mic < 32) ? Mic : 15;
 
-	struct {
-		int16_t BK4819_XtalFreqLow;
-		uint16_t EEPROM_1F8A;
-		uint16_t EEPROM_1F8C;
-		uint8_t VOLUME_GAIN;
-		uint8_t DAC_GAIN;
-	} Misc;
-	EEPROM_ReadBuffer(0x1F88, &Misc, sizeof(Misc));
-
-	gEeprom.BK4819_XTAL_FREQ_LOW = (Misc.BK4819_XtalFreqLow + 1000 < 2000) ? Misc.BK4819_XtalFreqLow : 0;
-	gEEPROM_1F8A = Misc.EEPROM_1F8A & 0x01FF;
-	gEEPROM_1F8C = Misc.EEPROM_1F8C & 0x01FF;
-	gEeprom.VOLUME_GAIN = (Misc.VOLUME_GAIN < 64) ? Misc.VOLUME_GAIN : 58;
-	gEeprom.DAC_GAIN    = (Misc.DAC_GAIN    < 16) ? Misc.DAC_GAIN : 8;
-
-	BK4819_WriteRegister(BK4819_REG_3B, gEeprom.BK4819_XTAL_FREQ_LOW + 22656);
+	EEPROM_ReadBuffer(0x1F88, &gCalibration, sizeof(gCalibration));
+	BK4819_WriteRegister(BK4819_REG_3B, gCalibration.BK4819_XTAL_FREQ_LOW + 22656);
 }
 
 void BOARD_FactoryReset(bool bIsAll)

@@ -37,13 +37,13 @@ enum {
 };
 
 enum {
-	CROSS_BAND_OFF = 0U,
+	CROSS_BAND_OFF    = 0U,
 	CROSS_BAND_CHAN_A = 1U,
 	CROSS_BAND_CHAN_B = 2U,
 };
 
 enum {
-	DUAL_WATCH_OFF = 0U,
+	DUAL_WATCH_OFF    = 0U,
 	DUAL_WATCH_CHAN_A = 1U,
 	DUAL_WATCH_CHAN_B = 2U,
 };
@@ -55,18 +55,10 @@ enum {
 };
 
 enum {
-	OUTPUT_POWER_LOW = 0U,
-	OUTPUT_POWER_MID = 1U,
+	OUTPUT_POWER_LOW  = 0U,
+	OUTPUT_POWER_MID  = 1U,
 	OUTPUT_POWER_HIGH = 2U,
 };
-
-enum VOICE_Prompt_t {
-	VOICE_PROMPT_OFF = 0U,
-	VOICE_PROMPT_CHINESE = 1U,
-	VOICE_PROMPT_ENGLISH = 2U,
-};
-
-typedef enum VOICE_Prompt_t VOICE_Prompt_t;
 
 enum ROGER_Mode_t {
 	ROGER_MODE_OFF   = 0U,
@@ -87,7 +79,6 @@ typedef enum CHANNEL_DisplayMode_t CHANNEL_DisplayMode_t;
 typedef struct {
 	VFO_Info_t VfoInfo[2];
 	uint32_t POWER_ON_PASSWORD;
-	int16_t BK4819_XTAL_FREQ_LOW;
 	uint8_t ScreenChannel[2];
 	uint8_t FreqChannel[2];
 	uint8_t MrChannel[2];
@@ -147,15 +138,22 @@ typedef struct {
 	uint16_t DTMF_CODE_PERSIST_TIME;
 	uint16_t DTMF_CODE_INTERVAL_TIME;
 	bool DTMF_SIDE_TONE;
-	uint8_t VOLUME_GAIN;
-	uint8_t DAC_GAIN;
 	uint8_t field77_0x95;
 	uint8_t field78_0x96;
 	uint8_t field79_0x97;
 	uint8_t Padding[2];
 } EEPROM_Config_t;
 
+typedef struct {
+	int16_t BK4819_XTAL_FREQ_LOW;
+	uint16_t EEPROM_1F8A;
+	uint16_t EEPROM_1F8C;
+	uint8_t VOLUME_GAIN;
+	uint8_t DAC_GAIN;
+} EEPROM_Calibration_t;
+
 extern EEPROM_Config_t gEeprom;
+extern const EEPROM_Calibration_t gCalibration;
 
 void SETTINGS_SaveFM(void);
 void SETTINGS_SaveVfoIndices(void);

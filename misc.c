@@ -40,9 +40,6 @@ uint8_t gTryCount;
 
 uint16_t gEEPROM_RSSI_CALIB[7][4];
 
-uint16_t gEEPROM_1F8A;
-uint16_t gEEPROM_1F8C;
-
 uint8_t gMR_ChannelAttributes[FREQ_CHANNEL_LAST + 1];
 
 volatile bool gNextTimeslice500ms;

@@ -114,7 +114,7 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 		*pMin = 1;
 		*pMax = 2;
 		break;
-	case MENU_D_RSP: case MENU_PTT_ID:
+	case MENU_COMPND: case MENU_D_RSP: case MENU_PTT_ID:
 		*pMin = 0;
 		*pMax = 3;
 		break;
@@ -364,6 +364,11 @@ void MENU_AcceptSetting(void)
 	case MENU_ROGER:
 		gEeprom.ROGER = gSubMenuSelection;
 		break;
+
+	case MENU_COMPND:
+		gTxVfo->CompanderMode = gSubMenuSelection;
+		gRequestSaveChannel = 1;
+		return;
 
 	case MENU_AM:
 		gTxVfo->AM_CHANNEL_MODE = gSubMenuSelection;
@@ -639,6 +644,10 @@ void MENU_ShowCurrentSetting(void)
 
 	case MENU_ROGER:
 		gSubMenuSelection = gEeprom.ROGER;
+		break;
+
+	case MENU_COMPND:
+		gSubMenuSelection = gTxVfo->CompanderMode;
 		break;
 
 	case MENU_AM:

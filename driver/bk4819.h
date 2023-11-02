@@ -78,6 +78,8 @@ void BK4819_SetAF(BK4819_AF_Type_t AF);
 void BK4819_RX_TurnOn(void);
 void BK4819_SelectFilter(uint32_t Frequency);
 
+void BK4819_SetCompander(uint8_t Mode);
+
 void BK4819_DisableDTMF(void);
 void BK4819_EnableDTMF(void);
 void BK4819_PlayTone(uint16_t Frequency, bool bTuningGainSwitch);

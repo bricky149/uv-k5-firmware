@@ -77,9 +77,6 @@ extern uint8_t gTryCount;
 
 extern uint16_t gEEPROM_RSSI_CALIB[7][4];
 
-extern uint16_t gEEPROM_1F8A;
-extern uint16_t gEEPROM_1F8C;
-
 extern uint8_t gMR_ChannelAttributes[207];
 
 extern volatile bool gNextTimeslice500ms;
