@@ -216,12 +216,14 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 				Tmp = 0;
 			}
 			break;
+
 		case CODE_TYPE_DIGITAL:
 		case CODE_TYPE_REVERSE_DIGITAL:
 			if (Tmp >= 104) {
 				Tmp = 0;
 			}
 			break;
+
 		default:
 			gEeprom.VfoInfo[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
 			Tmp = 0;
@@ -236,12 +238,14 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 				Tmp = 0;
 			}
 			break;
+
 		case CODE_TYPE_DIGITAL:
 		case CODE_TYPE_REVERSE_DIGITAL:
 			if (Tmp >= 104) {
 				Tmp = 0;
 			}
 			break;
+
 		default:
 			gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
 			Tmp = 0;
@@ -263,7 +267,7 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 			gEeprom.VfoInfo[VFO].FrequencyReverse = false;
 			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BK4819_FILTER_BW_WIDE;
 			gEeprom.VfoInfo[VFO].OUTPUT_POWER = OUTPUT_POWER_LOW;
-			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = false;
+			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = true;
 		} else {
 			gEeprom.VfoInfo[VFO].FrequencyReverse = !!(Data[4] & 0x01);
 			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = !!(Data[4] & 0x02);
@@ -323,9 +327,11 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 	RADIO_ApplyOffset(pRadio);
 	memset(gEeprom.VfoInfo[VFO].Name, 0, sizeof(gEeprom.VfoInfo[VFO].Name));
 	if (IS_MR_CHANNEL(Channel)) {
+		// Only space for 8 characters on screen
+		EEPROM_ReadBuffer(0x0F50 + (Channel * 0x10), gEeprom.VfoInfo[VFO].Name, 12);
 		// 16 bytes allocated but only 12 used
-		EEPROM_ReadBuffer(0x0F50 + (Channel * 0x10), gEeprom.VfoInfo[VFO].Name + 0, 8);
-		EEPROM_ReadBuffer(0x0F58 + (Channel * 0x10), gEeprom.VfoInfo[VFO].Name + 8, 2);
+		//EEPROM_ReadBuffer(0x0F50 + (Channel * 0x10), gEeprom.VfoInfo[VFO].Name + 0, 8);
+		//EEPROM_ReadBuffer(0x0F58 + (Channel * 0x10), gEeprom.VfoInfo[VFO].Name + 8, 2);
 	}
 
 	if (!gEeprom.VfoInfo[VFO].FrequencyReverse) {
@@ -349,6 +355,7 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = false;
 		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
 		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
+		gEeprom.VfoInfo[VFO].CompanderMode = 0;
 	} else {
 		// Override AM mode when entering/leaving Band2
 		gEeprom.VfoInfo[VFO].AM_CHANNEL_MODE = 0;

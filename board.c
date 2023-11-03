@@ -496,25 +496,24 @@ void BOARD_EEPROM_Init(void)
 	memset(Data, 0, sizeof(Data));
 
 	// 0E70..0E77
-	EEPROM_ReadBuffer(0x0E70, Data, 8);
+	EEPROM_ReadBuffer(0x0E70, Data, 16);
 	gEeprom.CHAN_1_CALL      = IS_MR_CHANNEL(Data[0]) ? Data[0] : MR_CHANNEL_FIRST;
 	gEeprom.SQUELCH_LEVEL    = (Data[1] < 10) ? Data[1] : 2;
 	gEeprom.TX_TIMEOUT_TIMER = (Data[2] < 11) ? Data[2] : 2;
 	gEeprom.KEY_LOCK         = (Data[4] <  2) ? Data[4] : 0;
 	gEeprom.MIC_SENSITIVITY  = (Data[7] <  5) ? Data[7] : 3;
-
 	// 0E78..0E7F
-	EEPROM_ReadBuffer(0x0E78, Data, 8);
-	gEeprom.CHANNEL_DISPLAY_MODE  = (Data[1] < 3) ? Data[1] : MDF_FREQUENCY;
-	gEeprom.CROSS_BAND_RX_TX      = (Data[2] < 3) ? Data[2] : CROSS_BAND_OFF;
-	gEeprom.BATTERY_SAVE          = (Data[3] < 5) ? Data[3] : 4;
-	gEeprom.DUAL_WATCH            = (Data[4] < 3) ? Data[4] : DUAL_WATCH_OFF;
-	gEeprom.BACKLIGHT             = (Data[5] < 6) ? Data[5] : 5;
-	gEeprom.TAIL_NOTE_ELIMINATION = (Data[6] < 2) ? Data[6] : 1;
-	gEeprom.VFO_OPEN              = (Data[7] < 2) ? Data[7] : 1;
+	//EEPROM_ReadBuffer(0x0E78, Data, 8);
+	gEeprom.CHANNEL_DISPLAY_MODE  = (Data[9] < 3) ? Data[9] : MDF_FREQUENCY;
+	gEeprom.CROSS_BAND_RX_TX      = (Data[10] < 3) ? Data[10] : CROSS_BAND_OFF;
+	gEeprom.BATTERY_SAVE          = (Data[11] < 5) ? Data[11] : 4;
+	gEeprom.DUAL_WATCH            = (Data[12] < 3) ? Data[12] : DUAL_WATCH_OFF;
+	gEeprom.BACKLIGHT             = (Data[13] < 6) ? Data[13] : 5;
+	gEeprom.TAIL_NOTE_ELIMINATION = (Data[14] < 2) ? Data[14] : 1;
+	gEeprom.VFO_OPEN              = (Data[15] < 2) ? Data[15] : 1;
 
 	// 0E80..0E87
-	EEPROM_ReadBuffer(0x0E80, Data, 6);
+	EEPROM_ReadBuffer(0x0E80, Data, 8);
 	gEeprom.ScreenChannel[0] = IS_VALID_CHANNEL(Data[0]) ? Data[0] : (FREQ_CHANNEL_FIRST + BAND6_400MHz);
 	gEeprom.ScreenChannel[1] = IS_VALID_CHANNEL(Data[3]) ? Data[3] : (FREQ_CHANNEL_FIRST + BAND6_400MHz);
 	gEeprom.MrChannel[0]     = IS_MR_CHANNEL(Data[1])    ? Data[1] : MR_CHANNEL_FIRST;
@@ -547,7 +546,7 @@ void BOARD_EEPROM_Init(void)
 #endif
 
 	// 0E90..0E97
-	EEPROM_ReadBuffer(0x0E90, Data, 7);
+	EEPROM_ReadBuffer(0x0E90, Data, 8);
 	gEeprom.KEY_1_SHORT_PRESS_ACTION = (Data[1] < 6) ? Data[1] : 3;
 	gEeprom.KEY_1_LONG_PRESS_ACTION  = (Data[2] < 6) ? Data[2] : 4;
 	gEeprom.KEY_2_SHORT_PRESS_ACTION = (Data[3] < 6) ? Data[3] : 2;
@@ -563,13 +562,13 @@ void BOARD_EEPROM_Init(void)
 	//EEPROM_ReadBuffer(0x0EA0, Data, 8);
 
 	// 0EA8..0EAF
-	EEPROM_ReadBuffer(0x0EA8, Data, 4);
+	EEPROM_ReadBuffer(0x0EA8, Data, 8);
 	gEeprom.ROGER                          = (Data[1] <  3) ? Data[1] : ROGER_MODE_OFF;
 	gEeprom.REPEATER_TAIL_TONE_ELIMINATION = (Data[2] < 11) ? Data[2] : 0;
 	gEeprom.TX_VFO                         = (Data[3] <  2) ? Data[3] : 0;
 
 	// 0ED0..0ED7
-	EEPROM_ReadBuffer(0x0ED0, Data, 8);
+	EEPROM_ReadBuffer(0x0ED0, Data, 16);
 	gEeprom.DTMF_SIDE_TONE               = (Data[0] <   2) ? Data[0] : 0;
 	gEeprom.DTMF_SEPARATE_CODE           = DTMF_ValidateCodes((char *)(Data + 1), 1) ? Data[1] : '*';
 	gEeprom.DTMF_GROUP_CALL_CODE         = DTMF_ValidateCodes((char *)(Data + 2), 1) ? Data[2] : '#';
@@ -578,11 +577,10 @@ void BOARD_EEPROM_Init(void)
 	gEeprom.DTMF_PRELOAD_TIME            = (Data[5] < 101) ? Data[5] * 10 : 300;
 	gEeprom.DTMF_FIRST_CODE_PERSIST_TIME = (Data[6] < 101) ? Data[6] * 10 : 100;
 	gEeprom.DTMF_HASH_CODE_PERSIST_TIME  = (Data[7] < 101) ? Data[7] * 10 : 100;
-
 	// 0ED8..0EDF
-	EEPROM_ReadBuffer(0x0ED8, Data, 2);
-	gEeprom.DTMF_CODE_PERSIST_TIME  = (Data[0] < 101) ? Data[0] * 10 : 100;
-	gEeprom.DTMF_CODE_INTERVAL_TIME = (Data[1] < 101) ? Data[1] * 10 : 100;
+	//EEPROM_ReadBuffer(0x0ED8, Data, 8);
+	gEeprom.DTMF_CODE_PERSIST_TIME  = (Data[8] < 101) ? Data[8] * 10 : 100;
+	gEeprom.DTMF_CODE_INTERVAL_TIME = (Data[9] < 101) ? Data[9] * 10 : 100;
 
 	// 0EE0..0EE7
 	EEPROM_ReadBuffer(0x0EE0, Data, 8);
@@ -616,7 +614,7 @@ void BOARD_EEPROM_Init(void)
 	}
 
 	// 0F18..0F1F
-	EEPROM_ReadBuffer(0x0F18, Data, 7);
+	EEPROM_ReadBuffer(0x0F18, Data, 8);
 	gEeprom.SCAN_LIST_DEFAULT        = (Data[0] < 2) ? Data[0] : false;
 	for (uint8_t i = 0; i < 2; i++) {
 		uint8_t j = (i * 3) + 1;
@@ -626,7 +624,7 @@ void BOARD_EEPROM_Init(void)
 	}
 
 	// 0F40..0F47
-	EEPROM_ReadBuffer(0x0F40, Data, 6);
+	EEPROM_ReadBuffer(0x0F40, Data, 8);
 	gSetting_F_LOCK         = (Data[0] < 6) ? Data[0] : F_LOCK_OFF;
 
 	gUpperLimitFrequencyBandTable = UpperLimitFrequencyBandTable;

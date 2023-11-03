@@ -20,6 +20,7 @@
 #include "dcs.h"
 #include "driver/st7565.h"
 #include "external/printf/printf.h"
+#include "frequencies.h"
 #include "helper/battery.h"
 #include "misc.h"
 #include "settings.h"
@@ -188,16 +189,20 @@ void UI_DisplayMenu(void)
 	NUMBER_ToDigits(gMenuCursor + 1, String);
 	UI_DisplaySmallDigits(2, String + 6, 33, 6);
 	memset(String, 0, sizeof(String));
+
+	uint32_t kHz;
 	char Contact[16];
 
 	switch (gMenuCursor) {
 	case MENU_SQL:
 	case MENU_MIC:
-		sprintf(String, "%d", gSubMenuSelection);
+		sprintf(String, "%u", gSubMenuSelection);
 		break;
 
 	case MENU_STEP:
-		sprintf(String, "%.2fKHz", gSubMenu_Step[gSubMenuSelection] * 0.01);
+		kHz = gSubMenu_Step[gSubMenuSelection] / 100;
+		uint8_t Hz = gSubMenu_Step[gSubMenuSelection] % 100;
+		sprintf(String, "%u.%02ukHz", kHz, Hz);
 		break;
 
 	case MENU_TXP:
@@ -220,7 +225,9 @@ void UI_DisplayMenu(void)
 		if (gSubMenuSelection == 0) {
 			strcpy(String, "OFF");
 		} else {
-			sprintf(String, "%.1fHz", CTCSS_Options[gSubMenuSelection - 1] * 0.1);
+			uint8_t Hz = CTCSS_Options[gSubMenuSelection - 1] / 10;
+			uint8_t mHz = CTCSS_Options[gSubMenuSelection - 1] % 10;
+			sprintf(String, "%u.%01uHz", Hz, mHz);
 		}
 		break;
 
@@ -229,30 +236,20 @@ void UI_DisplayMenu(void)
 		break;
 
 	case MENU_OFFSET:
-		if (!gIsInSubMenu || gInputBoxIndex == 0) {
-			sprintf(String, "%.5f", gSubMenuSelection * 1e-05);
-			break;
+		uint8_t i = 0;
+		while (i < 3) {
+			String[i] = (gInputBox[i] == 10) ? '-' : gInputBox[i] + '0';
+			i++;
 		}
-		for (i = 0; i < 3; i++) {
-			if (gInputBox[i] == 10) {
-				String[i] = '-';
-			} else {
-				String[i] = gInputBox[i] + '0';
-			}
+		String[i] = '.';
+		i++;
+		while (i < 8) {
+			String[i] = (gInputBox[i] == 10) ? '-' : gInputBox[i] + '0';
+			i++;
 		}
-		String[3] = '.';
-		for (i = 3; i < 6; i++) {
-			if (gInputBox[i] == 10) {
-				String[i + 1] = '-';
-			} else {
-				String[i + 1] = gInputBox[i] + '0';
-			}
-		}
-		String[7] = '-';
-		String[8] = '-';
-		String[9] = '0';
-		String[10] = '0';
-		String[11] = '0';
+		uint16_t MHz = gSubMenuSelection / 100000;
+		kHz = gSubMenuSelection % 100000;
+		sprintf(String, "%u.%05u", MHz, kHz);
 		break;
 
 	case MENU_W_N:
@@ -263,7 +260,7 @@ void UI_DisplayMenu(void)
 		if (gSubMenuSelection == 0) {
 			strcpy(String, "OFF");
 		} else {
-			sprintf(String, "%d", gSubMenuSelection);
+			sprintf(String, "%u", gSubMenuSelection);
 		}
 		break;
 
@@ -326,7 +323,7 @@ void UI_DisplayMenu(void)
 		break;
 
 	case MENU_S_LIST:
-		sprintf(String, "LIST%d", gSubMenuSelection);
+		sprintf(String, "LIST%u", gSubMenuSelection);
 		break;
 
 	case MENU_ANI_ID:
@@ -385,7 +382,7 @@ void UI_DisplayMenu(void)
 
 	case MENU_BATCAL:
 		uint32_t vol = gBatteryVoltageAverage * gBatteryCalibration[3] / gSubMenuSelection;
-		sprintf(String, "%u.%02uV-%#4d", vol / 100, vol % 100, gSubMenuSelection);
+		sprintf(String, "%u.%02uV-%#4u", vol / 100, vol % 100, gSubMenuSelection);
 		break;
 	}
 	UI_PrintString(String, 50, 127, 2, 8, true);
@@ -461,11 +458,11 @@ void UI_DisplayMenu(void)
 			} else {
 				UI_PrintString(String, 50, 127, 0, 8, true);
 				if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH1[i])) {
-					sprintf(String, "PRI1:%d", gEeprom.SCANLIST_PRIORITY_CH1[i] + 1);
+					sprintf(String, "PRI1:%u", gEeprom.SCANLIST_PRIORITY_CH1[i] + 1);
 					UI_PrintString(String, 50, 127, 2, 8, true);
 				}
 				if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH2[i])) {
-					sprintf(String, "PRI2:%d", gEeprom.SCANLIST_PRIORITY_CH2[i] + 1);
+					sprintf(String, "PRI2:%u", gEeprom.SCANLIST_PRIORITY_CH2[i] + 1);
 					UI_PrintString(String, 50, 127, 4, 8, true);
 				}
 			}

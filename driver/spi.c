@@ -51,14 +51,9 @@ void SPI1_Init(void)
 
 void SPI_WaitForUndocumentedTxFifoStatusBit(void)
 {
-	uint16_t Timeout = 0;
-	do {
-		// Undocumented bit!
-		if ((SPI0->IF & 0x20) == 0) {
-			break;
-		}
-		Timeout++;
-	} while (Timeout < 65535);
+	while ((SPI0->IF & 0x20) != 0) {
+		// Spinlock until ready
+	}
 }
 
 void SPI_Disable(volatile uint32_t *pCR)

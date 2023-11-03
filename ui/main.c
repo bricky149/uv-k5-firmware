@@ -201,7 +201,7 @@ void UI_DisplayMain(void)
 				sprintf(String, "VOL HIGH");
 				break;
 			}
-			UI_PrintString(String, 31, 111, i * 4, 10, true);
+			UI_PrintString(String, 31, 112, i * 4, 10, true);
 		} else {
 			if (gInputBoxIndex && IS_FREQ_CHANNEL(gEeprom.ScreenChannel[i]) && gEeprom.TX_VFO == i) {
 				UI_DisplayFrequency(gInputBox, 31, i * 4, true, false);
@@ -263,30 +263,31 @@ void UI_DisplayMain(void)
 			}
 		}
 
+		pLine1 += 128;
 		// TODO: not quite how the original does it, but it's quite entangled in Ghidra.
 		if (Level) {
-			memcpy(pLine1 + 128 + 0, BITMAP_Antenna, sizeof(BITMAP_Antenna));
-			memcpy(pLine1 + 128 + 5, BITMAP_AntennaLevel1, sizeof(BITMAP_AntennaLevel1));
+			memcpy(pLine1, BITMAP_Antenna, sizeof(BITMAP_Antenna));
+			memcpy(pLine1 + 5, BITMAP_AntennaLevel1, sizeof(BITMAP_AntennaLevel1));
 			if (Level >= 2) {
-				memcpy(pLine1 + 128 + 8, BITMAP_AntennaLevel2, sizeof(BITMAP_AntennaLevel2));
+				memcpy(pLine1 + 8, BITMAP_AntennaLevel2, sizeof(BITMAP_AntennaLevel2));
 			}
 			if (Level >= 3) {
-				memcpy(pLine1 + 128 + 11, BITMAP_AntennaLevel3, sizeof(BITMAP_AntennaLevel3));
+				memcpy(pLine1 + 11, BITMAP_AntennaLevel3, sizeof(BITMAP_AntennaLevel3));
 			}
 			if (Level >= 4) {
-				memcpy(pLine1 + 128 + 14, BITMAP_AntennaLevel4, sizeof(BITMAP_AntennaLevel4));
+				memcpy(pLine1 + 14, BITMAP_AntennaLevel4, sizeof(BITMAP_AntennaLevel4));
 			}
 			if (Level >= 5) {
-				memcpy(pLine1 + 128 + 17, BITMAP_AntennaLevel5, sizeof(BITMAP_AntennaLevel5));
+				memcpy(pLine1 + 17, BITMAP_AntennaLevel5, sizeof(BITMAP_AntennaLevel5));
 			}
 			if (Level >= 6) {
-				memcpy(pLine1 + 128 + 20, BITMAP_AntennaLevel6, sizeof(BITMAP_AntennaLevel6));
+				memcpy(pLine1 + 20, BITMAP_AntennaLevel6, sizeof(BITMAP_AntennaLevel6));
 			}
 		}
 
 		// 0x931E
 		if (gEeprom.VfoInfo[i].IsAM) {
-			memcpy(pLine1 + 128 + 27, BITMAP_AM, sizeof(BITMAP_AM));
+			memcpy(pLine1 + 27, BITMAP_AM, sizeof(BITMAP_AM));
 		} else {
 			const FREQ_Config_t *pConfig;
 
@@ -295,14 +296,20 @@ void UI_DisplayMain(void)
 			} else {
 				pConfig = gEeprom.VfoInfo[i].pRX;
 			}
+			if (gEeprom.VfoInfo[i].CompanderMode) {
+				memcpy(pLine1 + 94, BITMAP_C, sizeof(BITMAP_C));
+			}
+
 			switch (pConfig->CodeType) {
 			case CODE_TYPE_CONTINUOUS_TONE:
-				memcpy(pLine1 + 128 + 27, BITMAP_CT, sizeof(BITMAP_CT));
+				memcpy(pLine1 + 27, BITMAP_CT, sizeof(BITMAP_CT));
 				break;
+
 			case CODE_TYPE_DIGITAL:
 			case CODE_TYPE_REVERSE_DIGITAL:
-				memcpy(pLine1 + 128 + 24, BITMAP_DCS, sizeof(BITMAP_DCS));
+				memcpy(pLine1 + 24, BITMAP_DCS, sizeof(BITMAP_DCS));
 				break;
+
 			default:
 				break;
 			}
@@ -311,33 +318,33 @@ void UI_DisplayMain(void)
 		// 0x936C
 		switch (gEeprom.VfoInfo[i].OUTPUT_POWER) {
 		case OUTPUT_POWER_LOW:
-			memcpy(pLine1 + 128 + 44, BITMAP_PowerLow, sizeof(BITMAP_PowerLow));
+			memcpy(pLine1 + 44, BITMAP_PowerLow, sizeof(BITMAP_PowerLow));
 			break;
 		case OUTPUT_POWER_MID:
-			memcpy(pLine1 + 128 + 44, BITMAP_PowerMid, sizeof(BITMAP_PowerMid));
+			memcpy(pLine1 + 44, BITMAP_PowerMid, sizeof(BITMAP_PowerMid));
 			break;
 		case OUTPUT_POWER_HIGH:
-			memcpy(pLine1 + 128 + 44, BITMAP_PowerHigh, sizeof(BITMAP_PowerHigh));
+			memcpy(pLine1 + 44, BITMAP_PowerHigh, sizeof(BITMAP_PowerHigh));
 			break;
 		}
 
 		if (gEeprom.VfoInfo[i].ConfigRX.Frequency != gEeprom.VfoInfo[i].ConfigTX.Frequency) {
 			if (gEeprom.VfoInfo[i].FREQUENCY_DEVIATION_SETTING == FREQUENCY_DEVIATION_ADD) {
-				memcpy(pLine1 + 128 + 54, BITMAP_Add, sizeof(BITMAP_Add));
+				memcpy(pLine1 + 54, BITMAP_Add, sizeof(BITMAP_Add));
 			}
 			if (gEeprom.VfoInfo[i].FREQUENCY_DEVIATION_SETTING == FREQUENCY_DEVIATION_SUB) {
-				memcpy(pLine1 + 128 + 54, BITMAP_Sub, sizeof(BITMAP_Sub));
+				memcpy(pLine1 + 54, BITMAP_Sub, sizeof(BITMAP_Sub));
 			}
 		}
 
 		if (gEeprom.VfoInfo[i].FrequencyReverse) {
-			memcpy(pLine1 + 128 + 64, BITMAP_ReverseMode, sizeof(BITMAP_ReverseMode));
+			memcpy(pLine1 + 64, BITMAP_ReverseMode, sizeof(BITMAP_ReverseMode));
 		}
 		if (gEeprom.VfoInfo[i].CHANNEL_BANDWIDTH == BANDWIDTH_NARROW) {
-			memcpy(pLine1 + 128 + 74, BITMAP_NarrowBand, sizeof(BITMAP_NarrowBand));
+			memcpy(pLine1 + 74, BITMAP_NarrowBand, sizeof(BITMAP_NarrowBand));
 		}
 		if (gEeprom.VfoInfo[i].DTMF_DECODING_ENABLE) {
-			memcpy(pLine1 + 128 + 84, BITMAP_DTMF, sizeof(BITMAP_DTMF));
+			memcpy(pLine1 + 84, BITMAP_DTMF, sizeof(BITMAP_DTMF));
 		}
 	}
 	ST7565_BlitFullScreen();

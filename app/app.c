@@ -921,18 +921,13 @@ void APP_TimeSlice500ms(void)
 	if (gLowBattery) {
 		gLowBatteryBlink = ++gLowBatteryCountdown & 1;
 		UI_DisplayBattery(gLowBatteryCountdown);
-		if (gCurrentFunction != FUNCTION_TRANSMIT) {
-			if (gLowBatteryCountdown < 30) {
-			} else {
-				gLowBatteryCountdown = 0;
-				if (!gChargingWithTypeC) {
-					if (gBatteryDisplayLevel == 0) {
-						gReducedService = true;
-						FUNCTION_Select(FUNCTION_POWER_SAVE);
-						ST7565_HardwareReset();
-						GPIO_ClearBit(&GPIOB->DATA, GPIOB_PIN_BACKLIGHT);
-					}
-				}
+		if (gLowBatteryCountdown >= 30 && gCurrentFunction != FUNCTION_TRANSMIT) {
+			gLowBatteryCountdown = 0;
+			if (!gChargingWithTypeC && gBatteryDisplayLevel == 0) {
+				gReducedService = true;
+				FUNCTION_Select(FUNCTION_POWER_SAVE);
+				ST7565_HardwareReset();
+				GPIO_ClearBit(&GPIOB->DATA, GPIOB_PIN_BACKLIGHT);
 			}
 		}
 	}
