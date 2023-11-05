@@ -35,6 +35,7 @@ enum {
 enum {
 	BANDWIDTH_WIDE = 0U,
 	BANDWIDTH_NARROW = 1U,
+	BANDWIDTH_NARROWER = 2U,
 };
 
 enum PTT_ID_t {
@@ -45,6 +46,15 @@ enum PTT_ID_t {
 };
 
 typedef enum PTT_ID_t PTT_ID_t;
+
+enum COMPND_Setting_t {
+	COMPND_OFF = 0U,
+	COMPND_RX = 1U,
+	COMPND_TX = 2U,
+	COMPND_RX_TX = 3U,
+};
+
+typedef enum COMPND_Setting_t COMPND_Setting_t;
 
 enum STEP_Setting_t {
 	STEP_1_25kHz,
@@ -96,7 +106,7 @@ typedef struct VFO_Info_t {
 	uint8_t OUTPUT_POWER;
 	uint8_t TXP_CalculatedSetting;
 	bool FrequencyReverse;
-	uint8_t CompanderMode;
+	COMPND_Setting_t CompanderMode;
 	uint8_t CHANNEL_BANDWIDTH;
 	uint8_t SCANLIST1_PARTICIPATION;
 	uint8_t SCANLIST2_PARTICIPATION;
@@ -104,9 +114,9 @@ typedef struct VFO_Info_t {
 	uint8_t DTMF_DECODING_ENABLE;
 	PTT_ID_t DTMF_PTT_ID_TX_MODE;
 	uint8_t BUSY_CHANNEL_LOCK;
-	uint8_t AM_CHANNEL_MODE;
-	bool IsAM;
+	uint8_t ModulationType;
 	char Name[16];
+	uint8_t Padding[2];
 } VFO_Info_t;
 
 extern VFO_Info_t *gTxVfo;

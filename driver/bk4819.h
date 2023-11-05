@@ -21,6 +21,14 @@
 #include <stdint.h>
 #include "driver/bk4819-regs.h"
 
+enum BK4819_MOD_Type_t {
+	MOD_FM,
+	MOD_AM,
+	MOD_SSB,
+};
+
+typedef enum BK4819_MOD_Type_t BK4819_MOD_Type_t;
+
 enum BK4819_AF_Type_t {
 	BK4819_AF_MUTE = 0U,
 	BK4819_AF_OPEN = 1U,
@@ -36,6 +44,7 @@ typedef enum BK4819_AF_Type_t BK4819_AF_Type_t;
 enum BK4819_FilterBandwidth_t {
 	BK4819_FILTER_BW_WIDE   = 0U,
 	BK4819_FILTER_BW_NARROW = 1U,
+	BK4819_FILTER_BW_NARROWER = 2U,
 };
 
 typedef enum BK4819_FilterBandwidth_t BK4819_FilterBandwidth_t;
@@ -72,6 +81,10 @@ void BK4819_SetupSquelch(
 		uint8_t SquelchOpenRSSIThresh, uint8_t SquelchCloseRSSIThresh,
 		uint8_t SquelchOpenNoiseThresh, uint8_t SquelchCloseNoiseThresh,
 		uint8_t SquelchCloseGlitchThresh, uint8_t SquelchOpenGlitchThresh);
+
+uint16_t BK4819_GetRegValue(RegisterSpec s);
+void BK4819_SetRegValue(RegisterSpec s, uint16_t v);
+void BK4819_SetModulation(BK4819_MOD_Type_t type);
 
 void BK4819_SetAF(BK4819_AF_Type_t AF);
 void BK4819_RX_TurnOn(void);

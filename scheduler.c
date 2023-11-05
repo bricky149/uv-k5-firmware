@@ -24,13 +24,20 @@
 #include "settings.h"
 
 #define DECREMENT_AND_TRIGGER(cnt, flag) \
-	do { \
-		if (cnt) { \
-			if (--cnt == 0) { \
-				flag = true; \
-			} \
+	if (cnt > 0 && --cnt == 0) { \
+		flag = true; \
+	}
+#define INCREMENT_AND_TRIGGER(cnt, flag) \
+	if (cnt == 0 && ++cnt > 0) { \
+		flag = false; \
+	}
+#define TRIGGER_CXCSS(cnt, flag0, flag1) \
+	if (cnt > 0 && --cnt == 0) { \
+		if (flag0) { \
+			flag1 = false; \
+			flag0 = false; \
 		} \
-	} while(0)
+	}
 
 static volatile uint32_t gGlobalSysTickCounter;
 
@@ -40,26 +47,23 @@ void SystickHandler(void)
 {
 	gGlobalSysTickCounter++;
 	gNextTimeslice = true;
+	if ((gGlobalSysTickCounter & 3) == 0) {
+		gNextTimeslice40ms = true;
+	}
 	if ((gGlobalSysTickCounter % 50) == 0) {
 		gNextTimeslice500ms = true;
 		DECREMENT_AND_TRIGGER(gTxTimerCountdown, gTxTimeoutReached);
 	}
-	if ((gGlobalSysTickCounter % 4) == 0) {
-		gNextTimeslice40ms = true;
-	}
-	if (gFoundCDCSSCountdown) {
-		gFoundCDCSSCountdown--;
-	}
-	if (gFoundCTCSSCountdown) {
-		gFoundCTCSSCountdown--;
-	}
+
+	TRIGGER_CXCSS(gFoundCDCSSCountdown, gFoundCDCSS, gFoundCTCSS);
+	TRIGGER_CXCSS(gFoundCTCSSCountdown, gFoundCTCSS, gFoundCDCSS);
+
 	if (gCurrentFunction == FUNCTION_FOREGROUND) {
 		DECREMENT_AND_TRIGGER(gBatterySaveCountdown, gSchedulePowerSave);
 	}
 	if (gCurrentFunction == FUNCTION_POWER_SAVE) {
 		DECREMENT_AND_TRIGGER(gBatterySave, gBatterySaveCountdownExpired);
 	}
-
 	if (gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF && gEeprom.DUAL_WATCH != DUAL_WATCH_OFF) {
 		if (gCurrentFunction != FUNCTION_MONITOR && gCurrentFunction != FUNCTION_TRANSMIT) {
 			if (gCurrentFunction != FUNCTION_RECEIVE) {
@@ -67,13 +71,11 @@ void SystickHandler(void)
 			}
 		}
 	}
-
 	if (gScanState != SCAN_OFF || gCssScanMode == CSS_SCAN_MODE_SCANNING) {
 		if (gCurrentFunction != FUNCTION_MONITOR && gCurrentFunction != FUNCTION_TRANSMIT) {
 			DECREMENT_AND_TRIGGER(ScanPauseDelayIn10msec, gScheduleScanListen);
 		}
 	}
-
 	DECREMENT_AND_TRIGGER(gTailNoteEliminationCountdown, gFlagTteComplete);
 
 #if defined(ENABLE_FMRADIO)

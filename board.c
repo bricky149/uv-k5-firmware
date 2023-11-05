@@ -633,7 +633,6 @@ void BOARD_EEPROM_Init(void)
 	gSetting_350TX          = (Data[1] < 2) ? Data[1] : true;
 	gSetting_200TX          = (Data[3] < 2) ? Data[3] : false;
 	gSetting_500TX          = (Data[4] < 2) ? Data[4] : false;
-	gSetting_350EN          = (Data[5] < 2) ? Data[5] : true;
 
 	if (!gEeprom.VFO_OPEN) {
 		gEeprom.ScreenChannel[0] = gEeprom.MrChannel[0];

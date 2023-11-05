@@ -175,7 +175,7 @@ void SETTINGS_SaveSettings(void)
 	State[2] = 0xFF;
 	State[3] = gSetting_200TX;
 	State[4] = gSetting_500TX;
-	State[5] = gSetting_350EN;
+	State[5] = 0xFF;
 	State[6] = 0xFF;
 	State[7] = 0xFF;
 
@@ -220,16 +220,14 @@ void SETTINGS_SaveChannel(uint8_t Channel, uint8_t VFO, const VFO_Info_t *pVFO, 
 		State8[0] = pVFO->ConfigRX.Code;
 		State8[1] = pVFO->ConfigTX.Code;
 		State8[2] = (pVFO->ConfigTX.CodeType << 4) | pVFO->ConfigRX.CodeType;
-		State8[3] = (pVFO->AM_CHANNEL_MODE << 4) | pVFO->FREQUENCY_DEVIATION_SETTING;
+		State8[3] = (pVFO->FrequencyReverse << 4) | pVFO->FREQUENCY_DEVIATION_SETTING;
 		State8[4] = 0
 			| (pVFO->BUSY_CHANNEL_LOCK << 4)
 			| (pVFO->OUTPUT_POWER << 2)
-			| (pVFO->CHANNEL_BANDWIDTH << 1)
-			| (pVFO->FrequencyReverse << 0)
-			;
+			| (pVFO->CHANNEL_BANDWIDTH << 0);
 		State8[5] = (pVFO->DTMF_PTT_ID_TX_MODE << 1) | pVFO->DTMF_DECODING_ENABLE;
 		State8[6] = pVFO->STEP_SETTING;
-		State8[7] = pVFO->CompanderMode;
+		State8[7] = (pVFO->ModulationType << 2) | pVFO->CompanderMode;
 
 		EEPROM_WriteBuffer(OffsetVFO + 8, State8);
 

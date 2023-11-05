@@ -139,20 +139,9 @@ static void APP_HandleReceive(void)
 	}
 	switch (gCurrentCodeType) {
 	case CODE_TYPE_CONTINUOUS_TONE:
-		if (gFoundCTCSS && gFoundCTCSSCountdown == 0) {
-			gFoundCTCSS = false;
-			gFoundCDCSS = false;
-			Mode = END_OF_RX_MODE_END;
-		}
-		break;
-
 	case CODE_TYPE_DIGITAL:
 	case CODE_TYPE_REVERSE_DIGITAL:
-		if (gFoundCDCSS && gFoundCDCSSCountdown == 0) {
-			gFoundCTCSS = false;
-			gFoundCDCSS = false;
-			Mode = END_OF_RX_MODE_END;
-		}
+		Mode = END_OF_RX_MODE_END;
 		break;
 
 	default:
@@ -319,7 +308,8 @@ void APP_StartListening(FUNCTION_Type_t Function)
 		gDualWatchCountdown = 360;
 		gScheduleDualWatch = false;
 	}
-	if (gRxVfo->IsAM) {
+	BK4819_SetModulation(gRxVfo->ModulationType);
+	if (gRxVfo->ModulationType == MOD_AM) {
 		BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
 		BK4819_DisableAGC();
 		// Override compander mode when entering/leaving AM

@@ -100,7 +100,7 @@ KEY_Code_t KEYBOARD_Poll(void)
 	KEY_Code_t Key = KEY_INVALID;
 
 	if (!GPIO_CheckBit(&GPIOC->DATA, GPIOC_PIN_PTT)) {
-        SYSTICK_DelayUs(4);
+        SYSTICK_DelayUs(5);
         if (!GPIO_CheckBit(&GPIOC->DATA, GPIOC_PIN_PTT)) {
 		    Key = KEY_PTT;
         }
@@ -109,7 +109,7 @@ KEY_Code_t KEYBOARD_Poll(void)
 	// *****************
     for (uint8_t j = 0; j < ARRAY_SIZE(keyboard); j++) {
         // Set all high
-        GPIOA->DATA |= 1 << GPIOA_PIN_KEYBOARD_4 |
+        GPIOA->DATA |=  1 << GPIOA_PIN_KEYBOARD_4 |
                         1 << GPIOA_PIN_KEYBOARD_5 |
                         1 << GPIOA_PIN_KEYBOARD_6 |
                         1 << GPIOA_PIN_KEYBOARD_7 ;
@@ -117,7 +117,7 @@ KEY_Code_t KEYBOARD_Poll(void)
         GPIOA->DATA &= keyboard[j].set_to_zero_mask;
 
         // Wait for the pins to stabilise. 1 works for me.
-        SYSTICK_DelayUs(4);
+        SYSTICK_DelayUs(5);
 
         // Read all 4 GPIO pins at once
         uint16_t reg = GPIOA->DATA;

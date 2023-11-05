@@ -68,7 +68,7 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		}
 		gInputBoxIndex = 0;
 		NUMBER_Get(gInputBox, &Frequency);
-		if (gSetting_350EN || (Frequency < 35000000 || Frequency > 39999990)) {
+		if (Frequency < 35000000 || Frequency > 39999990) {
 			uint8_t i;
 
 			for (i = 0; i < 7; i++) {
@@ -110,9 +110,9 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			return;
 		}
 		uint8_t Band = gTxVfo->Band + 1;
-		if (gSetting_350EN || Band != BAND5_350MHz) {
+		if (Band != BAND5_350MHz) {
 			if (BAND7_470MHz < Band) {
-				Band = BAND1_50MHz;
+				Band = BAND1_18MHz;
 			}
 		} else {
 			Band = BAND6_400MHz;

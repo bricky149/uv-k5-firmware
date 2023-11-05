@@ -66,7 +66,6 @@ extern const uint32_t *gLowerLimitFrequencyBandTable;
 extern bool gSetting_350TX;
 extern bool gSetting_200TX;
 extern bool gSetting_500TX;
-extern bool gSetting_350EN;
 extern uint8_t gSetting_F_LOCK;
 
 extern const uint32_t gDefaultAesKey[4];

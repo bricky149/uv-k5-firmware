@@ -70,8 +70,8 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 		break;
 	case MENU_TXP: case MENU_SFT_D:
 	case MENU_TDR: case MENU_WX:
-	case MENU_SC_REV:
-	case MENU_MDF:
+	case MENU_SC_REV: case MENU_MDF:
+	case MENU_W_N: case MENU_MOD:
 	case MENU_ROGER:
 		*pMin = 0;
 		*pMax = 2;
@@ -84,15 +84,12 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 		*pMin = 0;
 		*pMax = 50;
 		break;
-	case MENU_W_N: case MENU_BCL:
-	case MENU_AUTOLK:
+	case MENU_BCL: case MENU_AUTOLK:
 	case MENU_S_ADD1: case MENU_S_ADD2:
 	case MENU_STE:
 	case MENU_D_ST: case MENU_D_DCD:
-	case MENU_AM:
 	case MENU_RESET: case MENU_350TX:
 	case MENU_200TX: case MENU_500TX:
-	case MENU_350EN:
 		*pMin = 0;
 		*pMax = 1;
 		break;
@@ -370,8 +367,8 @@ void MENU_AcceptSetting(void)
 		gRequestSaveChannel = 1;
 		return;
 
-	case MENU_AM:
-		gTxVfo->AM_CHANNEL_MODE = gSubMenuSelection;
+	case MENU_MOD:
+		gTxVfo->ModulationType = gSubMenuSelection;
 		gRequestSaveChannel = 1;
 		return;
 
@@ -400,13 +397,6 @@ void MENU_AcceptSetting(void)
 	case MENU_500TX:
 		gSetting_500TX = gSubMenuSelection;
 		break;
-
-	case MENU_350EN:
-		gSetting_350EN = gSubMenuSelection;
-		gRequestSaveSettings = true;
-		gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
-		gFlagResetVfos = true;
-		return;
 
 	case MENU_BATCAL:
 		gBatteryCalibration[0] = (520ul * gSubMenuSelection) / 760;  // 5.20V empty, blinking above this value, reduced functionality below
@@ -650,8 +640,8 @@ void MENU_ShowCurrentSetting(void)
 		gSubMenuSelection = gTxVfo->CompanderMode;
 		break;
 
-	case MENU_AM:
-		gSubMenuSelection = gTxVfo->AM_CHANNEL_MODE;
+	case MENU_MOD:
+		gSubMenuSelection = gTxVfo->ModulationType;
 		break;
 
 	case MENU_DEL_CH:
@@ -672,10 +662,6 @@ void MENU_ShowCurrentSetting(void)
 
 	case MENU_500TX:
 		gSubMenuSelection = gSetting_500TX;
-		break;
-
-	case MENU_350EN:
-		gSubMenuSelection = gSetting_350EN;
 		break;
 
 	case MENU_BATCAL:

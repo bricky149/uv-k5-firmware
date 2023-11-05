@@ -60,8 +60,8 @@ const uint16_t StepFrequencyTable[7] = {
 
 FREQUENCY_Band_t FREQUENCY_GetBand(uint32_t Frequency)
 {
-	if (Frequency >=  5000000 && Frequency <=  7600000) {
-		return BAND1_50MHz;
+	if (Frequency >= 1800000 && Frequency <= 7600000) {
+		return BAND1_18MHz;
 	}
 	if (Frequency >= 10800000 && Frequency <= 13599990) {
 		return BAND2_108MHz;
@@ -78,7 +78,7 @@ FREQUENCY_Band_t FREQUENCY_GetBand(uint32_t Frequency)
 	if (Frequency >= 40000000 && Frequency <= 46999990) {
 		return BAND6_400MHz;
 	}
-	if (Frequency >= 47000000 && Frequency <= 60000000) {
+	if (Frequency >= 47000000 && Frequency <= 63000000) {
 		return BAND7_470MHz;
 	}
 
@@ -162,23 +162,17 @@ bool FREQUENCY_Check(VFO_Info_t *pInfo)
 		break;
 
 	default:
-		if (Frequency >= 13600000 && Frequency <= 17399990) {
-			return false;
-		}
-		if (Frequency >= 35000000 && Frequency <= 39999990) {
-			if (gSetting_350TX && gSetting_350EN) {
-				return false;
-			}
-		}
-		if (Frequency >= 40000000 && Frequency <= 46999990) {
-			return false;
-		}
 		if (Frequency >= 17400000 && Frequency <= 34999990) {
 			if (gSetting_200TX) {
 				return false;
 			}
 		}
-		if (Frequency >= 47000000 && Frequency <= 60000000) {
+		if (Frequency >= 35000000 && Frequency <= 39999990) {
+			if (gSetting_350TX) {
+				return false;
+			}
+		}
+		if (Frequency >= 47000000 && Frequency <= 63000000) {
 			if (gSetting_500TX) {
 				return false;
 			}

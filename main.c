@@ -36,7 +36,7 @@
 #include "ui/lock.h"
 
 #if defined(ENABLE_UART)
-static const char Version[] = "UV-K5 Firmware, Open Edition, OEFW-"GIT_HASH"\r\n";
+static const char Version[] = "UV-K5 Firmware, Open Edition, B149-"GIT_HASH"\r\n";
 
 void _putchar(char c)
 {
@@ -60,6 +60,7 @@ void Main(void)
 
 	SYSTICK_Init();
 	BOARD_Init();
+	BK4819_Init();
 
 #if defined(ENABLE_UART)
 	UART_Init();
@@ -68,11 +69,10 @@ void Main(void)
 
 	// Not implementing authentic device checks
 
-	memset(&gEeprom, 0, sizeof(gEeprom));
 	memset(gDTMF_String, '-', sizeof(gDTMF_String));
 	gDTMF_String[14] = 0;
 
-	BK4819_Init();
+	memset(&gEeprom, 0, sizeof(gEeprom));
 	BOARD_EEPROM_Init();
 	BOARD_EEPROM_LoadCalibration();
 

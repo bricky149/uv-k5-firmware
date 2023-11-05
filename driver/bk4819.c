@@ -127,7 +127,7 @@ void BK4819_WriteRegister(BK4819_REGISTER_t Register, uint16_t Data)
 		Data <<= 1;
 		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
 	}
-	SYSTICK_DelayUs(4);
+	SYSTICK_DelayUs(5);
 
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCN);
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
@@ -317,6 +317,24 @@ void BK4819_SetupSquelch(uint8_t SquelchOpenRSSIThresh, uint8_t SquelchCloseRSSI
 	BK4819_WriteRegister(BK4819_REG_78, (SquelchOpenRSSIThresh << 8) | SquelchCloseRSSIThresh);
 	BK4819_SetAF(BK4819_AF_MUTE);
 	BK4819_RX_TurnOn();
+}
+
+// fagci
+uint16_t BK4819_GetRegValue(RegisterSpec s) {
+	return (BK4819_ReadRegister(s.num) >> s.offset) & s.mask;
+}
+void BK4819_SetRegValue(RegisterSpec s, uint16_t v) {
+	uint16_t reg = BK4819_ReadRegister(s.num);
+	reg &= ~(s.mask << s.offset);
+	BK4819_WriteRegister(s.num, reg | (v << s.offset));
+}
+void BK4819_SetModulation(BK4819_MOD_Type_t type) {
+	uint8_t modTypeReg47Values[5] = {1, 7, 5, 9, 4};
+	BK4819_SetAF(modTypeReg47Values[type]);
+
+	BK4819_SetRegValue(afDacGainRegSpec, 0xF);
+	BK4819_WriteRegister(0x3D, type == MOD_SSB ? 0 : 0x2AAB);
+	BK4819_SetRegValue(afcDisableRegSpec, type != MOD_FM);
 }
 
 void BK4819_SetAF(BK4819_AF_Type_t AF)

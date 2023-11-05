@@ -21,7 +21,7 @@
 #include "radio.h"
 
 enum FREQUENCY_Band_t {
-	BAND1_50MHz = 0,
+	BAND1_18MHz = 0,
 	BAND2_108MHz,
 	BAND3_136MHz,
 	BAND4_174MHz,

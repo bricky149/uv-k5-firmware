@@ -41,7 +41,7 @@ void FUNCTION_Init(void)
 {
 	gCurrentCodeType = gSelectedCodeType;
 	if (gCssScanMode == CSS_SCAN_MODE_OFF) {
-		if (gRxVfo->IsAM) {
+		if (gRxVfo->ModulationType == MOD_AM) {
 			gCurrentCodeType = CODE_TYPE_OFF;
 		} else {
 			gCurrentCodeType = gRxVfo->pRX->CodeType;

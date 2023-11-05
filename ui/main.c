@@ -286,7 +286,7 @@ void UI_DisplayMain(void)
 		}
 
 		// 0x931E
-		if (gEeprom.VfoInfo[i].IsAM) {
+		if (gEeprom.VfoInfo[i].ModulationType == 1) {
 			memcpy(pLine1 + 27, BITMAP_AM, sizeof(BITMAP_AM));
 		} else {
 			const FREQ_Config_t *pConfig;
@@ -296,7 +296,7 @@ void UI_DisplayMain(void)
 			} else {
 				pConfig = gEeprom.VfoInfo[i].pRX;
 			}
-			if (gEeprom.VfoInfo[i].CompanderMode) {
+			if (gEeprom.VfoInfo[i].CompanderMode != COMPND_OFF) {
 				memcpy(pLine1 + 94, BITMAP_C, sizeof(BITMAP_C));
 			}
 
@@ -340,8 +340,11 @@ void UI_DisplayMain(void)
 		if (gEeprom.VfoInfo[i].FrequencyReverse) {
 			memcpy(pLine1 + 64, BITMAP_ReverseMode, sizeof(BITMAP_ReverseMode));
 		}
-		if (gEeprom.VfoInfo[i].CHANNEL_BANDWIDTH == BANDWIDTH_NARROW) {
+		switch (gEeprom.VfoInfo[i].CHANNEL_BANDWIDTH) {
+		case BANDWIDTH_NARROWER:
+		case BANDWIDTH_NARROW:
 			memcpy(pLine1 + 74, BITMAP_NarrowBand, sizeof(BITMAP_NarrowBand));
+			break;
 		}
 		if (gEeprom.VfoInfo[i].DTMF_DECODING_ENABLE) {
 			memcpy(pLine1 + 84, BITMAP_DTMF, sizeof(BITMAP_DTMF));

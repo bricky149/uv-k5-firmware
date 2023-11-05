@@ -29,7 +29,7 @@
 #include "ui/menu.h"
 #include "ui/ui.h"
 
-static const MENU_Item_t MenuList[] = {
+static const MENU_Item_t MenuList[56] = {
 	{ "SQL", MENU_SQL },
 	{ "STEP", MENU_STEP },
 	{ "TXP", MENU_TXP },
@@ -76,7 +76,7 @@ static const MENU_Item_t MenuList[] = {
 	{ "PONMSG", MENU_PONMSG },
 	{ "ROGER", MENU_ROGER },
 	{ "COMPND", MENU_COMPND },
-	{ "AM", MENU_AM },
+	{ "MOD", MENU_MOD },
 	{ "DEL-CH", MENU_DEL_CH },
 	{ "RESET", MENU_RESET },
 	{ "350TX", MENU_350TX },
@@ -88,7 +88,7 @@ static const MENU_Item_t MenuList[] = {
 	{ "BATCAL", MENU_BATCAL },
 };
 
-static const uint16_t gSubMenu_Step[] = {
+static const uint16_t gSubMenu_Step[7] = {
 	125,
 	250,
 	500,
@@ -110,9 +110,10 @@ static const char gSubMenu_SFT_D[3][4] = {
 	"-",
 };
 
-static const char gSubMenu_W_N[2][7] = {
+static const char gSubMenu_W_N[3][9] = {
 	"WIDE",
 	"NARROW",
+	"NARROWER",
 };
 
 static const char gSubMenu_OFF_ON[2][4] = {
@@ -171,6 +172,12 @@ static const char gSubMenu_COMPND[4][6] = {
 	"TX",
 	"RX",
 	"TX/RX",
+};
+
+static const char gSubMenu_MOD[3][4] = {
+	"FM",
+	"AM",
+	"SSB",
 };
 
 static const char gSubMenu_RESET[2][4] = {
@@ -301,6 +308,10 @@ void UI_DisplayMenu(void)
 		}
 		break;
 
+	case MENU_MOD:
+		strcpy(String, gSubMenu_MOD[gSubMenuSelection]);
+		break;
+
 	case MENU_BCL:
 	case MENU_AUTOLK:
 	case MENU_S_ADD1:
@@ -308,11 +319,9 @@ void UI_DisplayMenu(void)
 	case MENU_STE:
 	case MENU_D_ST:
 	case MENU_D_DCD:
-	case MENU_AM:
 	case MENU_350TX:
 	case MENU_200TX:
 	case MENU_500TX:
-	case MENU_350EN:
 		strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
 		break;
 
