@@ -68,6 +68,8 @@ void SETTINGS_SaveVfoIndices(void)
 	State[3] = gEeprom.ScreenChannel[1];
 	State[4] = gEeprom.MrChannel[1];
 	State[5] = gEeprom.FreqChannel[1];
+	State[6] = 0xFF;
+	State[7] = 0xFF;
 
 	EEPROM_WriteBuffer(0x0E80, State);
 }
@@ -119,8 +121,11 @@ void SETTINGS_SaveSettings(void)
 
 	EEPROM_WriteBuffer(0x0E98, Buf);
 
+	//State[0] = gEeprom.VOICE_PROMPT;
+	//EEPROM_WriteBuffer(0x0EA0, State);
+
 	State[0] = 0xFF;
-	State[1] = 0xFF;
+	State[1] = gEeprom.ROGER;
 	State[2] = gEeprom.REPEATER_TAIL_TONE_ELIMINATION;
 	State[3] = gEeprom.TX_VFO;
 	State[4] = 0xFF;
@@ -128,7 +133,31 @@ void SETTINGS_SaveSettings(void)
 	State[6] = 0xFF;
 	State[7] = 0xFF;
 
+	EEPROM_WriteBuffer(0x0EA8, State);
+
+	State[0] = gEeprom.DTMF_SIDE_TONE;
+	State[1] = gEeprom.DTMF_SEPARATE_CODE;
+	State[2] = gEeprom.DTMF_GROUP_CALL_CODE;
+	State[3] = gEeprom.DTMF_DECODE_RESPONSE;
+	State[4] = gEeprom.DTMF_AUTO_RESET_TIME;
+	State[5] = gEeprom.DTMF_PRELOAD_TIME / 10U;
+	State[6] = gEeprom.DTMF_FIRST_CODE_PERSIST_TIME / 10U;
+	State[7] = gEeprom.DTMF_HASH_CODE_PERSIST_TIME / 10U;
+
 	EEPROM_WriteBuffer(0x0ED0, State);
+
+	memset(State, 0xFF, sizeof(State));
+
+	State[0] = gEeprom.DTMF_CODE_PERSIST_TIME / 10U;
+	State[1] = gEeprom.DTMF_CODE_INTERVAL_TIME / 10U;
+	State[2] = 0xFF;
+	State[3] = 0xFF;
+	State[4] = 0xFF;
+	State[5] = 0xFF;
+	State[6] = 0xFF;
+	State[7] = 0xFF;
+
+	EEPROM_WriteBuffer(0x0ED8, State);
 
 	State[0] = gEeprom.SCAN_LIST_DEFAULT;
 	State[1] = gEeprom.SCAN_LIST_ENABLED[0];
@@ -152,7 +181,6 @@ void SETTINGS_SaveSettings(void)
 
 	EEPROM_WriteBuffer(0x0F40, State);
 
-	EEPROM_ReadBuffer(0x1F48, Buf, sizeof(Buf));
 	Buf[0] = gBatteryCalibration[4];
 	Buf[1] = gBatteryCalibration[5];
 
@@ -168,14 +196,16 @@ void SETTINGS_SaveChannel(uint8_t Channel, uint8_t VFO, const VFO_Info_t *pVFO, 
 	uint16_t OffsetMR;
 	uint16_t OffsetVFO;
 
-	OffsetMR = 0x0000 + (Channel * 16);
-	OffsetVFO = OffsetMR;
 	if (!IS_MR_CHANNEL(Channel)) {
 		if (VFO == 0) {
 			OffsetVFO = 0x0C80 + ((Channel - FREQ_CHANNEL_FIRST) * 32);
 		} else {
 			OffsetVFO = 0x0C90 + ((Channel - FREQ_CHANNEL_FIRST) * 32);
 		}
+		OffsetMR = OffsetVFO;
+	} else {
+		OffsetMR = 0x0000 + (Channel * 16);
+		OffsetVFO = OffsetMR;
 	}
 
 	if (Mode == 2 || !IS_MR_CHANNEL(Channel)) {

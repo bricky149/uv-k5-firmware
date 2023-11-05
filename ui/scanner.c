@@ -44,11 +44,11 @@ void UI_DisplayScanner(void)
 	memset(String, 0, sizeof(String));
 
 	if (gScanCssState < SCAN_CSS_STATE_FOUND || !gScanUseCssResult) {
-		sprintf(String, "CTC:******");
+		sprintf(String, "CTC:***.*");
 	} else if (gScanCssResultType == CODE_TYPE_CONTINUOUS_TONE) {
 		uint8_t Hz = CTCSS_Options[gScanCssResultCode] / 10;
 		uint8_t mHz = CTCSS_Options[gScanCssResultCode] % 10;
-		sprintf(String, "FREQ:%u.%01uHz", Hz, mHz);
+		sprintf(String, "CTC:%u.%01uHz", Hz, mHz);
 	} else {
 		sprintf(String, "DCS:D%03oN", DCS_Options[gScanCssResultCode]);
 	}

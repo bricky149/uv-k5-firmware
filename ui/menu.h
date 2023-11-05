@@ -20,6 +20,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef struct {
+	const char Name[7];
+	uint8_t ID;
+} MENU_Item_t;
+
 enum {
 	MENU_SQL		= 0,
 	MENU_STEP,

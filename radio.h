@@ -96,6 +96,7 @@ typedef struct VFO_Info_t {
 	uint8_t OUTPUT_POWER;
 	uint8_t TXP_CalculatedSetting;
 	bool FrequencyReverse;
+	uint8_t CompanderMode;
 	uint8_t CHANNEL_BANDWIDTH;
 	uint8_t SCANLIST1_PARTICIPATION;
 	uint8_t SCANLIST2_PARTICIPATION;
@@ -105,8 +106,7 @@ typedef struct VFO_Info_t {
 	uint8_t BUSY_CHANNEL_LOCK;
 	uint8_t AM_CHANNEL_MODE;
 	bool IsAM;
-	uint8_t CompanderMode;
-	char Name[12];
+	char Name[16];
 } VFO_Info_t;
 
 extern VFO_Info_t *gTxVfo;

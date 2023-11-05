@@ -29,31 +29,63 @@
 #include "ui/menu.h"
 #include "ui/ui.h"
 
-static const char MenuList[][7] = {
-	// 0x00
-	"SQL",    "STEP",    "TXP",    "R_DCS",
-	"R_CTCS", "T_DCS",   "T_CTCS", "SFT-D",
-	// 0x08
-	"OFFSET", "W/N",     "SCR",    "BCL",
-	"MEM-CH", "SAVE",    "VOX",    "ABR",
-	// 0x10
-	"TDR",    "WX",      "BEEP",   "TOT",
-	"VOICE",  "SC-REV",  "MDF",    "AUTOLK",
-	// 0x18
-	"S-ADD1", "S-ADD2",  "STE",    "RP-STE",
-	"MIC",    "1-CALL",  "S-LIST", "SLIST1",
-	// 0x20
-	"SLIST2",
-		             "ANI-ID", "UPCODE",
-	"DWCODE", "D-ST",    "D-RSP",  "D-HOLD",
-	// 0x28
-	"D-PRE",  "PTT-ID",  "D-DCD",  "D-LIST",
-	"PONMSG", "ROGER",   "COMPND", "AM",
-	// 0x30
-	          "DEL-CH",  "RESET",  "350TX",
-	"F-LOCK", "200TX",   "500TX",  "350EN",
-	// 0x38
-	"SCREN", "BATCAL",
+static const MENU_Item_t MenuList[] = {
+	{ "SQL", MENU_SQL },
+	{ "STEP", MENU_STEP },
+	{ "TXP", MENU_TXP },
+	{ "R_DCS", MENU_R_DCS },
+	{ "R_CTCS", MENU_R_CTCS },
+	{ "T_DCS", MENU_T_DCS },
+	{ "T_CTCS", MENU_T_CTCS },
+	{ "SFT-D", MENU_SFT_D },
+	{ "OFFSET", MENU_OFFSET },
+	{ "W/N", MENU_W_N },
+	{ "SCR", MENU_SCR },
+	{ "BCL", MENU_BCL },
+	{ "MEM-CH", MENU_MEM_CH },
+	{ "SAVE", MENU_SAVE },
+	{ "VOX", MENU_VOX },
+	{ "ABR", MENU_ABR },
+	{ "TDR", MENU_TDR },
+	{ "WX", MENU_WX },
+	{ "BEEP", MENU_BEEP },
+	{ "TOT", MENU_TOT },
+	{ "VOICE", MENU_VOICE },
+	{ "SC-REV", MENU_SC_REV },
+	{ "MDF", MENU_MDF },
+	{ "AUTOLK", MENU_AUTOLK },
+	{ "S-ADD1", MENU_S_ADD1 },
+	{ "S-ADD2", MENU_S_ADD2 },
+	{ "STE", MENU_STE },
+	{ "RP-STE", MENU_RP_STE },
+	{ "MIC", MENU_MIC },
+	{ "1-CALL", MENU_1_CALL },
+	{ "S-LIST", MENU_S_LIST },
+	{ "SLIST1", MENU_SLIST1 },
+	{ "SLIST2", MENU_SLIST2 },
+	{ "ANI-ID", MENU_ANI_ID },
+	{ "UPCODE", MENU_UPCODE },
+	{ "DWCODE", MENU_DWCODE },
+	{ "D-ST", MENU_D_ST },
+	{ "D-RSP", MENU_D_RSP },
+	{ "D-HOLD", MENU_D_HOLD },
+	{ "D-PRE", MENU_D_PRE },
+	{ "PTT-ID", MENU_PTT_ID },
+	{ "D-DCD", MENU_D_DCD },
+	{ "D-LIST", MENU_D_LIST },
+	{ "PONMSG", MENU_PONMSG },
+	{ "ROGER", MENU_ROGER },
+	{ "COMPND", MENU_COMPND },
+	{ "AM", MENU_AM },
+	{ "DEL-CH", MENU_DEL_CH },
+	{ "RESET", MENU_RESET },
+	{ "350TX", MENU_350TX },
+	{ "F-LOCK", MENU_F_LOCK },
+	{ "200TX", MENU_200TX },
+	{ "500TX", MENU_500TX },
+	{ "350EN", MENU_350EN },
+	{ "SCREN", MENU_SCREN },
+	{ "BATCAL", MENU_BATCAL },
 };
 
 static const uint16_t gSubMenu_Step[] = {
@@ -164,19 +196,26 @@ uint32_t gSubMenuSelection;
 void UI_DisplayMenu(void)
 {
 	uint8_t i;
+	char String[16];
 	memset(gFrameBuffer, 0, sizeof(gFrameBuffer));
 
 	for (i = 0; i < 3; i++) {
-		if (gMenuCursor || i) {
-			if ((gMenuListCount - 1) != gMenuCursor || (i != 2)) {
-				UI_PrintString(MenuList[gMenuCursor + i - 1], 0, 127, i * 2, 8, false);
+		// No previous item if we are at the start
+		if (gMenuCursor > 0 || i > 0) {
+			// No next item if we are at the end
+			if (gMenuCursor < (gMenuListCount - 1) || (i < 2)) {
+				strcpy(String, MenuList[gMenuCursor + i - 1].Name);
+				UI_PrintString(String, 0, 127, i * 2, 8, false);
+				memset(String, 0, sizeof(String));
 			}
 		}
 	}
+	// Invert current menu item pixels
 	for (i = 0; i < 48; i++) {
 		gFrameBuffer[2][i] ^= 0xFF;
 		gFrameBuffer[3][i] ^= 0xFF;
 	}
+	// Draw vertical line between item name and value
 	for (i = 0; i < 7; i++) {
 		gFrameBuffer[i][48] = 0xFF;
 		gFrameBuffer[i][49] = 0xFF;
@@ -185,10 +224,8 @@ void UI_DisplayMenu(void)
 		memcpy(gFrameBuffer[0] + 50, BITMAP_CurrentIndicator, sizeof(BITMAP_CurrentIndicator));
 	}
 
-	char String[16];
 	NUMBER_ToDigits(gMenuCursor + 1, String);
 	UI_DisplaySmallDigits(2, String + 6, 33, 6);
-	memset(String, 0, sizeof(String));
 
 	uint32_t kHz;
 	char Contact[16];
@@ -260,7 +297,7 @@ void UI_DisplayMenu(void)
 		if (gSubMenuSelection == 0) {
 			strcpy(String, "OFF");
 		} else {
-			sprintf(String, "%u", gSubMenuSelection);
+			sprintf(String, "%u", gSubMenuSelection * 2);
 		}
 		break;
 
@@ -405,68 +442,68 @@ void UI_DisplayMenu(void)
 		}
 		break;
 
-		case MENU_R_CTCS:
-		case MENU_R_DCS:
-			if (gCssScanMode != CSS_SCAN_MODE_OFF) {
-				UI_PrintString("SCAN", 50, 127, 4, 8, true);
-			}
-			break;
+	case MENU_R_CTCS:
+	case MENU_R_DCS:
+		if (gCssScanMode != CSS_SCAN_MODE_OFF) {
+			UI_PrintString("SCAN", 50, 127, 4, 8, true);
+		}
+		break;
 
-		case MENU_UPCODE:
-			if (strlen(gEeprom.DTMF_UP_CODE) > 8) {
-				UI_PrintString(gEeprom.DTMF_UP_CODE + 8, 50, 127, 4, 8, true);
-			}
-			break;
+	case MENU_UPCODE:
+		if (strlen(gEeprom.DTMF_UP_CODE) > 8) {
+			UI_PrintString(gEeprom.DTMF_UP_CODE + 8, 50, 127, 4, 8, true);
+		}
+		break;
 
-		case MENU_DWCODE:
-			if (strlen(gEeprom.DTMF_DOWN_CODE) > 8) {
-				UI_PrintString(gEeprom.DTMF_DOWN_CODE + 8, 50, 127, 4, 8, true);
-			}
-			break;
+	case MENU_DWCODE:
+		if (strlen(gEeprom.DTMF_DOWN_CODE) > 8) {
+			UI_PrintString(gEeprom.DTMF_DOWN_CODE + 8, 50, 127, 4, 8, true);
+		}
+		break;
 
-		case MENU_D_LIST:
-			if (gIsDtmfContactValid) {
-				Contact[11] = 0;
-				memcpy(&gDTMF_ID, Contact + 8, 4);
-				sprintf(String, "ID:%s", Contact + 8);
-				UI_PrintString(String, 50, 127, 4, 8, true);
-			}
-			break;
+	case MENU_D_LIST:
+		if (gIsDtmfContactValid) {
+			Contact[11] = 0;
+			memcpy(&gDTMF_ID, Contact + 8, 4);
+			sprintf(String, "ID:%s", Contact + 8);
+			UI_PrintString(String, 50, 127, 4, 8, true);
+		}
+		break;
 	}
 
 	switch (gMenuCursor) {
-		case MENU_R_CTCS:
-		case MENU_T_CTCS:
-		case MENU_R_DCS:
-		case MENU_T_DCS:
-		case MENU_D_LIST:
-			NUMBER_ToDigits((uint8_t)gSubMenuSelection, String);
-			uint8_t Offset = (gMenuCursor == MENU_D_LIST) ? 2 : 3;
-			UI_DisplaySmallDigits(Offset, String + (8 - Offset), 105, 0);
-			break;
+	case MENU_R_CTCS:
+	case MENU_T_CTCS:
+	case MENU_R_DCS:
+	case MENU_T_DCS:
+	case MENU_D_LIST:
+		NUMBER_ToDigits((uint8_t)gSubMenuSelection, String);
+		uint8_t Offset = (gMenuCursor == MENU_D_LIST) ? 2 : 3;
+		UI_DisplaySmallDigits(Offset, String + (8 - Offset), 105, 0);
+		break;
 
-		case MENU_SLIST1:
-		case MENU_SLIST2:
-			if (gSubMenuSelection == 0xFF) {
-				sprintf(String, "NULL");
-			} else {
-				UI_GenerateChannelStringEx(String, true, (uint8_t)gSubMenuSelection);
-			}
-			i = gMenuCursor - MENU_SLIST1;
-			if (gSubMenuSelection == 0xFF || !gEeprom.SCAN_LIST_ENABLED[i]) {
+	case MENU_SLIST1:
+	case MENU_SLIST2:
+		if (gSubMenuSelection == 0xFF) {
+			sprintf(String, "NULL");
+		} else {
+			UI_GenerateChannelStringEx(String, true, (uint8_t)gSubMenuSelection);
+		}
+		i = gMenuCursor - MENU_SLIST1;
+		if (gSubMenuSelection == 0xFF || !gEeprom.SCAN_LIST_ENABLED[i]) {
+			UI_PrintString(String, 50, 127, 2, 8, true);
+		} else {
+			UI_PrintString(String, 50, 127, 0, 8, true);
+			if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH1[i])) {
+				sprintf(String, "PRI1:%u", gEeprom.SCANLIST_PRIORITY_CH1[i] + 1);
 				UI_PrintString(String, 50, 127, 2, 8, true);
-			} else {
-				UI_PrintString(String, 50, 127, 0, 8, true);
-				if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH1[i])) {
-					sprintf(String, "PRI1:%u", gEeprom.SCANLIST_PRIORITY_CH1[i] + 1);
-					UI_PrintString(String, 50, 127, 2, 8, true);
-				}
-				if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH2[i])) {
-					sprintf(String, "PRI2:%u", gEeprom.SCANLIST_PRIORITY_CH2[i] + 1);
-					UI_PrintString(String, 50, 127, 4, 8, true);
-				}
 			}
-			break;
+			if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH2[i])) {
+				sprintf(String, "PRI2:%u", gEeprom.SCANLIST_PRIORITY_CH2[i] + 1);
+				UI_PrintString(String, 50, 127, 4, 8, true);
+			}
+		}
+		break;
 	}
 	ST7565_BlitFullScreen();
 }

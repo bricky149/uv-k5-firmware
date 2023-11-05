@@ -114,12 +114,6 @@ extern uint8_t gKeypadLocked;
 extern bool gFlagPrepareTX;
 extern bool gFlagAcceptSetting;
 extern bool gFlagRefreshSetting;
-extern bool gFlagSaveVfo;
-extern bool gFlagSaveSettings;
-extern bool gFlagSaveChannel;
-#if defined(ENABLE_FMRADIO)
-extern bool gFlagSaveFM;
-#endif
 extern uint8_t gDTMF_RequestPending;
 extern bool g_CDCSS_Lost;
 extern uint8_t gCDCSSCodeType;

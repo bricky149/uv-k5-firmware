@@ -117,23 +117,21 @@ void BK4819_WriteRegister(BK4819_REGISTER_t Register, uint16_t Data)
 	BK4819_WriteU8(Register);
 
 	//BK4819_WriteU16(Data);
-	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
 	for (uint8_t i = 0; i < 16; i++) {
-		if ((Data & 0x8000U) == 0U) {
+		if ((Data & 0x8000U) == 0) {
 			GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
 		} else {
 			GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
 		}
-
 		GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
 		Data <<= 1;
 		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
 	}
+	SYSTICK_DelayUs(4);
 
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCN);
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
-	SYSTEM_DelayMs(1);
 }
 
 void BK4819_WriteU8(uint8_t Data)
@@ -151,43 +149,18 @@ void BK4819_WriteU8(uint8_t Data)
 	}
 }
 
-void BK4819_NaiveAGC(void)
-{
-	// Check if we need to adjust gain
-	uint16_t rssi = BK4819_GetRSSI();
-	if (rssi >= 138 && rssi <= 143) {
-		return;
-	}
-	// Beken's AGC is not helpful in AM mode
-	// We can keep the sensitivity of high LNA
-	// while adjusting PGA to control distortion
-	uint8_t gain_index = 4;
-	do {
-		BK4819_WriteRegister(0x13, // 1o11
-			(3u << 8) |            // LNA Short
-			(7u << 5) |            // LNA
-			(3u << 3) |            // MIXER
-			(gain_index << 0));    // PGA
-		rssi = BK4819_GetRSSI();
-		if (rssi < 138) {
-			gain_index++;
-		} else if (rssi > 143) {
-			gain_index--;
-		} else {
-			break;
-		}
-	} while (gain_index <= 7);
-}
-
 void BK4819_EnableAGC(void)
 {
 	BK4819_WriteRegister(BK4819_REG_7E,
 		(0u << 15) | // 0 AGC fix mode
-		(3u << 12) | // 3 AGC fix index (0 lowest without whistling)
+		(1u << 12) | // 3 AGC fix index
 		(5u <<  3) | // 5 DC filter bandwidth for Tx (MIC In)
 		(6u <<  0)); // 6 DC filter bandwidth for Rx (I.F In)
 
-    BK4819_WriteRegister(BK4819_REG_13, 0x03BE);
+    BK4819_WriteRegister(BK4819_REG_12, 0x037C);
+    BK4819_WriteRegister(BK4819_REG_11, 0x027B);
+    BK4819_WriteRegister(BK4819_REG_10, 0x007A);
+    BK4819_WriteRegister(BK4819_REG_14, 0x0018);
 
 	BK4819_WriteRegister(BK4819_REG_49, 0x2A38);
 	BK4819_WriteRegister(BK4819_REG_7B, 0x8420);
@@ -197,14 +170,11 @@ void BK4819_DisableAGC(void)
 {
 	BK4819_WriteRegister(BK4819_REG_7E,
 		(1u << 15) | // 0 AGC fix mode
-		(0u << 12) | // 3 AGC fix index (0 lowest without whistling)
+		(1u << 12) | // 3 AGC fix index
 		(5u <<  3) | // 5 DC filter bandwidth for Tx (MIC In)
 		(6u <<  0)); // 6 DC filter bandwidth for Rx (I.F In)
 
-    BK4819_WriteRegister(BK4819_REG_12, 0x037C);
-    BK4819_WriteRegister(BK4819_REG_11, 0x027B);
-    BK4819_WriteRegister(BK4819_REG_10, 0x007A);
-    BK4819_WriteRegister(BK4819_REG_14, 0x0018);
+	BK4819_WriteRegister(BK4819_REG_13, 0x03BE);
 
 	BK4819_WriteRegister(BK4819_REG_7B, 0x318C);
 	BK4819_WriteRegister(BK4819_REG_7C, 0x595E);
@@ -340,8 +310,8 @@ void BK4819_SetupSquelch(uint8_t SquelchOpenRSSIThresh, uint8_t SquelchCloseRSSI
 	//BK4819_WriteRegister(BK4819_REG_4E, 0x6F00 | SquelchOpenGlitchThresh);
 	BK4819_WriteRegister(BK4819_REG_4E,      // 1o11
 			(1u << 14) |                     // 1 ???
-			(4u << 11) |                     // 5 squelch = open delay .. 0 ~ 7
-			(2u <<  9) |                     // 3 squelch = close delay .. 0 ~ 3
+			(5u << 11) |                     // 5 squelch = open delay .. 0 ~ 7
+			(3u <<  9) |                     // 3 squelch = close delay .. 0 ~ 3
 			(SquelchOpenGlitchThresh << 0)); // 0 ~ 255
 	BK4819_WriteRegister(BK4819_REG_4F, (SquelchCloseNoiseThresh << 8) | SquelchOpenNoiseThresh);
 	BK4819_WriteRegister(BK4819_REG_78, (SquelchOpenRSSIThresh << 8) | SquelchCloseRSSIThresh);

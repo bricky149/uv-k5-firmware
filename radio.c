@@ -267,7 +267,7 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 			gEeprom.VfoInfo[VFO].FrequencyReverse = false;
 			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BK4819_FILTER_BW_WIDE;
 			gEeprom.VfoInfo[VFO].OUTPUT_POWER = OUTPUT_POWER_LOW;
-			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = true;
+			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = 0;
 		} else {
 			gEeprom.VfoInfo[VFO].FrequencyReverse = !!(Data[4] & 0x01);
 			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = !!(Data[4] & 0x02);
@@ -276,7 +276,7 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		}
 
 		if (Data[5] == 0xFF) {
-			gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = false;
+			gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = 0;
 			gEeprom.VfoInfo[VFO].DTMF_PTT_ID_TX_MODE = PTT_ID_OFF;
 		} else {
 			gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = !!(Data[5] & 1);
@@ -325,13 +325,12 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		gEeprom.VfoInfo[VFO].FREQUENCY_OF_DEVIATION = Frequency;
 	}
 	RADIO_ApplyOffset(pRadio);
-	memset(gEeprom.VfoInfo[VFO].Name, 0, sizeof(gEeprom.VfoInfo[VFO].Name));
 	if (IS_MR_CHANNEL(Channel)) {
-		// Only space for 8 characters on screen
-		EEPROM_ReadBuffer(0x0F50 + (Channel * 0x10), gEeprom.VfoInfo[VFO].Name, 12);
+		memset(gEeprom.VfoInfo[VFO].Name, 0, sizeof(gEeprom.VfoInfo[VFO].Name));
+		EEPROM_ReadBuffer(0x0F50 + (Channel * 0x10), gEeprom.VfoInfo[VFO].Name, 16);
 		// 16 bytes allocated but only 12 used
 		//EEPROM_ReadBuffer(0x0F50 + (Channel * 0x10), gEeprom.VfoInfo[VFO].Name + 0, 8);
-		//EEPROM_ReadBuffer(0x0F58 + (Channel * 0x10), gEeprom.VfoInfo[VFO].Name + 8, 2);
+		//EEPROM_ReadBuffer(0x0F58 + (Channel * 0x10), gEeprom.VfoInfo[VFO].Name + 8, 8);
 	}
 
 	if (!gEeprom.VfoInfo[VFO].FrequencyReverse) {

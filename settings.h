@@ -84,8 +84,6 @@ typedef struct {
 	uint8_t MrChannel[2];
 	uint8_t RX_VFO;
 	uint8_t TX_VFO;
-	uint8_t field7_0xa;
-	uint8_t field8_0xb;
 	uint8_t SQUELCH_LEVEL;
 	uint8_t TX_TIMEOUT_TIMER;
 	bool KEY_LOCK;
@@ -101,14 +99,10 @@ typedef struct {
 	bool SCAN_LIST_ENABLED[2];
 	uint8_t SCANLIST_PRIORITY_CH1[2];
 	uint8_t SCANLIST_PRIORITY_CH2[2];
-	uint8_t field29_0x26;
-	uint8_t field30_0x27;
 	uint16_t FM_SelectedFrequency;
 	uint8_t FM_SelectedChannel;
 	bool FM_IsMrMode;
 	uint16_t FM_FrequencyPlaying;
-	uint8_t field37_0x32;
-	uint8_t field38_0x33;
 	uint16_t FM_LowerLimit;
 	uint16_t FM_UpperLimit;
 	bool AUTO_KEYPAD_LOCK;
@@ -123,11 +117,7 @@ typedef struct {
 	uint8_t CHAN_1_CALL;
 	char ANI_DTMF_ID[8];
 	char DTMF_UP_CODE[16];
-	uint8_t field57_0x6c;
-	uint8_t field58_0x6d;
 	char DTMF_DOWN_CODE[16];
-	uint8_t field60_0x7e;
-	uint8_t field61_0x7f;
 	char DTMF_SEPARATE_CODE;
 	char DTMF_GROUP_CALL_CODE;
 	uint8_t DTMF_DECODE_RESPONSE;
@@ -138,10 +128,7 @@ typedef struct {
 	uint16_t DTMF_CODE_PERSIST_TIME;
 	uint16_t DTMF_CODE_INTERVAL_TIME;
 	bool DTMF_SIDE_TONE;
-	uint8_t field77_0x95;
-	uint8_t field78_0x96;
-	uint8_t field79_0x97;
-	uint8_t Padding[2];
+	uint8_t Padding[3];
 } EEPROM_Config_t;
 
 typedef struct {

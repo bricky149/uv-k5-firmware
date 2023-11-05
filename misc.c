@@ -76,12 +76,6 @@ bool gRequestSaveFM;
 bool gFlagPrepareTX;
 bool gFlagAcceptSetting;
 bool gFlagRefreshSetting;
-bool gFlagSaveVfo;
-bool gFlagSaveSettings;
-bool gFlagSaveChannel;
-#if defined(ENABLE_FMRADIO)
-bool gFlagSaveFM;
-#endif
 uint8_t gDTMF_RequestPending;
 bool g_CDCSS_Lost;
 uint8_t gCDCSSCodeType;

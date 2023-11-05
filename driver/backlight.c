@@ -25,7 +25,7 @@ void BACKLIGHT_TurnOn(void)
 {
 	if (gEeprom.BACKLIGHT > 0) {
 		GPIO_SetBit(&GPIOB->DATA, GPIOB_PIN_BACKLIGHT);
-		gBacklightCountdown = 1 + (gEeprom.BACKLIGHT * 4);
+		gBacklightCountdown = gEeprom.BACKLIGHT * 4; // Decrements every 500ms
 	}
 }
 

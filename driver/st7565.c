@@ -31,6 +31,7 @@ void ST7565_DrawLine(uint8_t Column, uint8_t Line, uint16_t Size, const uint8_t 
 {
 	SPI_DisableMasterMode(&SPI0->CR);
 	ST7565_SelectColumnAndLine(Column + 4U, Line);
+	SPI_WaitForUndocumentedTxFifoStatusBit();
 
 	GPIO_SetBit(&GPIOB->DATA, GPIOB_PIN_ST7565_A0);
 	uint16_t i;
