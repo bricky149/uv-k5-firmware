@@ -27,9 +27,8 @@ void I2C_Start(void)
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
 	
 	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA);
-	
+
 	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-	
 }
 
 void I2C_Stop(void)
@@ -41,7 +40,6 @@ void I2C_Stop(void)
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
 	
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA);
-	
 }
 
 uint8_t I2C_Read(bool bFinal)
@@ -55,16 +53,16 @@ uint8_t I2C_Read(bool bFinal)
 	Data = 0;
 	for (i = 0; i < 8; i++) {
 		GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-		
+
 		GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-		
+
 		Data <<= 1;
-		
-		if (GPIO_CheckBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA)) {
+
+		if (GPIO_CheckBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA) != 0) {
 			Data |= 1U;
 		}
+
 		GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-		
 	}
 
 	PORTCON_PORTA_IE &= ~PORTCON_PORTA_IE_A11_MASK;
@@ -79,20 +77,19 @@ uint8_t I2C_Read(bool bFinal)
 	}
 	
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-	
+
 	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-	
 
 	return Data;
 }
 
-int I2C_Write(uint8_t Data)
+bool I2C_Write(uint8_t Data)
 {
 	uint8_t i;
-	int ret = -1;
+	bool ret = true;
 
 	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-	
+
 	for (i = 0; i < 8; i++) {
 		if ((Data & 0x80) == 0) {
 			GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA);
@@ -100,27 +97,23 @@ int I2C_Write(uint8_t Data)
 			GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA);
 		}
 		Data <<= 1;
-		
+
 		GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-		
+
 		GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-		
 	}
 
 	PORTCON_PORTA_IE |= PORTCON_PORTA_IE_A11_BITS_ENABLE;
 	PORTCON_PORTA_OD &= ~PORTCON_PORTA_OD_A11_MASK;
+
 	GPIOA->DIR &= ~GPIO_DIR_11_MASK;
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA);
-	
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-	
 
-	for (i = 0; i < 255; i++) {
-		if (GPIO_CheckBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA) == 0) {
-			ret = 0;
-			break;
-		}
+	while (GPIO_CheckBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA)) {
+		// Spinlock until we are ready
 	}
+	ret = false;
 
 	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
 	
@@ -143,27 +136,25 @@ int I2C_ReadBuffer(const void *pBuffer, uint8_t Size)
 	}
 
 	for (i = 0; i < Size - 1; i++) {
-		
 		pData[i] = I2C_Read(false);
 	}
 
-	
 	pData[i++] = I2C_Read(true);
 
 	return Size;
 }
 
-int I2C_WriteBuffer(const void *pBuffer, uint8_t Size)
+bool I2C_WriteBuffer(const void *pBuffer, uint8_t Size)
 {
 	const uint8_t *pData = (const uint8_t *)pBuffer;
 	uint8_t i;
 
 	for (i = 0; i < Size; i++) {
-		if (I2C_Write(*pData++) < 0) {
-			return -1;
+		if (I2C_Write(*pData++)) {
+			return true;
 		}
 	}
 
-	return 0;
+	return false;
 }
 

@@ -282,6 +282,7 @@ void APP_StartListening(FUNCTION_Type_t Function)
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
 	gEnableSpeaker = true;
 	BACKLIGHT_TurnOn();
+
 	if (gScanState != SCAN_OFF) {
 		switch (gEeprom.SCAN_RESUME_MODE) {
 		case SCAN_RESUME_TO:
@@ -299,7 +300,6 @@ void APP_StartListening(FUNCTION_Type_t Function)
 		}
 		bScanKeepFrequency = true;
 	}
-
 	if (gCssScanMode != CSS_SCAN_MODE_OFF) {
 		gCssScanMode = CSS_SCAN_MODE_FOUND;
 	}
@@ -308,11 +308,11 @@ void APP_StartListening(FUNCTION_Type_t Function)
 		gDualWatchCountdown = 360;
 		gScheduleDualWatch = false;
 	}
+
 	BK4819_SetModulation(gRxVfo->ModulationType);
-	if (gRxVfo->ModulationType == MOD_AM) {
+	if (gRxVfo->ModulationType != MOD_FM) {
 		BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
 		BK4819_DisableAGC();
-		// Override compander mode when entering/leaving AM
 		BK4819_SetCompander(0);
 		BK4819_SetAF(BK4819_AF_AM);
 	} else {
@@ -324,6 +324,7 @@ void APP_StartListening(FUNCTION_Type_t Function)
 		BK4819_SetCompander(gRxVfo->CompanderMode);
 		BK4819_SetAF(BK4819_AF_OPEN);
 	}
+
 	FUNCTION_Select(Function);
 	if (Function == FUNCTION_MONITOR
 #if defined(ENABLE_FMRADIO)
@@ -334,7 +335,6 @@ void APP_StartListening(FUNCTION_Type_t Function)
 		return;
 	}
 	gUpdateDisplay = true;
-
 }
 
 void APP_SetFrequencyByStep(VFO_Info_t *pInfo, int8_t Step)
@@ -487,25 +487,20 @@ void APP_EndTransmission(void)
 
 void APP_Update(void)
 {
+	if (gReducedService) {
+		return;
+	}
+
 	if (gCurrentFunction == FUNCTION_TRANSMIT && gTxTimeoutReached) {
 		gTxTimeoutReached = false;
 		gFlagEndTransmission = true;
 		APP_EndTransmission();
 		RADIO_SetVfoState(VFO_STATE_TIMEOUT);
-		GUI_DisplayScreen();
-	}
-
-	if (gReducedService) {
-		return;
+		gUpdateDisplay = true;
 	}
 	if (gCurrentFunction != FUNCTION_TRANSMIT) {
 		APP_HandleFunction();
 	}
-#if defined(ENABLE_FMRADIO)
-	if (gFmRadioCountdown > 0) {
-		return;
-	}
-#endif
 
 	if (gScreenToDisplay != DISPLAY_SCANNER && gScanState != SCAN_OFF && gScheduleScanListen && !gPttIsPressed) {
 		if (IS_FREQ_CHANNEL(gNextMrChannel)) {
@@ -552,13 +547,6 @@ void APP_Update(void)
 			}
 		}
 	}
-
-#if defined(ENABLE_FMRADIO)
-	if (gFM_ScanState != FM_SCAN_OFF && gScheduleFM && gCurrentFunction != FUNCTION_MONITOR && gCurrentFunction != FUNCTION_RECEIVE && gCurrentFunction != FUNCTION_TRANSMIT) {
-		FM_Play();
-		gScheduleFM = false;
-	}
-#endif
 
 	if (gSchedulePowerSave) {
 		if (gEeprom.BATTERY_SAVE == 0 || gScanState != SCAN_OFF || gCssScanMode != CSS_SCAN_MODE_OFF
@@ -649,7 +637,6 @@ void APP_CheckKeys(void)
 
 void APP_TimeSlice10ms(void)
 {
-	gFlashLightBlinkCounter++;
 
 #if defined(ENABLE_UART)
 	if (UART_IsCommandAvailable()) {
@@ -659,25 +646,19 @@ void APP_TimeSlice10ms(void)
 	}
 #endif
 
-	if (gReducedService) {
-		return;
-	}
-	if ((gCurrentFunction != FUNCTION_POWER_SAVE || !gRxIdleMode) && gScreenToDisplay != DISPLAY_SCANNER) {
-		APP_CheckRadioInterrupts();
-	}
+	gFlashLightBlinkCounter++;
 	if (gFlashLightState == FLASHLIGHT_BLINK && (gFlashLightBlinkCounter & 15U) == 0) {
 		GPIO_FlipBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
 	}
-	if (gCurrentFunction != FUNCTION_TRANSMIT) {
-		if (gUpdateStatus) {
-			UI_DisplayStatus();
-			gUpdateStatus = false;
-		}
-		if (gUpdateDisplay) {
-			GUI_DisplayScreen();
-			gUpdateDisplay = false;
-		}
-	} else {
+
+	if (gReducedService) {
+		return;
+	}
+
+	if ((gCurrentFunction != FUNCTION_POWER_SAVE || !gRxIdleMode) && gScreenToDisplay != DISPLAY_SCANNER) {
+		APP_CheckRadioInterrupts();
+	}
+	if (gCurrentFunction == FUNCTION_TRANSMIT) {
 		if (gRTTECountdown > 0) {
 			gRTTECountdown--;
 			if (gRTTECountdown == 0) {
@@ -689,6 +670,17 @@ void APP_TimeSlice10ms(void)
 
 	// Skipping authentic device checks
 
+	if (gCurrentFunction != FUNCTION_TRANSMIT) {
+		if (gUpdateStatus) {
+			UI_DisplayStatus();
+			gUpdateStatus = false;
+		}
+		if (gUpdateDisplay) {
+			GUI_DisplayScreen();
+			gUpdateDisplay = false;
+		}
+	}
+
 #if defined(ENABLE_FMRADIO)
 	if (gFmRadioCountdown > 0) {
 		return;
@@ -699,6 +691,10 @@ void APP_TimeSlice10ms(void)
 			FM_Start();
 			GUI_SelectNextDisplay(DISPLAY_FM);
 		}
+	}
+	if (gFM_ScanState != FM_SCAN_OFF && gScheduleFM && gCurrentFunction != FUNCTION_MONITOR && gCurrentFunction != FUNCTION_RECEIVE && gCurrentFunction != FUNCTION_TRANSMIT) {
+		FM_Play();
+		gScheduleFM = false;
 	}
 #endif
 
@@ -790,6 +786,12 @@ void APP_TimeSlice10ms(void)
 	}
 }
 
+void APP_TimeSlice40ms(void) {
+	if (gRxVfo->ModulationType == MOD_AM) {
+		BK4819_NaiveAGC();
+	}
+}
+
 void APP_TimeSlice500ms(void)
 {
 	// Skipped authentic device check
@@ -829,10 +831,6 @@ void APP_TimeSlice500ms(void)
 				gBatteryVoltageIndex = 0;
 			}
 			BATTERY_GetReadings(true);
-		}
-		if (gCurrentFunction != FUNCTION_POWER_SAVE) {
-			gCurrentRSSI = BK4819_GetRSSI();
-			UI_UpdateRSSI(gCurrentRSSI);
 		}
 		if (
 #if defined(ENABLE_FMRADIO)
@@ -883,6 +881,8 @@ void APP_TimeSlice500ms(void)
 				}
 			}
 		}
+		gCurrentRSSI = BK4819_GetRSSI();
+		UI_UpdateRSSI(gCurrentRSSI);
 	}
 
 #if defined(ENABLE_FMRADIO)

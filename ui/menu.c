@@ -348,7 +348,7 @@ void UI_DisplayMenu(void)
 		if (gSubMenuSelection == 0) {
 			strcpy(String, "OFF");
 		} else {
-			sprintf(String, "%dmin", gSubMenuSelection);
+			sprintf(String, "%umin", gSubMenuSelection);
 		}
 		break;
 
@@ -364,7 +364,7 @@ void UI_DisplayMenu(void)
 		if (gSubMenuSelection == 0) {
 			strcpy(String, "OFF");
 		} else {
-			sprintf(String, "%d*100ms", gSubMenuSelection);
+			sprintf(String, "%u*100ms", gSubMenuSelection);
 		}
 		break;
 
@@ -389,11 +389,11 @@ void UI_DisplayMenu(void)
 		break;
 
 	case MENU_D_HOLD:
-		sprintf(String, "%ds", gSubMenuSelection);
+		sprintf(String, "%us", gSubMenuSelection);
 		break;
 
 	case MENU_D_PRE:
-		sprintf(String, "%d*10ms", gSubMenuSelection);
+		sprintf(String, "%u*10ms", gSubMenuSelection);
 		break;
 
 	case MENU_PTT_ID:

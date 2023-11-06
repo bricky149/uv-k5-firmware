@@ -37,10 +37,7 @@ void GENERIC_Key_F(bool bKeyPressed, bool bKeyHeld)
 	}
 	if (bKeyHeld || !bKeyPressed) {
 		if (bKeyHeld || bKeyPressed) {
-			if (!bKeyHeld) {
-				return;
-			}
-			if (!bKeyPressed) {
+			if (!bKeyHeld || !bKeyPressed) {
 				return;
 			}
 			gEeprom.KEY_LOCK = !gEeprom.KEY_LOCK;

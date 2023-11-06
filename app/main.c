@@ -242,10 +242,7 @@ static void MAIN_Key_STAR(bool bKeyPressed, bool bKeyHeld)
 	}
 	if (bKeyHeld || !bKeyPressed) {
 		if (bKeyHeld || bKeyPressed) {
-			if (!bKeyHeld) {
-				return;
-			}
-			if (!bKeyPressed) {
+			if (!bKeyHeld || !bKeyPressed) {
 				return;
 			}
 			ACTION_Scan(false);
@@ -297,7 +294,7 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 	}
 
 	if (gScanState == SCAN_OFF) {
-			uint8_t Next;
+		uint8_t Next;
 
 		if (IS_FREQ_CHANNEL(Channel)) {
 			APP_SetFrequencyByStep(gTxVfo, Direction);

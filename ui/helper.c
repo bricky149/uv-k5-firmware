@@ -26,7 +26,7 @@ void UI_GenerateChannelString(char *pString, uint8_t Channel)
 	uint8_t i;
 
 	if (gInputBoxIndex == 0) {
-		sprintf(pString, "CH-%02d", Channel + 1);
+		sprintf(pString, "CH-%02u", Channel + 1);
 		return;
 	}
 
@@ -60,12 +60,12 @@ void UI_GenerateChannelStringEx(char *pString, bool bShowPrefix, uint8_t Channel
 	}
 
 	if (bShowPrefix) {
-		sprintf(pString, "CH-%03d", ChannelNumber + 1);
+		sprintf(pString, "CH-%03u", ChannelNumber + 1);
 	} else {
 		if (ChannelNumber == 0xFF) {
 			strcpy(pString, "NULL");
 		} else {
-			sprintf(pString, "%03d", ChannelNumber + 1);
+			sprintf(pString, "%03u", ChannelNumber + 1);
 		}
 	}
 }

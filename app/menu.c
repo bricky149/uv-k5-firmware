@@ -132,16 +132,16 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 		*pMax = 2200;  // 2300
 		break;
 	default:
-		return false;
+		return true;
 	}
 
-	return true;
+	return false;
 }
 
 void MENU_AcceptSetting(void)
 {
 	uint16_t Min, Max;
-	if (MENU_GetLimits(gMenuCursor, &Min, &Max)) {
+	if (!MENU_GetLimits(gMenuCursor, &Min, &Max)) {
 		if (gSubMenuSelection < Min) {
 			gSubMenuSelection = Min;
 		} else if (gSubMenuSelection > Max) {
@@ -742,7 +742,7 @@ static void MENU_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 
 		default:
 			uint16_t Min, Max;
-			if (!MENU_GetLimits(gMenuCursor, &Min, &Max)) {
+			if (MENU_GetLimits(gMenuCursor, &Min, &Max)) {
 				gInputBoxIndex = 0;
 				return;
 			}
@@ -888,7 +888,7 @@ static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 	default:
 		//MENU_ClampSelection(Direction) called once
 		uint16_t Min, Max;
-		if (MENU_GetLimits(gMenuCursor, &Min, &Max)) {
+		if (!MENU_GetLimits(gMenuCursor, &Min, &Max)) {
 			uint16_t Selection = gSubMenuSelection;
 			if (Selection < Min) {
 				Selection = Min;

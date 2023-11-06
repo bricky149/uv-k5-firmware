@@ -70,7 +70,7 @@ uint8_t FM_FindNextChannel(uint8_t Channel, uint8_t Direction)
 	return 0xFF;
 }
 
-int FM_ConfigureChannelState(void)
+bool FM_ConfigureChannelState(void)
 {
 	uint8_t Channel;
 
@@ -79,13 +79,13 @@ int FM_ConfigureChannelState(void)
 		Channel = FM_FindNextChannel(gEeprom.FM_SelectedChannel, FM_CHANNEL_UP);
 		if (Channel == 0xFF) {
 			gEeprom.FM_IsMrMode = false;
-			return -1;
+			return true;
 		}
 		gEeprom.FM_SelectedChannel = Channel;
 		gEeprom.FM_FrequencyPlaying = gFM_Channels[Channel];
 	}
 
-	return 0;
+	return false;
 }
 
 void FM_TurnOff(void)
@@ -307,12 +307,10 @@ static void FM_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 
 static void FM_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
 {
-	if (bKeyHeld) {
+	if (bKeyHeld || !bKeyPressed) {
 		return;
 	}
-	if (!bKeyPressed) {
-		return;
-	}
+
 	if (gFM_ScanState == FM_SCAN_OFF) {
 		if (gInputBoxIndex == 0) {
 			if (!gAskToSave && !gAskToDelete) {
@@ -344,10 +342,7 @@ static void FM_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
 
 static void FM_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 {
-	if (bKeyHeld) {
-		return;
-	}
-	if (!bKeyPressed) {
+	if (bKeyHeld || !bKeyPressed) {
 		return;
 	}
 
@@ -390,14 +385,14 @@ static void FM_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 static void FM_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Step)
 {
 	if (bKeyHeld || !bKeyPressed) {
-		if (gInputBoxIndex) {
+		if (gInputBoxIndex > 0) {
 			return;
 		}
 		if (!bKeyPressed) {
 			return;
 		}
 	} else {
-		if (gInputBoxIndex) {
+		if (gInputBoxIndex > 0) {
 			return;
 		}
 	}

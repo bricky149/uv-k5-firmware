@@ -149,6 +149,34 @@ void BK4819_WriteU8(uint8_t Data)
 	}
 }
 
+void BK4819_NaiveAGC(void)
+{
+	// Check if we need to adjust gain
+	uint16_t rssi = BK4819_GetRSSI();
+	if (rssi >= 137 && rssi <= 143) {
+		return;
+	}
+	// Beken's AGC is not helpful in AM mode
+	// We can keep the sensitivity of high LNA
+	// while adjusting PGA to control distortion
+	uint8_t gain_index = 5;
+	do {
+		BK4819_WriteRegister(0x13, // 1o11
+			(3u << 8) |            // LNA Short
+			(6u << 5) |            // LNA
+			(3u << 3) |            // MIXER
+			(gain_index << 0));    // PGA
+		rssi = BK4819_GetRSSI();
+		if (rssi < 137) {
+			gain_index++;
+		} else if (rssi > 143) {
+			gain_index--;
+		} else {
+			break;
+		}
+	} while (gain_index <= 7);
+}
+
 void BK4819_EnableAGC(void)
 {
 	BK4819_WriteRegister(BK4819_REG_7E,
@@ -320,9 +348,6 @@ void BK4819_SetupSquelch(uint8_t SquelchOpenRSSIThresh, uint8_t SquelchCloseRSSI
 }
 
 // fagci
-uint16_t BK4819_GetRegValue(RegisterSpec s) {
-	return (BK4819_ReadRegister(s.num) >> s.offset) & s.mask;
-}
 void BK4819_SetRegValue(RegisterSpec s, uint16_t v) {
 	uint16_t reg = BK4819_ReadRegister(s.num);
 	reg &= ~(s.mask << s.offset);
@@ -737,7 +762,9 @@ void BK4819_EnableCTCSS(void)
 
 uint16_t BK4819_GetRSSI(void)
 {
-	return BK4819_ReadRegister(BK4819_REG_67) & 0x01FF;
+	uint16_t RawRSSI = BK4819_ReadRegister(BK4819_REG_67) & 0x01FF;
+	// Ignore the last bit so NaiveAGC can work properly
+	return RawRSSI >>= 1;
 }
 
 bool BK4819_GetFrequencyScanResult(uint32_t *pFrequency)

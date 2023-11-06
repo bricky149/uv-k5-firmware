@@ -28,6 +28,7 @@ void APP_SetFrequencyByStep(VFO_Info_t *pInfo, int8_t Step);
 
 void APP_Update(void);
 void APP_TimeSlice10ms(void);
+void APP_TimeSlice40ms(void);
 void APP_TimeSlice500ms(void);
 
 #endif

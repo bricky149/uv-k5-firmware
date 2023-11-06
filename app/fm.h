@@ -42,7 +42,7 @@ extern uint16_t gFM_RestoreCountdown;
 
 bool FM_CheckValidChannel(uint8_t Channel);
 uint8_t FM_FindNextChannel(uint8_t Channel, uint8_t Direction);
-int FM_ConfigureChannelState(void);
+bool FM_ConfigureChannelState(void);
 void FM_TurnOff(void);
 void FM_EraseChannels(void);
 

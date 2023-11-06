@@ -47,7 +47,7 @@ void UI_DisplayFM(void)
 			if (!gEeprom.FM_IsMrMode) {
 				for (i = 0; i < 20; i++) {
 					if (gEeprom.FM_FrequencyPlaying == gFM_Channels[i]) {
-						sprintf(String, "VFO(CH%02d)", i + 1);
+						sprintf(String, "VFO(CH%02u)", i + 1);
 						break;
 					}
 				}
@@ -55,13 +55,13 @@ void UI_DisplayFM(void)
 					strcpy(String, "VFO");
 				}
 			} else {
-				sprintf(String, "MR(CH%02d)", gEeprom.FM_SelectedChannel + 1);
+				sprintf(String, "MR(CH%02u)", gEeprom.FM_SelectedChannel + 1);
 			}
 		} else {
 			if (!gFM_AutoScan) {
 				strcpy(String, "M-SCAN");
 			} else {
-				sprintf(String, "A-SCAN(%d)", gFM_ChannelPosition + 1);
+				sprintf(String, "A-SCAN(%u)", gFM_ChannelPosition + 1);
 			}
 		}
 	}
@@ -81,7 +81,7 @@ void UI_DisplayFM(void)
 		ST7565_BlitFullScreen();
 		return;
 	} else {
-		sprintf(String, "CH-%02d", gEeprom.FM_SelectedChannel + 1);
+		sprintf(String, "CH-%02u", gEeprom.FM_SelectedChannel + 1);
 	}
 
 	UI_PrintString(String, 0, 127, 4, 10, true);

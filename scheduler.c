@@ -58,22 +58,37 @@ void SystickHandler(void)
 	TRIGGER_CXCSS(gFoundCDCSSCountdown, gFoundCDCSS, gFoundCTCSS);
 	TRIGGER_CXCSS(gFoundCTCSSCountdown, gFoundCTCSS, gFoundCDCSS);
 
-	if (gCurrentFunction == FUNCTION_FOREGROUND) {
+	switch (gCurrentFunction) {
+	case FUNCTION_FOREGROUND:
 		DECREMENT_AND_TRIGGER(gBatterySaveCountdown, gSchedulePowerSave);
-	}
-	if (gCurrentFunction == FUNCTION_POWER_SAVE) {
+		break;
+	case FUNCTION_POWER_SAVE:
 		DECREMENT_AND_TRIGGER(gBatterySave, gBatterySaveCountdownExpired);
+		break;
+	default:
+		break;
 	}
 	if (gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF && gEeprom.DUAL_WATCH != DUAL_WATCH_OFF) {
-		if (gCurrentFunction != FUNCTION_MONITOR && gCurrentFunction != FUNCTION_TRANSMIT) {
-			if (gCurrentFunction != FUNCTION_RECEIVE) {
-				DECREMENT_AND_TRIGGER(gDualWatchCountdown, gScheduleDualWatch);
-			}
+		switch (gCurrentFunction) {
+		case FUNCTION_FOREGROUND:
+		case FUNCTION_INCOMING:
+		case FUNCTION_POWER_SAVE:
+			DECREMENT_AND_TRIGGER(gDualWatchCountdown, gScheduleDualWatch);
+			break;
+		default:
+			break;
 		}
 	}
 	if (gScanState != SCAN_OFF || gCssScanMode == CSS_SCAN_MODE_SCANNING) {
-		if (gCurrentFunction != FUNCTION_MONITOR && gCurrentFunction != FUNCTION_TRANSMIT) {
+		switch (gCurrentFunction) {
+		case FUNCTION_FOREGROUND:
+		case FUNCTION_INCOMING:
+		case FUNCTION_RECEIVE:
+		case FUNCTION_POWER_SAVE:
 			DECREMENT_AND_TRIGGER(ScanPauseDelayIn10msec, gScheduleScanListen);
+			break;
+		default:
+			break;
 		}
 	}
 	DECREMENT_AND_TRIGGER(gTailNoteEliminationCountdown, gFlagTteComplete);

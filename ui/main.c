@@ -170,8 +170,8 @@ void UI_DisplayMain(void)
 		}
 
 		// 0x8FEC
-
 		uint8_t State = VfoState[i];
+
 		if (gCurrentFunction == FUNCTION_TRANSMIT) {
 			if (gEeprom.CROSS_BAND_RX_TX == CROSS_BAND_OFF) {
 				Channel = gEeprom.RX_VFO;
@@ -233,11 +233,11 @@ void UI_DisplayMain(void)
 					}
 					UI_DisplaySmallDigits(2, String + 6, 112, Line + 1);
 				} else if (gEeprom.CHANNEL_DISPLAY_MODE == MDF_CHANNEL) {
-					sprintf(String, "CH-%03d", gEeprom.ScreenChannel[i] + 1);
+					sprintf(String, "CH-%03u", gEeprom.ScreenChannel[i] + 1);
 					UI_PrintString(String, 31, 112, i * 4, 8, true);
 				} else if (gEeprom.CHANNEL_DISPLAY_MODE == MDF_NAME) {
 					if(gEeprom.VfoInfo[i].Name[0] == 0 || gEeprom.VfoInfo[i].Name[0] == 0xFF) {
-						sprintf(String, "CH-%03d", gEeprom.ScreenChannel[i] + 1);
+						sprintf(String, "CH-%03u", gEeprom.ScreenChannel[i] + 1);
 						UI_PrintString(String, 31, 112, i * 4, 8, true);
 					} else {
 						UI_PrintString(gEeprom.VfoInfo[i].Name, 31, 112, i * 4, 8, true);
@@ -265,7 +265,7 @@ void UI_DisplayMain(void)
 
 		pLine1 += 128;
 		// TODO: not quite how the original does it, but it's quite entangled in Ghidra.
-		if (Level) {
+		if (Level > 0) {
 			memcpy(pLine1, BITMAP_Antenna, sizeof(BITMAP_Antenna));
 			memcpy(pLine1 + 5, BITMAP_AntennaLevel1, sizeof(BITMAP_AntennaLevel1));
 			if (Level >= 2) {
@@ -286,32 +286,35 @@ void UI_DisplayMain(void)
 		}
 
 		// 0x931E
-		if (gEeprom.VfoInfo[i].ModulationType == 1) {
+		switch (gEeprom.VfoInfo[i].ModulationType) {
+		case 1:
 			memcpy(pLine1 + 27, BITMAP_AM, sizeof(BITMAP_AM));
-		} else {
+			break;
+		case 2:
+			memcpy(pLine1 + 27, BITMAP_SSB, sizeof(BITMAP_SSB));
+			break;
+		default:
 			const FREQ_Config_t *pConfig;
-
 			if (LevelMode == LEVEL_MODE_TX) {
 				pConfig = gEeprom.VfoInfo[i].pTX;
 			} else {
 				pConfig = gEeprom.VfoInfo[i].pRX;
-			}
-			if (gEeprom.VfoInfo[i].CompanderMode != COMPND_OFF) {
-				memcpy(pLine1 + 94, BITMAP_C, sizeof(BITMAP_C));
 			}
 
 			switch (pConfig->CodeType) {
 			case CODE_TYPE_CONTINUOUS_TONE:
 				memcpy(pLine1 + 27, BITMAP_CT, sizeof(BITMAP_CT));
 				break;
-
 			case CODE_TYPE_DIGITAL:
 			case CODE_TYPE_REVERSE_DIGITAL:
 				memcpy(pLine1 + 24, BITMAP_DCS, sizeof(BITMAP_DCS));
 				break;
-
 			default:
 				break;
+			}
+
+			if (gEeprom.VfoInfo[i].CompanderMode != COMPND_OFF) {
+				memcpy(pLine1 + 94, BITMAP_C, sizeof(BITMAP_C));
 			}
 		}
 
@@ -342,6 +345,7 @@ void UI_DisplayMain(void)
 		}
 		switch (gEeprom.VfoInfo[i].CHANNEL_BANDWIDTH) {
 		case BANDWIDTH_NARROWER:
+			// No bitmap for now
 		case BANDWIDTH_NARROW:
 			memcpy(pLine1 + 74, BITMAP_NarrowBand, sizeof(BITMAP_NarrowBand));
 			break;
