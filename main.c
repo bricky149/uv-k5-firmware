@@ -36,8 +36,6 @@
 #include "ui/lock.h"
 
 #if defined(ENABLE_UART)
-static const char Version[] = "UV-K5 Firmware, Open Edition, B149-"GIT_HASH"\r\n";
-
 void _putchar(char c)
 {
 	UART_Send((uint8_t *)&c, 1);
@@ -64,6 +62,7 @@ void Main(void)
 
 #if defined(ENABLE_UART)
 	UART_Init();
+	const char Version[] = "UV-K5 Firmware, Open Edition, B149-"GIT_HASH"\n";
 	UART_Send(Version, sizeof(Version));
 #endif
 
@@ -90,7 +89,6 @@ void Main(void)
 	if (!gChargingWithTypeC && gBatteryDisplayLevel == 0) {
 		FUNCTION_Select(FUNCTION_POWER_SAVE);
 		GPIO_ClearBit(&GPIOB->DATA, GPIOB_PIN_BACKLIGHT);
-		gReducedService = true;
 	} else {
 		BACKLIGHT_TurnOn();
 		if (gEeprom.POWER_ON_PASSWORD < 1000000) {

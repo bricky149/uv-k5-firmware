@@ -185,13 +185,11 @@ static const char gSubMenu_RESET[2][4] = {
 	"ALL",
 };
 
-static const char gSubMenu_F_LOCK[6][4] = {
+static const char gSubMenu_F_LOCK[4][4] = {
 	"OFF",
 	"FCC",
 	"CE",
 	"GB",
-	"430",
-	"438",
 };
 
 bool gIsInSubMenu;

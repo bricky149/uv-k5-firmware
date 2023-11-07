@@ -64,7 +64,7 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 			break;
 		}
 		// Fallthrough
-	case MENU_ABR: case MENU_F_LOCK:
+	case MENU_ABR:
 		*pMin = 0;
 		*pMax = 5;
 		break;
@@ -111,7 +111,8 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 		*pMin = 1;
 		*pMax = 2;
 		break;
-	case MENU_COMPND: case MENU_D_RSP: case MENU_PTT_ID:
+	case MENU_D_RSP: case MENU_PTT_ID:
+	case MENU_COMPND: case MENU_F_LOCK:
 		*pMin = 0;
 		*pMax = 3;
 		break;

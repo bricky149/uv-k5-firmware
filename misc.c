@@ -55,7 +55,6 @@ uint8_t gFoundCTCSS;
 uint8_t gFoundCDCSS;
 bool gEndOfRxDetectedMaybe;
 uint8_t gVFO_RSSI_Level[2];
-uint8_t gReducedService;
 uint8_t gBatteryVoltageIndex;
 CssScanMode_t gCssScanMode;
 bool gUpdateRSSI;
@@ -123,7 +122,7 @@ uint8_t gIsLocked = 0xFF;
 
 // --------
 
-void NUMBER_Get(char *pDigits, uint32_t *pInteger)
+__attribute__((used)) void NUMBER_Get(char *pDigits, uint32_t *pInteger)
 {
 	uint32_t Value = 0;
 	uint32_t Multiplier = 10000000;

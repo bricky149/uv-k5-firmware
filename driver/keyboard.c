@@ -17,9 +17,9 @@
 
 #include "bsp/dp32g030/gpio.h"
 #include "driver/gpio.h"
+#include "driver/i2c.h"
 #include "driver/keyboard.h"
 #include "driver/systick.h"
-#include "driver/i2c.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
@@ -100,7 +100,7 @@ KEY_Code_t KEYBOARD_Poll(void)
 	KEY_Code_t Key = KEY_INVALID;
 
 	if (!GPIO_CheckBit(&GPIOC->DATA, GPIOC_PIN_PTT)) {
-        SYSTICK_DelayUs(5);
+        // Double check for pin stability
         if (!GPIO_CheckBit(&GPIOC->DATA, GPIOC_PIN_PTT)) {
 		    Key = KEY_PTT;
         }
@@ -117,7 +117,7 @@ KEY_Code_t KEYBOARD_Poll(void)
         GPIOA->DATA &= keyboard[j].set_to_zero_mask;
 
         // Wait for the pins to stabilise. 1 works for me.
-        SYSTICK_DelayUs(5);
+        SYSTICK_DelayUs(2);
 
         // Read all 4 GPIO pins at once
         uint16_t reg = GPIOA->DATA;

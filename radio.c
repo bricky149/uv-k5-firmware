@@ -335,20 +335,14 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		gEeprom.VfoInfo[VFO].pTX = &gEeprom.VfoInfo[VFO].ConfigRX;
 	}
 
-	switch (gEeprom.VfoInfo[VFO].Band) {
-	case BAND1_18MHz:
-		gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = 0;
-		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
-		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
-		gEeprom.VfoInfo[VFO].CompanderMode = COMPND_OFF;
-		break;
-	case BAND2_108MHz:
+	if (gEeprom.VfoInfo[VFO].Band == BAND2_108MHz) {
 		gEeprom.VfoInfo[VFO].ModulationType = MOD_AM;
+	}
+	if (gEeprom.VfoInfo[VFO].ModulationType != MOD_FM) {
 		gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = 0;
 		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
 		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
 		gEeprom.VfoInfo[VFO].CompanderMode = COMPND_OFF;
-		break;
 	}
 
 	RADIO_ConfigureSquelchAndOutputPower(pRadio);
@@ -415,13 +409,13 @@ void RADIO_ApplyOffset(VFO_Info_t *pInfo)
 
 	Frequency = pInfo->ConfigRX.Frequency;
 	switch (pInfo->FREQUENCY_DEVIATION_SETTING) {
-	case FREQUENCY_DEVIATION_OFF:
-		break;
 	case FREQUENCY_DEVIATION_ADD:
 		Frequency += pInfo->FREQUENCY_OF_DEVIATION;
 		break;
 	case FREQUENCY_DEVIATION_SUB:
 		Frequency -= pInfo->FREQUENCY_OF_DEVIATION;
+		break;
+	default:
 		break;
 	}
 

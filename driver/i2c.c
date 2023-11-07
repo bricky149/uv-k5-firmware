@@ -23,22 +23,18 @@
 void I2C_Start(void)
 {
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA);
-	
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-	
-	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA);
 
+	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA);
 	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
 }
 
 void I2C_Stop(void)
 {
 	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA);
-	
 	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-	
+
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-	
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA);
 }
 
@@ -53,15 +49,12 @@ uint8_t I2C_Read(bool bFinal)
 	Data = 0;
 	for (i = 0; i < 8; i++) {
 		GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-
 		GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
 
 		Data <<= 1;
-
 		if (GPIO_CheckBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA) != 0) {
 			Data |= 1U;
 		}
-
 		GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
 	}
 
@@ -75,9 +68,7 @@ uint8_t I2C_Read(bool bFinal)
 	} else {
 		GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA);
 	}
-	
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-
 	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
 
 	return Data;
@@ -99,14 +90,13 @@ bool I2C_Write(uint8_t Data)
 		Data <<= 1;
 
 		GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-
 		GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
 	}
 
 	PORTCON_PORTA_IE |= PORTCON_PORTA_IE_A11_BITS_ENABLE;
 	PORTCON_PORTA_OD &= ~PORTCON_PORTA_OD_A11_MASK;
-
 	GPIOA->DIR &= ~GPIO_DIR_11_MASK;
+
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA);
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
 
@@ -116,7 +106,7 @@ bool I2C_Write(uint8_t Data)
 	ret = false;
 
 	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
-	
+
 	PORTCON_PORTA_IE &= ~PORTCON_PORTA_IE_A11_MASK;
 	PORTCON_PORTA_OD |= PORTCON_PORTA_OD_A11_BITS_ENABLE;
 	GPIOA->DIR |= GPIO_DIR_11_BITS_OUTPUT;
@@ -125,7 +115,7 @@ bool I2C_Write(uint8_t Data)
 	return ret;
 }
 
-int I2C_ReadBuffer(const void *pBuffer, uint8_t Size)
+__attribute__((used)) int I2C_ReadBuffer(const void *pBuffer, uint8_t Size)
 {
 	uint8_t *pData = (uint8_t *)pBuffer;
 	uint8_t i;
@@ -144,7 +134,7 @@ int I2C_ReadBuffer(const void *pBuffer, uint8_t Size)
 	return Size;
 }
 
-bool I2C_WriteBuffer(const void *pBuffer, uint8_t Size)
+__attribute__((used)) bool I2C_WriteBuffer(const void *pBuffer, uint8_t Size)
 {
 	const uint8_t *pData = (const uint8_t *)pBuffer;
 	uint8_t i;

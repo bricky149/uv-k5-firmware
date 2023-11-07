@@ -18,7 +18,6 @@
 #include "driver/bk1080.h"
 #include "driver/gpio.h"
 #include "driver/i2c.h"
-#include "driver/system.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
@@ -80,7 +79,6 @@ void BK1080_WriteRegister(BK1080_Register_t Register, uint16_t Value)
 	Value = ((Value >> 8) & 0xFF) | ((Value & 0xFF) << 8);
 	I2C_WriteBuffer(&Value, sizeof(Value));
 	I2C_Stop();
-	SYSTEM_DelayMs(1);
 }
 
 void BK1080_Mute(void)

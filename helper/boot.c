@@ -19,7 +19,6 @@
 #include "driver/bk4819.h"
 #include "driver/keyboard.h"
 #include "driver/gpio.h"
-#include "driver/system.h"
 #include "helper/boot.h"
 #include "misc.h"
 #include "radio.h"
@@ -37,7 +36,6 @@ BOOT_Mode_t BOOT_GetMode(void)
 			return BOOT_MODE_NORMAL;
 		}
 		Keys[i] = KEYBOARD_Poll();
-		SYSTEM_DelayMs(20);
 	}
 	if (Keys[0] == Keys[1]) {
 		gKeyReading0 = Keys[0];

@@ -20,7 +20,6 @@
 #include "driver/gpio.h"
 #include "driver/spi.h"
 #include "driver/st7565.h"
-#include "driver/system.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
@@ -127,9 +126,7 @@ void ST7565_Init(void)
 void ST7565_HardwareReset(void)
 {
 	GPIO_ClearBit(&GPIOB->DATA, GPIOB_PIN_ST7565_RES);
-	SYSTEM_DelayMs(20);
 	GPIO_SetBit(&GPIOB->DATA, GPIOB_PIN_ST7565_RES);
-	SYSTEM_DelayMs(80);
 }
 
 void ST7565_SelectColumnAndLine(uint8_t Column, uint8_t Line)

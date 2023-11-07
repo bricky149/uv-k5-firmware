@@ -3,8 +3,9 @@ TARGET = firmware
 ENABLE_FMRADIO := 1
 ENABLE_SWD := 0
 ENABLE_UART := 1
-# Broken above -O1
-ENABLE_LTO := 0
+# Broken above -O1 on stock due to not enough GPIO pin delays (driver/gpio.c)
+# https://stackoverflow.com/questions/50175117/what-gets-discarded-by-gccs-flto
+ENABLE_LTO := 1
 
 BSP_DEFINITIONS := $(wildcard hardware/*/*.def)
 BSP_HEADERS := $(patsubst hardware/%,bsp/%,$(BSP_DEFINITIONS))
@@ -80,7 +81,6 @@ OBJS += ui/rssi.o
 OBJS += ui/scanner.o
 OBJS += ui/status.o
 OBJS += ui/ui.o
-OBJS += version.o
 
 OBJS += main.o
 

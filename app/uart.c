@@ -32,7 +32,6 @@
 #include "functions.h"
 #include "misc.h"
 #include "settings.h"
-#include "version.h"
 
 #define DMA_INDEX(x, y) (((x) + (y)) % sizeof(UART_DMA_Buffer))
 
@@ -42,7 +41,7 @@ typedef struct {
 } Header_t;
 
 typedef struct {
-	uint8_t Padding[2];
+	uint8_t Obfuscation[2];
 	uint16_t ID;
 } Footer_t;
 
@@ -122,7 +121,7 @@ typedef struct {
 	Header_t Header;
 	struct {
 		bool bIsLocked;
-		uint8_t Padding[3];
+		uint8_t Padding[2];
 	} Data;
 } REPLY_052D_t;
 
@@ -164,11 +163,11 @@ static void SendReply(void *pReply, uint16_t Size)
 	UART_Send(&Header, sizeof(Header));
 	UART_Send(pReply, Size);
 	if (bIsEncrypted) {
-		Footer.Padding[0] = Obfuscation[(Size + 0) % 16] ^ 0xFF;
-		Footer.Padding[1] = Obfuscation[(Size + 1) % 16] ^ 0xFF;
+		Footer.Obfuscation[0] = Obfuscation[(Size + 0) % 16] ^ 0xFF;
+		Footer.Obfuscation[1] = Obfuscation[(Size + 1) % 16] ^ 0xFF;
 	} else {
-		Footer.Padding[0] = 0xFF;
-		Footer.Padding[1] = 0xFF;
+		Footer.Obfuscation[0] = 0xFF;
+		Footer.Obfuscation[1] = 0xFF;
 	}
 	Footer.ID = 0xBADC;
 
@@ -181,7 +180,7 @@ static void SendVersion(void)
 
 	Reply.Header.ID = 0x0515;
 	Reply.Header.Size = sizeof(Reply.Data);
-	strcpy(Reply.Data.Version, Version);
+	strcpy(Reply.Data.Version, "B149-" GIT_HASH);
 	Reply.Data.bHasCustomAesKey = bHasCustomAesKey;
 	Reply.Data.bIsInLockScreen = bIsInLockScreen;
 	Reply.Data.Challenge[0] = gChallenge[0];
@@ -192,7 +191,7 @@ static void SendVersion(void)
 	SendReply(&Reply, sizeof(Reply));
 }
 
-static bool IsBadChallenge(const uint32_t *pKey, const uint32_t *pIn, const uint32_t *pResponse)
+__attribute__((used)) static bool IsBadChallenge(const uint32_t *pKey, const uint32_t *pIn, const uint32_t *pResponse)
 {
 	uint8_t i;
 	uint32_t IV[4];

@@ -132,6 +132,9 @@ bool FREQUENCY_Check(VFO_Info_t *pInfo)
 		if (Frequency >= 14400000 && Frequency <= 14599990) {
 			return false;
 		}
+		if (Frequency >= 44600000 && Frequency <= 44699990) {
+			return false;
+		}
 		break;
 
 	case F_LOCK_GB:
@@ -141,22 +144,7 @@ bool FREQUENCY_Check(VFO_Info_t *pInfo)
 		if (Frequency >= 43000000 && Frequency <= 43999990) {
 			return false;
 		}
-		break;
-
-	case F_LOCK_430:
-		if (Frequency >= 13600000 && Frequency <= 17399990) {
-			return false;
-		}
-		if (Frequency >= 40000000 && Frequency <= 42999990) {
-			return false;
-		}
-		break;
-
-	case F_LOCK_438:
-		if (Frequency >= 13600000 && Frequency <= 17399990) {
-			return false;
-		}
-		if (Frequency >= 40000000 && Frequency <= 43799990) {
+		if (Frequency >= 44600000 && Frequency <= 44699990) {
 			return false;
 		}
 		break;
@@ -171,6 +159,9 @@ bool FREQUENCY_Check(VFO_Info_t *pInfo)
 			if (gSetting_350TX) {
 				return false;
 			}
+		}
+		if (Frequency >= 40000000 && Frequency <= 46999990) {
+			return false;
 		}
 		if (Frequency >= 47000000 && Frequency <= 63000000) {
 			if (gSetting_500TX) {

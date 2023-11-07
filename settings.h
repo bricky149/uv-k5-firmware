@@ -26,8 +26,6 @@ enum {
 	F_LOCK_FCC = 1U,
 	F_LOCK_CE  = 2U,
 	F_LOCK_GB  = 3U,
-	F_LOCK_430 = 4U,
-	F_LOCK_438 = 5U,
 };
 
 enum {
@@ -128,7 +126,7 @@ typedef struct {
 	uint16_t DTMF_CODE_PERSIST_TIME;
 	uint16_t DTMF_CODE_INTERVAL_TIME;
 	bool DTMF_SIDE_TONE;
-	uint8_t Padding[3];
+	uint8_t Padding[1];
 } EEPROM_Config_t;
 
 typedef struct {

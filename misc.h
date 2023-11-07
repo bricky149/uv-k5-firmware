@@ -93,7 +93,6 @@ extern uint8_t gFoundCTCSS;
 extern uint8_t gFoundCDCSS;
 extern bool gEndOfRxDetectedMaybe;
 extern uint8_t gVFO_RSSI_Level[2];
-extern uint8_t gReducedService;
 extern uint8_t gBatteryVoltageIndex;
 extern CssScanMode_t gCssScanMode;
 extern bool gUpdateRSSI;

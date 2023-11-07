@@ -487,10 +487,6 @@ void APP_EndTransmission(void)
 
 void APP_Update(void)
 {
-	if (gReducedService) {
-		return;
-	}
-
 	if (gCurrentFunction == FUNCTION_TRANSMIT && gTxTimeoutReached) {
 		gTxTimeoutReached = false;
 		gFlagEndTransmission = true;
@@ -651,10 +647,6 @@ void APP_TimeSlice10ms(void)
 		GPIO_FlipBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
 	}
 
-	if (gReducedService) {
-		return;
-	}
-
 	if ((gCurrentFunction != FUNCTION_POWER_SAVE || !gRxIdleMode) && gScreenToDisplay != DISPLAY_SCANNER) {
 		APP_CheckRadioInterrupts();
 	}
@@ -812,14 +804,6 @@ void APP_TimeSlice500ms(void)
 	}
 #endif
 
-	if (gReducedService) {
-		BOARD_ADC_GetBatteryInfo(&gBatteryCurrentVoltage, &gBatteryCurrent);
-		if (gBatteryCurrent > 500 || gBatteryCalibration[3] < gBatteryCurrentVoltage) {
-			NVIC_SystemReset();
-		}
-		return;
-	}
-
 	gBatteryCheckCounter++;
 
 	// Skipped authentic device check
@@ -904,7 +888,6 @@ void APP_TimeSlice500ms(void)
 		if (gLowBatteryCountdown >= 30 && gCurrentFunction != FUNCTION_TRANSMIT) {
 			gLowBatteryCountdown = 0;
 			if (!gChargingWithTypeC && gBatteryDisplayLevel == 0) {
-				gReducedService = true;
 				FUNCTION_Select(FUNCTION_POWER_SAVE);
 				ST7565_HardwareReset();
 				GPIO_ClearBit(&GPIOB->DATA, GPIOB_PIN_BACKLIGHT);
