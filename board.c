@@ -40,6 +40,14 @@
 #include "misc.h"
 #include "settings.h"
 
+static const uint32_t DefaultFrequencyTable[5] = {
+	14502500,
+	14552500,
+	43477500,
+	43502500,
+	43697500,
+};
+
 void BOARD_GPIO_Init(void)
 {
 	GPIOA->DIR |= 0
@@ -102,36 +110,36 @@ void BOARD_PORTCON_Init(void)
 	// PORT A pin selection
 
 	PORTCON_PORTA_SEL0 &= ~(0
-		// Key pad
+		// Keypad
 		| PORTCON_PORTA_SEL0_A3_MASK
-		// Key pad
+		// Keypad
 		| PORTCON_PORTA_SEL0_A4_MASK
-		// Key pad
+		// Keypad
 		| PORTCON_PORTA_SEL0_A5_MASK
-		// Key pad
+		// Keypad
 		| PORTCON_PORTA_SEL0_A6_MASK
 		);
 	PORTCON_PORTA_SEL0 |= 0
-		// Key pad
+		// Keypad
 		| PORTCON_PORTA_SEL0_A3_BITS_GPIOA3
-		// Key pad
+		// Keypad
 		| PORTCON_PORTA_SEL0_A4_BITS_GPIOA4
-		// Key pad
+		// Keypad
 		| PORTCON_PORTA_SEL0_A5_BITS_GPIOA5
-		// Key pad
+		// Keypad
 		| PORTCON_PORTA_SEL0_A6_BITS_GPIOA6
 		// UART1 TX, wasn't cleared in previous step / relying on default value!
 		| PORTCON_PORTA_SEL0_A7_BITS_UART1_TX
 		;
 
 	PORTCON_PORTA_SEL1 &= ~(0
-		// Key pad + I2C
+		// Keypad + I2C
 		| PORTCON_PORTA_SEL1_A10_MASK
-		// Key pad + I2C
+		// Keypad + I2C
 		| PORTCON_PORTA_SEL1_A11_MASK
-		// Key pad + Voice chip
+		// Keypad + Voice chip
 		| PORTCON_PORTA_SEL1_A12_MASK
-		// Key pad + Voice chip
+		// Keypad + Voice chip
 		| PORTCON_PORTA_SEL1_A13_MASK
 		);
 	PORTCON_PORTA_SEL1 |= 0
@@ -139,13 +147,13 @@ void BOARD_PORTCON_Init(void)
 		| PORTCON_PORTA_SEL1_A8_BITS_UART1_RX
 		// Battery voltage, wasn't cleared in previous step / relying on default value!
 		| PORTCON_PORTA_SEL1_A9_BITS_SARADC_CH4
-		// Key pad + I2C
+		// Keypad + I2C
 		| PORTCON_PORTA_SEL1_A10_BITS_GPIOA10
-		// Key pad + I2C
+		// Keypad + I2C
 		| PORTCON_PORTA_SEL1_A11_BITS_GPIOA11
-		// Key pad + Voice chip
+		// Keypad + Voice chip
 		| PORTCON_PORTA_SEL1_A12_BITS_GPIOA12
-		// Key pad + Voice chip
+		// Keypad + Voice chip
 		| PORTCON_PORTA_SEL1_A13_BITS_GPIOA13
 		// Battery Current, wasn't cleared in previous step / relying on default value!
 		| PORTCON_PORTA_SEL1_A14_BITS_SARADC_CH9
@@ -154,13 +162,13 @@ void BOARD_PORTCON_Init(void)
 	// PORT B pin selection
 
 	PORTCON_PORTB_SEL0 &= ~(0
-		// Back light
+		// Backlight
 		| PORTCON_PORTB_SEL0_B6_MASK
 		// SPI0 SSN
 		| PORTCON_PORTB_SEL0_B7_MASK
 		);
 	PORTCON_PORTB_SEL0 |= 0
-		// Back light
+		// Backlight
 		| PORTCON_PORTB_SEL0_B6_BITS_GPIOB6
 		// SPI0 SSN
 		| PORTCON_PORTB_SEL0_B7_BITS_SPI0_SSN
@@ -203,7 +211,7 @@ void BOARD_PORTCON_Init(void)
 		| PORTCON_PORTC_SEL0_C1_MASK
 		// BK4819 SDA
 		| PORTCON_PORTC_SEL0_C2_MASK
-		// Flash light
+		// Flashlight
 		| PORTCON_PORTC_SEL0_C3_MASK
 		// Speaker
 		| PORTCON_PORTC_SEL0_C4_MASK
@@ -304,7 +312,7 @@ void BOARD_PORTCON_Init(void)
 		| PORTCON_PORTB_IE_B14_BITS_ENABLE
 		;
 	PORTCON_PORTB_IE &= ~(0
-		// Back light
+		// Backlight
 		| PORTCON_PORTB_IE_B6_MASK
 		// UART1
 		| PORTCON_PORTB_IE_B7_MASK
@@ -322,7 +330,7 @@ void BOARD_PORTCON_Init(void)
 		);
 
 	PORTCON_PORTB_PU &= ~(0
-		// Back light
+		// Backlight
 		| PORTCON_PORTB_PU_B6_MASK
 		// ST7565
 		| PORTCON_PORTB_PU_B9_MASK
@@ -335,7 +343,7 @@ void BOARD_PORTCON_Init(void)
 		);
 
 	PORTCON_PORTB_PD &= ~(0
-		// Back light
+		// Backlight
 		| PORTCON_PORTB_PD_B6_MASK
 		// ST7565
 		| PORTCON_PORTB_PD_B9_MASK
@@ -348,7 +356,7 @@ void BOARD_PORTCON_Init(void)
 		);
 
 	PORTCON_PORTB_OD &= ~(0
-		// Back light
+		// Backlight
 		| PORTCON_PORTB_OD_B6_MASK
 		// ST7565
 		| PORTCON_PORTB_OD_B9_MASK
@@ -376,7 +384,7 @@ void BOARD_PORTCON_Init(void)
 		| PORTCON_PORTC_IE_C1_MASK
 		// BK4819 SDA
 		| PORTCON_PORTC_IE_C2_MASK
-		// Flash Light
+		// Flashlight
 		| PORTCON_PORTC_IE_C3_MASK
 		// Speaker
 		| PORTCON_PORTC_IE_C4_MASK
@@ -393,7 +401,7 @@ void BOARD_PORTCON_Init(void)
 		| PORTCON_PORTC_PU_C1_MASK
 		// BK4819 SDA
 		| PORTCON_PORTC_PU_C2_MASK
-		// Flash Light
+		// Flashlight
 		| PORTCON_PORTC_PU_C3_MASK
 		// Speaker
 		| PORTCON_PORTC_PU_C4_MASK
@@ -406,7 +414,7 @@ void BOARD_PORTCON_Init(void)
 		| PORTCON_PORTC_PD_C1_MASK
 		// BK4819 SDA
 		| PORTCON_PORTC_PD_C2_MASK
-		// Flash Light
+		// Flashlight
 		| PORTCON_PORTC_PD_C3_MASK
 		// Speaker
 		| PORTCON_PORTC_PD_C4_MASK
@@ -421,7 +429,7 @@ void BOARD_PORTCON_Init(void)
 		| PORTCON_PORTC_OD_C1_MASK
 		// BK4819 SDA
 		| PORTCON_PORTC_OD_C2_MASK
-		// Flash Light
+		// Flashlight
 		| PORTCON_PORTC_OD_C3_MASK
 		// Speaker
 		| PORTCON_PORTC_OD_C4_MASK
@@ -433,7 +441,7 @@ void BOARD_PORTCON_Init(void)
 		| PORTCON_PORTC_OD_C1_BITS_DISABLE
 		// BK4819 SDA
 		| PORTCON_PORTC_OD_C2_BITS_DISABLE
-		// Flash Light
+		// Flashlight
 		| PORTCON_PORTC_OD_C3_BITS_DISABLE
 		// Speaker
 		| PORTCON_PORTC_OD_C4_BITS_DISABLE
@@ -627,9 +635,6 @@ void BOARD_EEPROM_Init(void)
 	EEPROM_ReadBuffer(0x0F40, Data, 8);
 	gSetting_F_LOCK         = (Data[0] < 4) ? Data[0] : F_LOCK_OFF;
 
-	gUpperLimitFrequencyBandTable = UpperLimitFrequencyBandTable;
-	gLowerLimitFrequencyBandTable = LowerLimitFrequencyBandTable;
-
 	gSetting_350TX          = (Data[1] < 2) ? Data[1] : true;
 	gSetting_200TX          = (Data[3] < 2) ? Data[3] : false;
 	gSetting_500TX          = (Data[4] < 2) ? Data[4] : false;
@@ -681,10 +686,11 @@ void BOARD_EEPROM_LoadCalibration(void)
 
 void BOARD_FactoryReset(bool bIsAll)
 {
+	uint16_t i;
 	// DO NOT TOUCH
 	uint8_t Template[8];
 	memset(Template, 0xFF, 8);
-	for (uint16_t i = 0x0C80; i < 0x1E00; i += 8) {
+	for (i = 0x0C80; i < 0x1E00; i += 8) {
 		if (
 			!(i >= 0x0EE0 && i < 0x0F18) && // ANI ID + DTMF codes
 			!(i >= 0x0F30 && i < 0x0F50) && // AES KEY + F LOCK + Scramble Enable
@@ -699,6 +705,17 @@ void BOARD_FactoryReset(bool bIsAll)
 				!(i >= 0x0E88 && i < 0x0E90))) // FM settings
 			) {
 			EEPROM_WriteBuffer(i, Template);
+		}
+	}
+	if (bIsAll) {
+		RADIO_InitInfo(gRxVfo, FREQ_CHANNEL_FIRST + 5, 5, 41002500);
+		for (i = 0; i < 5; i++) {
+			const uint32_t Frequency = DefaultFrequencyTable[i];
+
+			gRxVfo->ConfigRX.Frequency = Frequency;
+			gRxVfo->ConfigTX.Frequency = Frequency;
+			gRxVfo->Band = FREQUENCY_GetBand(Frequency);
+			SETTINGS_SaveChannel(MR_CHANNEL_FIRST + i, 0, gRxVfo, 2);
 		}
 	}
 }

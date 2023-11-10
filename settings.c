@@ -27,7 +27,7 @@
 #include "settings.h"
 
 EEPROM_Config_t gEeprom;
-const EEPROM_Calibration_t gCalibration;
+EEPROM_Calibration_t gCalibration;
 
 #if defined(ENABLE_FMRADIO)
 void SETTINGS_SaveFM(void)
@@ -235,7 +235,8 @@ void SETTINGS_SaveChannel(uint8_t Channel, uint8_t VFO, const VFO_Info_t *pVFO, 
 		SETTINGS_UpdateChannel(Channel, pVFO, true);
 
 		if (IS_MR_CHANNEL(Channel)) {
-			memset(&State32, 0xFF, sizeof(State32));
+			// dualtachyon
+			memset(&State32, 0, sizeof(State32));
 			EEPROM_WriteBuffer(OffsetMR + 0x0F50, State32);
 			EEPROM_WriteBuffer(OffsetMR + 0x0F58, State32);
 		}

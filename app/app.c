@@ -54,6 +54,9 @@
 #include "ui/status.h"
 #include "ui/ui.h"
 
+static uint16_t CurrentRSSI;
+static bool bUpdateRSSI;
+
 static void APP_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld);
 
 static void APP_CheckForIncoming(void)
@@ -246,7 +249,9 @@ static void APP_HandleFunction(void)
 		} else if (!bFlag) {
 			return;
 		}
-		DTMF_HandleRequest();
+		if (gDTMF_RequestPending) {
+			DTMF_HandleRequest();
+		}
 		if (gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF) {
 			if (gRxVfo->DTMF_DECODING_ENABLE) {
 				if (gDTMF_CallState == DTMF_CALL_STATE_NONE) {
@@ -314,7 +319,6 @@ void APP_StartListening(FUNCTION_Type_t Function)
 		BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
 		BK4819_DisableAGC();
 		BK4819_SetCompander(0);
-		BK4819_SetAF(BK4819_AF_AM);
 	} else {
 		BK4819_WriteRegister(BK4819_REG_48, 0xB000
 				| (gCalibration.VOLUME_GAIN << 4)
@@ -322,7 +326,6 @@ void APP_StartListening(FUNCTION_Type_t Function)
 				);
 		BK4819_EnableAGC();
 		BK4819_SetCompander(gRxVfo->CompanderMode);
-		BK4819_SetAF(BK4819_AF_OPEN);
 	}
 
 	FUNCTION_Select(Function);
@@ -339,13 +342,22 @@ void APP_StartListening(FUNCTION_Type_t Function)
 
 void APP_SetFrequencyByStep(VFO_Info_t *pInfo, int8_t Step)
 {
-	uint32_t Frequency;
-
-	Frequency = pInfo->ConfigRX.Frequency + (Step * pInfo->StepFrequency);
-	if (Frequency > gUpperLimitFrequencyBandTable[pInfo->Band]) {
-		pInfo->ConfigRX.Frequency = gLowerLimitFrequencyBandTable[pInfo->Band];
-	} else if (Frequency < gLowerLimitFrequencyBandTable[pInfo->Band]) {
-		pInfo->ConfigRX.Frequency = FREQUENCY_FloorToStep(gUpperLimitFrequencyBandTable[pInfo->Band], pInfo->StepFrequency, gLowerLimitFrequencyBandTable[pInfo->Band]);
+	uint32_t Frequency = pInfo->ConfigRX.Frequency + (Step * pInfo->StepFrequency);
+	// dualtachyon
+	if (pInfo->StepFrequency == 833) {
+		const uint32_t Lower = LowerLimitFrequencyBandTable[pInfo->Band];
+		const uint32_t Delta = Frequency - Lower;
+		uint32_t Base = (Delta / 2500) * 2500;
+		const uint32_t Index = ((Delta - Base) % 2500) / 833;
+		if (Index == 2) {
+			Base++;
+		}
+		Frequency = Lower + Base + (Index * 833);
+	}
+	if (Frequency > UpperLimitFrequencyBandTable[pInfo->Band]) {
+		pInfo->ConfigRX.Frequency = LowerLimitFrequencyBandTable[pInfo->Band];
+	} else if (Frequency < LowerLimitFrequencyBandTable[pInfo->Band]) {
+		pInfo->ConfigRX.Frequency = FREQUENCY_FloorToStep(UpperLimitFrequencyBandTable[pInfo->Band], pInfo->StepFrequency, LowerLimitFrequencyBandTable[pInfo->Band]);
 	} else {
 		pInfo->ConfigRX.Frequency = Frequency;
 	}
@@ -393,7 +405,6 @@ static void MR_NextChannel(void)
 			if (Ch == 0xFF) {
 				return;
 			}
-
 			gNextMrChannel = Ch;
 		}
 	} else {
@@ -401,7 +412,6 @@ static void MR_NextChannel(void)
 		if (Ch == 0xFF) {
 			return;
 		}
-
 		gNextMrChannel = Ch;
 	}
 
@@ -428,7 +438,6 @@ static void DUALWATCH_Alternate(void)
 	gRxVfo = &gEeprom.VfoInfo[gEeprom.RX_VFO];
 
 	RADIO_SetupRegisters(false);
-
 	gDualWatchCountdown = 10;
 }
 
@@ -565,23 +574,23 @@ void APP_Update(void)
 
 			if (gEeprom.DUAL_WATCH != DUAL_WATCH_OFF && gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF) {
 				DUALWATCH_Alternate();
-				gUpdateRSSI = false;
+				bUpdateRSSI = false;
 			}
 			FUNCTION_Init();
 			gBatterySave = 10;
 			gRxIdleMode = false;
-		} else if (gEeprom.DUAL_WATCH == DUAL_WATCH_OFF || gScanState != SCAN_OFF || gCssScanMode != CSS_SCAN_MODE_OFF || gUpdateRSSI) {
-			gCurrentRSSI = BK4819_GetRSSI();
-			UI_UpdateRSSI(gCurrentRSSI);
+		} else if (gEeprom.DUAL_WATCH == DUAL_WATCH_OFF || gScanState != SCAN_OFF || gCssScanMode != CSS_SCAN_MODE_OFF || bUpdateRSSI) {
+			CurrentRSSI = BK4819_GetRSSI();
+			UI_UpdateRSSI(CurrentRSSI);
 			gBatterySave = gEeprom.BATTERY_SAVE * 10;
 			gRxIdleMode = true;
 
 			BK4819_Sleep();
 			BK4819_ClearGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE);
-			// Authentic device checked removed
+			// Authentic device checks removed
 		} else {
 			DUALWATCH_Alternate();
-			gUpdateRSSI = true;
+			bUpdateRSSI = true;
 			gBatterySave = 10;
 		}
 		gBatterySaveCountdownExpired = false;
@@ -816,11 +825,11 @@ void APP_TimeSlice500ms(void)
 			}
 			BATTERY_GetReadings(true);
 		}
-		if (
+		if (gScanState == SCAN_OFF &&
 #if defined(ENABLE_FMRADIO)
 			(gFM_ScanState == FM_SCAN_OFF || gAskToSave) &&
 #endif
-			gScanState == SCAN_OFF && gCssScanMode == CSS_SCAN_MODE_OFF) {
+			gCssScanMode == CSS_SCAN_MODE_OFF) {
 			if (gBacklightCountdown > 0) {
 				gBacklightCountdown--;
 				if (gBacklightCountdown == 0) {
@@ -865,8 +874,8 @@ void APP_TimeSlice500ms(void)
 				}
 			}
 		}
-		gCurrentRSSI = BK4819_GetRSSI();
-		UI_UpdateRSSI(gCurrentRSSI);
+		CurrentRSSI = BK4819_GetRSSI();
+		UI_UpdateRSSI(CurrentRSSI);
 	}
 
 #if defined(ENABLE_FMRADIO)

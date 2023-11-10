@@ -344,9 +344,9 @@ void BK4819_SetRegValue(RegisterSpec s, uint16_t v) {
 	BK4819_WriteRegister(s.num, reg | (v << s.offset));
 }
 void BK4819_SetModulation(BK4819_MOD_Type_t type) {
-	uint8_t modTypeReg47Values[5] = {1, 7, 5, 9, 4};
+	// BK4819_AF_Type_t
+	uint8_t modTypeReg47Values[3] = {1, 7, 5};
 	BK4819_SetAF(modTypeReg47Values[type]);
-
 	BK4819_SetRegValue(afDacGainRegSpec, 0xF);
 	BK4819_WriteRegister(0x3D, type == MOD_SSB ? 0 : 0x2AAB);
 	BK4819_SetRegValue(afcDisableRegSpec, type != MOD_FM);
@@ -498,7 +498,7 @@ void BK4819_PlayTone(uint16_t Frequency, bool bTuningGainSwitch)
 			| BK4819_REG_30_ENABLE_TX_DSP
 			);
 
-	BK4819_WriteRegister(BK4819_REG_71, (uint16_t)(Frequency * 10.32444));
+	BK4819_WriteRegister(BK4819_REG_71, (uint16_t)((Frequency * 1032444) / 100000));
 }
 
 void BK4819_EnterTxMute(void)
@@ -706,7 +706,7 @@ void BK4819_TransmitTone(bool bLocalLoopback, uint32_t Frequency)
 	BK4819_WriteRegister(BK4819_REG_70, 0
 			| BK4819_REG_70_MASK_ENABLE_TONE1
 			| (96U << BK4819_REG_70_SHIFT_TONE1_TUNING_GAIN));
-	BK4819_WriteRegister(BK4819_REG_71, (uint16_t)(Frequency * 10.32444));
+	BK4819_WriteRegister(BK4819_REG_71, (uint16_t)((Frequency * 1032444) / 100000));
 	if (bLocalLoopback) {
 		BK4819_SetAF(BK4819_AF_BEEP);
 	} else {

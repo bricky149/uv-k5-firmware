@@ -22,9 +22,9 @@
 #include "driver/bk4819-regs.h"
 
 enum BK4819_MOD_Type_t {
-	MOD_FM,
-	MOD_AM,
-	MOD_SSB,
+	MOD_FM = 0U,
+	MOD_AM = 1U,
+	MOD_SSB = 2U,
 };
 
 typedef enum BK4819_MOD_Type_t BK4819_MOD_Type_t;
@@ -34,15 +34,16 @@ enum BK4819_AF_Type_t {
 	BK4819_AF_OPEN = 1U,
 	BK4819_AF_ALAM = 2U,
 	BK4819_AF_BEEP = 3U,
+	BK4819_AF_SSB = 5U,
 	BK4819_AF_CTCO = 6U,
-	BK4819_AF_AM   = 7U,
+	BK4819_AF_AM = 7U,
 	BK4819_AF_FSKO = 8U,
 };
 
 typedef enum BK4819_AF_Type_t BK4819_AF_Type_t;
 
 enum BK4819_FilterBandwidth_t {
-	BK4819_FILTER_BW_WIDE   = 0U,
+	BK4819_FILTER_BW_WIDE = 0U,
 	BK4819_FILTER_BW_NARROW = 1U,
 	BK4819_FILTER_BW_NARROWER = 2U,
 };

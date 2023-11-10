@@ -19,27 +19,24 @@
 
 void GPIO_ClearBit(volatile uint32_t *pReg, uint8_t Bit)
 {
-	SYSTICK_DelayUs(1);
 	*pReg &= ~(1U << Bit);
 	SYSTICK_DelayUs(1);
 }
 
 uint8_t GPIO_CheckBit(volatile uint32_t *pReg, uint8_t Bit)
 {
-	SYSTICK_DelayUs(1);
+	// Function call should add enough delay
 	return (*pReg >> Bit) & 1U;
 }
 
 void GPIO_FlipBit(volatile uint32_t *pReg, uint8_t Bit)
 {
-	SYSTICK_DelayUs(1);
 	*pReg ^= 1U << Bit;
 	SYSTICK_DelayUs(1);
 }
 
 void GPIO_SetBit(volatile uint32_t *pReg, uint8_t Bit)
 {
-	SYSTICK_DelayUs(1);
 	*pReg |= 1U << Bit;
 	SYSTICK_DelayUs(1);
 }

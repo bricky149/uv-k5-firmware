@@ -17,9 +17,6 @@
 #include <string.h>
 #include "misc.h"
 
-const uint32_t *gUpperLimitFrequencyBandTable;
-const uint32_t *gLowerLimitFrequencyBandTable;
-
 bool gSetting_350TX;
 bool gSetting_200TX;
 bool gSetting_500TX;
@@ -57,7 +54,6 @@ bool gEndOfRxDetectedMaybe;
 uint8_t gVFO_RSSI_Level[2];
 uint8_t gBatteryVoltageIndex;
 CssScanMode_t gCssScanMode;
-bool gUpdateRSSI;
 uint8_t gVoltageMenuCountdown;
 bool gPttWasReleased;
 bool gPttWasPressed;
@@ -116,8 +112,6 @@ volatile bool gFlagTteComplete;
 volatile bool gScheduleFM;
 #endif
 
-uint16_t gCurrentRSSI;
-
 uint8_t gIsLocked = 0xFF;
 
 // --------
@@ -155,6 +149,7 @@ uint16_t NUMBER_AddWithWraparound(uint16_t Base, int8_t Add, uint16_t LowerLimit
 	if (Base > UpperLimit) {
 		return LowerLimit;
 	}
+
 	return Base;
 }
 

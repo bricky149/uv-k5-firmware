@@ -19,7 +19,7 @@
 #include "driver/i2c.h"
 #include "driver/system.h"
 
-void EEPROM_ReadBuffer(uint16_t Address, const void *pBuffer, uint8_t Size)
+void EEPROM_ReadBuffer(uint16_t Address, void *pBuffer, uint8_t Size)
 {
 	I2C_Start();
 	I2C_Write(0xA0);
@@ -49,7 +49,7 @@ void EEPROM_WriteBuffer(uint16_t Address, const void *pBuffer)
 	I2C_Write((Address >> 0) & 0xFF);
 	I2C_WriteBuffer(pBuffer, 8);
 	I2C_Stop();
-	// give the EEPROM time to burn the data in (apparently takes 1.5ms ~ 5ms)
-	SYSTEM_DelayMs(10);
+	// https://www.st.com/resource/en/application_note/an5771-timing-of-erase-program-and-write-operations-for-page-eeproms-stmicroelectronics.pdf
+	SYSTEM_DelayMs(8);
 }
 

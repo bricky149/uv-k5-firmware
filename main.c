@@ -62,8 +62,8 @@ void Main(void)
 
 #if defined(ENABLE_UART)
 	UART_Init();
-	const char Version[] = "UV-K5 Firmware, Open Edition, B149-"GIT_HASH"\n";
-	UART_Send(Version, sizeof(Version));
+	const char UART_Version[] = "UV-K5 Firmware, Open Edition, B149-"GIT_HASH"\n";
+	UART_Send(UART_Version, sizeof(UART_Version));
 #endif
 
 	// Not implementing authentic device checks

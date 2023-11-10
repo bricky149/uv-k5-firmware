@@ -60,9 +60,6 @@ enum CssScanMode_t {
 
 typedef enum CssScanMode_t CssScanMode_t;
 
-extern const uint32_t *gUpperLimitFrequencyBandTable;
-extern const uint32_t *gLowerLimitFrequencyBandTable;
-
 extern bool gSetting_350TX;
 extern bool gSetting_200TX;
 extern bool gSetting_500TX;
@@ -95,7 +92,6 @@ extern bool gEndOfRxDetectedMaybe;
 extern uint8_t gVFO_RSSI_Level[2];
 extern uint8_t gBatteryVoltageIndex;
 extern CssScanMode_t gCssScanMode;
-extern bool gUpdateRSSI;
 extern uint8_t gVoltageMenuCountdown;
 extern bool gPttWasReleased;
 extern bool gPttWasPressed;
@@ -153,8 +149,6 @@ extern volatile bool gFlagTteComplete;
 #if defined(ENABLE_FMRADIO)
 extern volatile bool gScheduleFM;
 #endif
-
-extern uint16_t gCurrentRSSI;
 
 extern uint8_t gIsLocked;
 

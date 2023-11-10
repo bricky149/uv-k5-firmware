@@ -181,10 +181,6 @@ void DTMF_HandleRequest(void)
 	char String[20];
 	uint8_t Offset;
 
-	if (!gDTMF_RequestPending) {
-		return;
-	}
-
 	gDTMF_RequestPending = false;
 
 	if (gScanState != SCAN_OFF || gCssScanMode != CSS_SCAN_MODE_OFF) {

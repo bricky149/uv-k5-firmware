@@ -77,7 +77,6 @@ uint8_t I2C_Read(bool bFinal)
 bool I2C_Write(uint8_t Data)
 {
 	uint8_t i;
-	bool ret = true;
 
 	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
 
@@ -103,8 +102,6 @@ bool I2C_Write(uint8_t Data)
 	while (GPIO_CheckBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA)) {
 		// Spinlock until we are ready
 	}
-	ret = false;
-
 	GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_I2C_SCL);
 
 	PORTCON_PORTA_IE &= ~PORTCON_PORTA_IE_A11_MASK;
@@ -112,10 +109,10 @@ bool I2C_Write(uint8_t Data)
 	GPIOA->DIR |= GPIO_DIR_11_BITS_OUTPUT;
 	GPIO_SetBit(&GPIOA->DATA, GPIOA_PIN_I2C_SDA);
 
-	return ret;
+	return false;
 }
 
-__attribute__((used)) int I2C_ReadBuffer(const void *pBuffer, uint8_t Size)
+__attribute__((used)) int I2C_ReadBuffer(void *pBuffer, uint8_t Size)
 {
 	uint8_t *pData = (uint8_t *)pBuffer;
 	uint8_t i;
@@ -128,7 +125,6 @@ __attribute__((used)) int I2C_ReadBuffer(const void *pBuffer, uint8_t Size)
 	for (i = 0; i < Size - 1; i++) {
 		pData[i] = I2C_Read(false);
 	}
-
 	pData[i++] = I2C_Read(true);
 
 	return Size;
@@ -140,9 +136,7 @@ __attribute__((used)) bool I2C_WriteBuffer(const void *pBuffer, uint8_t Size)
 	uint8_t i;
 
 	for (i = 0; i < Size; i++) {
-		if (I2C_Write(*pData++)) {
-			return true;
-		}
+		I2C_Write(*pData++);
 	}
 
 	return false;

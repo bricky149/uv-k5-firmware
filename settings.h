@@ -138,7 +138,7 @@ typedef struct {
 } EEPROM_Calibration_t;
 
 extern EEPROM_Config_t gEeprom;
-extern const EEPROM_Calibration_t gCalibration;
+extern EEPROM_Calibration_t gCalibration;
 
 void SETTINGS_SaveFM(void);
 void SETTINGS_SaveVfoIndices(void);

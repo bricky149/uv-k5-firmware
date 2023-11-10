@@ -126,6 +126,9 @@ void RADIO_InitInfo(VFO_Info_t *pInfo, uint8_t ChannelSave, uint8_t Band, uint32
 	pInfo->pTX = &pInfo->ConfigTX;
 	pInfo->FREQUENCY_OF_DEVIATION = 0;
 	pInfo->CompanderMode = COMPND_OFF;
+	if (ChannelSave == (FREQ_CHANNEL_FIRST + BAND2_108MHz)) {
+		pInfo->ModulationType = MOD_AM;
+	}
 	RADIO_ConfigureSquelchAndOutputPower(pInfo);
 }
 
@@ -167,7 +170,7 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 			gEeprom.ScreenChannel[VFO] = gEeprom.FreqChannel[VFO];
 		}
 		Index = Channel - FREQ_CHANNEL_FIRST;
-		RADIO_InitInfo(pRadio, Channel, Index, gLowerLimitFrequencyBandTable[Index]);
+		RADIO_InitInfo(pRadio, Channel, Index, LowerLimitFrequencyBandTable[Index]);
 		return;
 	}
 
@@ -304,12 +307,12 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 	}
 
 	Frequency = pRadio->ConfigRX.Frequency;
-	if (Frequency < gLowerLimitFrequencyBandTable[Band]) {
-		pRadio->ConfigRX.Frequency = gLowerLimitFrequencyBandTable[Band];
-	} else if (Frequency > gUpperLimitFrequencyBandTable[Band]) {
-		pRadio->ConfigRX.Frequency = gUpperLimitFrequencyBandTable[Band];
+	if (Frequency < LowerLimitFrequencyBandTable[Band]) {
+		pRadio->ConfigRX.Frequency = LowerLimitFrequencyBandTable[Band];
+	} else if (Frequency > UpperLimitFrequencyBandTable[Band]) {
+		pRadio->ConfigRX.Frequency = UpperLimitFrequencyBandTable[Band];
 	} else if (Channel >= FREQ_CHANNEL_FIRST) {
-		pRadio->ConfigRX.Frequency = FREQUENCY_FloorToStep(pRadio->ConfigRX.Frequency, gEeprom.VfoInfo[VFO].StepFrequency, gLowerLimitFrequencyBandTable[Band]);
+		pRadio->ConfigRX.Frequency = FREQUENCY_FloorToStep(pRadio->ConfigRX.Frequency, gEeprom.VfoInfo[VFO].StepFrequency, LowerLimitFrequencyBandTable[Band]);
 	}
 
 	if (Frequency >= 10800000 && Frequency <= 13599990) {
@@ -388,9 +391,9 @@ void RADIO_ConfigureSquelchAndOutputPower(VFO_Info_t *pInfo)
 	// 1o11
 	// make low even lower
 	if (pInfo->OUTPUT_POWER == OUTPUT_POWER_LOW) {
-		Txp[0] /= 6;
-		Txp[1] /= 6;
-		Txp[2] /= 6;
+		for (uint8_t i = 0; i < 3; i++) {
+			Txp[i] /= 6;
+		}
 	}
 	pInfo->TXP_CalculatedSetting =
 		FREQUENCY_CalculateOutputPower(
@@ -692,11 +695,12 @@ void RADIO_EnableCxCSS(void)
 	case CODE_TYPE_REVERSE_DIGITAL:
 		BK4819_EnableCDCSS();
 		break;
-	default:
+	case CODE_TYPE_CONTINUOUS_TONE:
 		BK4819_EnableCTCSS();
 		break;
+	default:
+		break;
 	}
-
 	SYSTEM_DelayMs(200);
 }
 
