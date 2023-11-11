@@ -30,6 +30,7 @@
 #endif
 #include "helper/battery.h"
 #include "helper/boot.h"
+#include "mdc1200.h"
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
@@ -59,6 +60,7 @@ void Main(void)
 	SYSTICK_Init();
 	BOARD_Init();
 	BK4819_Init();
+	MDC1200_Init();
 
 #if defined(ENABLE_UART)
 	UART_Init();

@@ -42,56 +42,44 @@ bool gScanUseCssResult;
 int8_t gScanState;
 bool bScanKeepFrequency;
 
-static void SCANNER_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
+static void SCANNER_Key_EXIT(void)
 {
-	if (!bKeyHeld && bKeyPressed) {
-		switch (gScannerEditState) {
-		case 0:
-			gRequestDisplayScreen = DISPLAY_MAIN;
-			gEeprom.CROSS_BAND_RX_TX = gBackupCROSS_BAND_RX_TX;
-			gUpdateStatus = true;
-			gFlagStopScan = true;
-			gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
-			gFlagResetVfos = true;
-			break;
+	switch (gScannerEditState) {
+	case 0:
+		gRequestDisplayScreen = DISPLAY_MAIN;
+		gEeprom.CROSS_BAND_RX_TX = gBackupCROSS_BAND_RX_TX;
+		gUpdateStatus = true;
+		gFlagStopScan = true;
+		gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
+		gFlagResetVfos = true;
+		break;
 
-		case 1:
-			if (gInputBoxIndex) {
-				gInputBoxIndex--;
-				gInputBox[gInputBoxIndex] = 10;
-				gRequestDisplayScreen = DISPLAY_SCANNER;
-				break;
-			}
-			// Fallthrough
-
-		case 2:
-			gScannerEditState = 0;
+	case 1:
+		if (gInputBoxIndex > 0) {
+			gInputBoxIndex--;
+			gInputBox[gInputBoxIndex] = 10;
 			gRequestDisplayScreen = DISPLAY_SCANNER;
 			break;
 		}
+		// Fallthrough
+
+	case 2:
+		gScannerEditState = 0;
+		gRequestDisplayScreen = DISPLAY_SCANNER;
+		break;
 	}
 }
 
-static void SCANNER_Key_MENU(bool bKeyPressed, bool bKeyHeld)
+static void SCANNER_Key_MENU(void)
 {
 	uint8_t Channel;
 
-	if (bKeyHeld) {
-		return;
-	}
-	if (!bKeyPressed) {
-		return;
-	}
 	if (gScanCssState == SCAN_CSS_STATE_OFF && !gScanSingleFrequency) {
 		return;
 	}
-
-	if (gScanCssState == SCAN_CSS_STATE_SCANNING) {
-		if (gScanSingleFrequency) {
-			return;
-		}
+	if (gScanCssState == SCAN_CSS_STATE_SCANNING && gScanSingleFrequency) {
+		return;
 	}
-
 	if (gScanCssState == SCAN_CSS_STATE_FAILED) {
 		return;
 	}
@@ -179,16 +167,12 @@ static void SCANNER_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 	}
 }
 
-static void SCANNER_Key_UP_DOWN(bool bKeyPressed, bool pKeyHeld, int8_t Direction)
+static void SCANNER_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 {
-	if (pKeyHeld) {
-		if (!bKeyPressed) {
-			return;
-		}
-	} else {
-		if (!bKeyPressed) {
-			return;
-		}
+	if (!bKeyPressed) {
+		return;
+	}
+	if (!bKeyHeld) {
 		gInputBoxIndex = 0;
 	}
 	if (gScannerEditState == 1) {
@@ -202,7 +186,9 @@ void SCANNER_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
 	switch (Key) {
 	case KEY_MENU:
-		SCANNER_Key_MENU(bKeyPressed, bKeyHeld);
+		if (!bKeyHeld && bKeyPressed) {
+			SCANNER_Key_MENU();
+		}
 		break;
 	case KEY_UP:
 		SCANNER_Key_UP_DOWN(bKeyPressed, bKeyHeld, 1);
@@ -211,7 +197,9 @@ void SCANNER_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		SCANNER_Key_UP_DOWN(bKeyPressed, bKeyHeld, -1);
 		break;
 	case KEY_EXIT:
-		SCANNER_Key_EXIT(bKeyPressed, bKeyHeld);
+		if (!bKeyHeld && bKeyPressed) {
+			SCANNER_Key_EXIT();
+		}
 		break;
 	case KEY_F:
 		GENERIC_Key_F(bKeyPressed, bKeyHeld);

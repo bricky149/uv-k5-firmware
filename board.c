@@ -514,7 +514,6 @@ void BOARD_EEPROM_Init(void)
 	//EEPROM_ReadBuffer(0x0E78, Data, 8);
 	gEeprom.CHANNEL_DISPLAY_MODE  = (Data[9] < 3) ? Data[9] : MDF_FREQUENCY;
 	gEeprom.CROSS_BAND_RX_TX      = (Data[10] < 3) ? Data[10] : CROSS_BAND_OFF;
-	gEeprom.BATTERY_SAVE          = (Data[11] < 5) ? Data[11] : 4;
 	gEeprom.DUAL_WATCH            = (Data[12] < 3) ? Data[12] : DUAL_WATCH_OFF;
 	gEeprom.BACKLIGHT             = (Data[13] < 6) ? Data[13] : 5;
 	gEeprom.TAIL_NOTE_ELIMINATION = (Data[14] < 2) ? Data[14] : 1;
@@ -531,22 +530,10 @@ void BOARD_EEPROM_Init(void)
 
 #if defined(ENABLE_FMRADIO)
 	// 0E88..0E8F
-	struct {
-		uint16_t SelectedFrequency;
-		uint8_t SelectedChannel;
-		bool IsMrMode;
-	} FM;
-	EEPROM_ReadBuffer(0x0E88, &FM, sizeof(FM));
-
-	gEeprom.FM_LowerLimit = 760;
-	gEeprom.FM_UpperLimit = 1080;
-	if (FM.SelectedFrequency < gEeprom.FM_LowerLimit || FM.SelectedFrequency > gEeprom.FM_UpperLimit) {
-		gEeprom.FM_SelectedFrequency = 976;
-	} else {
-		gEeprom.FM_SelectedFrequency = FM.SelectedFrequency;
+	EEPROM_ReadBuffer(0x0E88, &gFM, sizeof(gFM));
+	if (gFM.SelectedFrequency < 760 || gFM.SelectedFrequency > 1080) {
+		gFM.SelectedFrequency = 976;
 	}
-	gEeprom.FM_SelectedChannel = FM.SelectedChannel;
-	gEeprom.FM_IsMrMode = FM.IsMrMode;
 
 	// 0E40..0E67
 	EEPROM_ReadBuffer(0x0E40, gFM_Channels, sizeof(gFM_Channels));

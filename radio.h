@@ -84,7 +84,6 @@ typedef struct {
 	uint32_t Frequency;
 	DCS_CodeType_t CodeType;
 	uint8_t Code;
-	uint8_t Padding[3];
 } FREQ_Config_t;
 
 typedef struct VFO_Info_t {
@@ -114,9 +113,9 @@ typedef struct VFO_Info_t {
 	uint8_t DTMF_DECODING_ENABLE;
 	PTT_ID_t DTMF_PTT_ID_TX_MODE;
 	uint8_t BUSY_CHANNEL_LOCK;
-	uint8_t ModulationType;
+	uint8_t MODULATION_MODE;
 	char Name[16];
-	uint8_t Padding[6];
+	uint8_t MDC1200_MODE;
 } VFO_Info_t;
 
 extern VFO_Info_t *gTxVfo;

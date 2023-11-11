@@ -28,6 +28,7 @@
 #include "frequencies.h"
 #include "functions.h"
 #include "helper/battery.h"
+#include "mdc1200.h"
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
@@ -127,7 +128,7 @@ void RADIO_InitInfo(VFO_Info_t *pInfo, uint8_t ChannelSave, uint8_t Band, uint32
 	pInfo->FREQUENCY_OF_DEVIATION = 0;
 	pInfo->CompanderMode = COMPND_OFF;
 	if (ChannelSave == (FREQ_CHANNEL_FIRST + BAND2_108MHz)) {
-		pInfo->ModulationType = MOD_AM;
+		pInfo->MODULATION_MODE = MOD_AM;
 	}
 	RADIO_ConfigureSquelchAndOutputPower(pInfo);
 }
@@ -287,10 +288,10 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 
 		if (Data[7] == 0xFF) {
 			gEeprom.VfoInfo[VFO].CompanderMode = COMPND_OFF;
-			gEeprom.VfoInfo[VFO].ModulationType = MOD_FM;
+			gEeprom.VfoInfo[VFO].MODULATION_MODE = MOD_FM;
 		} else {
 			gEeprom.VfoInfo[VFO].CompanderMode = (Data[7] & 3);
-			gEeprom.VfoInfo[VFO].ModulationType = (Data[7] >> 2) & 3;
+			gEeprom.VfoInfo[VFO].MODULATION_MODE = (Data[7] >> 2) & 3;
 		}
 
 		struct {
@@ -339,9 +340,9 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 	}
 
 	if (gEeprom.VfoInfo[VFO].Band == BAND2_108MHz) {
-		gEeprom.VfoInfo[VFO].ModulationType = MOD_AM;
+		gEeprom.VfoInfo[VFO].MODULATION_MODE = MOD_AM;
 	}
-	if (gEeprom.VfoInfo[VFO].ModulationType != MOD_FM) {
+	if (gEeprom.VfoInfo[VFO].MODULATION_MODE != MOD_FM) {
 		gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = 0;
 		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
 		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
@@ -508,7 +509,7 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 		| BK4819_REG_3F_SQUELCH_LOST
 		;
 
-	if (gRxVfo->ModulationType == MOD_FM) {
+	if (gRxVfo->MODULATION_MODE == MOD_FM) {
 		uint8_t CodeType;
 		uint8_t Code;
 
@@ -553,11 +554,14 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 		}
 	}
 
-	if (gRxVfo->ModulationType != MOD_FM || !gRxVfo->DTMF_DECODING_ENABLE) {
+	if (gRxVfo->MODULATION_MODE != MOD_FM || !gRxVfo->DTMF_DECODING_ENABLE) {
 		BK4819_DisableDTMF();
 	} else {
 		BK4819_EnableDTMF();
 		InterruptMask |= BK4819_REG_3F_DTMF_5TONE_FOUND;
+
+		BK4819_EnableMDC1200Rx();
+		InterruptMask |= BK4819_REG_3F_FSK_RX_SYNC | BK4819_REG_3F_FSK_RX_FINISHED | BK4819_REG_3F_FSK_FIFO_ALMOST_FULL;
 	}
 	BK4819_WriteRegister(BK4819_REG_3F, InterruptMask);
 
@@ -736,6 +740,11 @@ void RADIO_SendEndOfTransmission(void)
 			);
 		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
 		gEnableSpeaker = false;
+	}
+	if (gCurrentVfo->MDC1200_MODE == MDC1200_MODE_EOT ||
+		gCurrentVfo->MDC1200_MODE == MDC1200_MODE_BOTH) {
+
+		BK4819_SendMDC1200(MDC1200_OP_CODE_POST_ID, 0x00, gEeprom.MDC1200_ID, false, gCurrentVfo->CHANNEL_BANDWIDTH);
 	}
 	BK4819_ExitDTMF_TX(true);
 }

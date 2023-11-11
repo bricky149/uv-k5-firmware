@@ -31,12 +31,8 @@
 #include "ui/inputbox.h"
 #include "ui/ui.h"
 
-static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
+static void MAIN_Key_DIGITS(KEY_Code_t Key)
 {
-	if (bKeyHeld || !bKeyPressed) {
-		return;
-	}
-
 	uint8_t Vfo = gEeprom.TX_VFO;
 
 	if (!gWasFKeyPressed) {
@@ -60,14 +56,13 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
 			return;
 		}
-
-		uint32_t Frequency;
-
 		if (gInputBoxIndex < 6) {
 			return;
 		}
 		gInputBoxIndex = 0;
+		uint32_t Frequency;
 		NUMBER_Get(gInputBox, &Frequency);
+
 		if (Frequency < 35000000 || Frequency > 39999990) {
 			uint8_t i;
 
@@ -197,49 +192,40 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	}
 }
 
-static void MAIN_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
+static void MAIN_Key_EXIT(void)
 {
-	if (!bKeyHeld && bKeyPressed) {
 #if defined(ENABLE_FMRADIO)
-		if (gFmRadioMode) {
-			ACTION_FM();
+	if (gFmRadioMode) {
+		ACTION_FM();
+		return;
+	}
+#endif
+	if (gScanState == SCAN_OFF) {
+		if (gInputBoxIndex == 0) {
 			return;
 		}
-#endif
-		if (gScanState == SCAN_OFF) {
-			if (gInputBoxIndex == 0) {
-				return;
-			}
-			gInputBoxIndex--;
-			gInputBox[gInputBoxIndex] = 10;
-		} else {
-			SCANNER_Stop();
-		}
-		gRequestDisplayScreen = DISPLAY_MAIN;
+		gInputBoxIndex--;
+		gInputBox[gInputBoxIndex] = 10;
+	} else {
+		SCANNER_Stop();
 	}
+	gRequestDisplayScreen = DISPLAY_MAIN;
 }
 
-static void MAIN_Key_MENU(bool bKeyPressed, bool bKeyHeld)
+static void MAIN_Key_MENU(void)
 {
-	if (!bKeyHeld && bKeyPressed) {
-		bool bFlag;
-
-		bFlag = gInputBoxIndex == 0;
-		gInputBoxIndex = 0;
-		if (bFlag) {
-			gFlagRefreshSetting = true;
-			gRequestDisplayScreen = DISPLAY_MENU;
-		} else {
-			gRequestDisplayScreen = DISPLAY_MAIN;
-		}
+	bool bFlag = gInputBoxIndex == 0;
+	gInputBoxIndex = 0;
+	if (bFlag) {
+		gFlagRefreshSetting = true;
+		gRequestDisplayScreen = DISPLAY_MENU;
+	} else {
+		gRequestDisplayScreen = DISPLAY_MAIN;
 	}
 }
 
 static void MAIN_Key_STAR(bool bKeyPressed, bool bKeyHeld)
 {
-	if (gInputBoxIndex) {
-		return;
-	}
 	if (bKeyHeld || !bKeyPressed) {
 		if (bKeyHeld || bKeyPressed) {
 			if (!bKeyHeld || !bKeyPressed) {
@@ -269,43 +255,20 @@ static void MAIN_Key_STAR(bool bKeyPressed, bool bKeyHeld)
 	}
 }
 
-static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
+static void MAIN_Key_UP_DOWN(bool bKeyPressed, int8_t Direction)
 {
-	uint8_t Channel;
-
-	Channel = gEeprom.ScreenChannel[gEeprom.TX_VFO];
-	if (bKeyHeld || !bKeyPressed) {
-		if (gInputBoxIndex) {
-			return;
-		}
-		if (!bKeyPressed) {
-			if (!bKeyHeld) {
-				return;
-			}
-			if (IS_FREQ_CHANNEL(Channel)) {
-				return;
-			}
-			return;
-		}
-	} else {
-		if (gInputBoxIndex) {
-			return;
-		}
+	if (!bKeyPressed || gInputBoxIndex > 0) {
+		return;
 	}
-
+	uint8_t Channel = gEeprom.ScreenChannel[gEeprom.TX_VFO];
 	if (gScanState == SCAN_OFF) {
-		uint8_t Next;
-
 		if (IS_FREQ_CHANNEL(Channel)) {
 			APP_SetFrequencyByStep(gTxVfo, Direction);
 			gRequestSaveChannel = 1;
 			return;
 		}
-		Next = RADIO_FindNextChannel(Channel + Direction, Direction, false, 0);
-		if (Next == 0xFF) {
-			return;
-		}
-		if (Channel == Next) {
+		uint8_t Next = RADIO_FindNextChannel(Channel + Direction, Direction, false, 0);
+		if (Next == 0xFF || Channel == Next) {
 			return;
 		}
 		gEeprom.MrChannel[gEeprom.TX_VFO] = Next;
@@ -339,22 +302,30 @@ void MAIN_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	case KEY_0: case KEY_1: case KEY_2: case KEY_3:
 	case KEY_4: case KEY_5: case KEY_6: case KEY_7:
 	case KEY_8: case KEY_9:
-		MAIN_Key_DIGITS(Key, bKeyPressed, bKeyHeld);
+		if (!bKeyHeld && bKeyPressed) {
+			MAIN_Key_DIGITS(Key);
+		}
 		break;
 	case KEY_MENU:
-		MAIN_Key_MENU(bKeyPressed, bKeyHeld);
+		if (!bKeyHeld && bKeyPressed) {
+			MAIN_Key_MENU();
+		}
 		break;
 	case KEY_UP:
-		MAIN_Key_UP_DOWN(bKeyPressed, bKeyHeld, 1);
+		MAIN_Key_UP_DOWN(bKeyPressed, 1);
 		break;
 	case KEY_DOWN:
-		MAIN_Key_UP_DOWN(bKeyPressed, bKeyHeld, -1);
+		MAIN_Key_UP_DOWN(bKeyPressed, -1);
 		break;
 	case KEY_EXIT:
-		MAIN_Key_EXIT(bKeyPressed, bKeyHeld);
+		if (!bKeyHeld && bKeyPressed) {
+			MAIN_Key_EXIT();
+		}
 		break;
 	case KEY_STAR:
-		MAIN_Key_STAR(bKeyPressed, bKeyHeld);
+		if (gInputBoxIndex == 0) {
+			MAIN_Key_STAR(bKeyPressed, bKeyHeld);
+		}
 		break;
 	case KEY_F:
 		GENERIC_Key_F(bKeyPressed, bKeyHeld);

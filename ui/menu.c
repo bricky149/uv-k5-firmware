@@ -43,8 +43,8 @@ static const MENU_Item_t MenuList[56] = {
 	{ "SCR", MENU_SCR },
 	{ "BCL", MENU_BCL },
 	{ "MEM-CH", MENU_MEM_CH },
-	{ "SAVE", MENU_SAVE },
-	{ "VOX", MENU_VOX },
+	{ "MDCMOD", MENU_MDCMOD },
+	{ "MDC-ID", MENU_MDC_ID },
 	{ "ABR", MENU_ABR },
 	{ "TDR", MENU_TDR },
 	{ "WX", MENU_WX },
@@ -76,7 +76,7 @@ static const MENU_Item_t MenuList[56] = {
 	{ "PONMSG", MENU_PONMSG },
 	{ "ROGER", MENU_ROGER },
 	{ "COMPND", MENU_COMPND },
-	{ "MOD", MENU_MOD },
+	{ "DEMOD", MENU_DEMOD },
 	{ "DEL-CH", MENU_DEL_CH },
 	{ "RESET", MENU_RESET },
 	{ "350TX", MENU_350TX },
@@ -119,14 +119,6 @@ static const char gSubMenu_W_N[3][9] = {
 static const char gSubMenu_OFF_ON[2][4] = {
 	"OFF",
 	"ON",
-};
-
-static const char gSubMenu_SAVE[5][4] = {
-	"OFF",
-	"1:1",
-	"1:2",
-	"1:3",
-	"1:4",
 };
 
 static const char gSubMenu_CHAN[3][7] = {
@@ -174,7 +166,7 @@ static const char gSubMenu_COMPND[4][6] = {
 	"TX/RX",
 };
 
-static const char gSubMenu_MOD[3][4] = {
+static const char gSubMenu_DEMOD[3][4] = {
 	"FM",
 	"AM",
 	"SSB",
@@ -306,8 +298,8 @@ void UI_DisplayMenu(void)
 		}
 		break;
 
-	case MENU_MOD:
-		strcpy(String, gSubMenu_MOD[gSubMenuSelection]);
+	case MENU_DEMOD:
+		strcpy(String, gSubMenu_DEMOD[gSubMenuSelection]);
 		break;
 
 	case MENU_BCL:
@@ -331,10 +323,6 @@ void UI_DisplayMenu(void)
 			RADIO_CheckValidChannel((uint16_t)gSubMenuSelection, false, 0),
 			(uint8_t)gSubMenuSelection
 			);
-		break;
-
-	case MENU_SAVE:
-		strcpy(String, gSubMenu_SAVE[gSubMenuSelection]);
 		break;
 
 	case MENU_TDR:
@@ -394,6 +382,11 @@ void UI_DisplayMenu(void)
 		sprintf(String, "%u*10ms", gSubMenuSelection);
 		break;
 
+	case MENU_MDC_ID:
+		sprintf(String, "%04x", gSubMenuSelection);
+		break;
+
+	case MENU_MDCMOD:
 	case MENU_PTT_ID:
 		strcpy(String, gSubMenu_PTT_ID[gSubMenuSelection]);
 		break;

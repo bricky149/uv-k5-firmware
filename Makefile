@@ -64,6 +64,7 @@ OBJS += frequencies.o
 OBJS += functions.o
 OBJS += helper/battery.o
 OBJS += helper/boot.o
+OBJS += mdc1200.o
 OBJS += misc.o
 OBJS += radio.o
 OBJS += scheduler.o
@@ -99,8 +100,8 @@ SIZE = arm-none-eabi-size
 GIT_HASH := $(shell git rev-parse --short HEAD)
 
 ASFLAGS = -c -mcpu=cortex-m0
-CFLAGS = -Os -Wall -mcpu=cortex-m0 -pipe -std=c11 -MMD
-CFLAGS += -Wextra -free -freorder-blocks-algorithm=stc
+CFLAGS = -Wall -Wextra -mcpu=cortex-m0 -pipe -std=c11 -MMD
+CFLAGS += -Os -Wpadded -free -freorder-blocks-algorithm=stc
 CFLAGS += -DPRINTF_INCLUDE_CONFIG_H
 CFLAGS += -DGIT_HASH=\"$(GIT_HASH)\"
 

@@ -130,7 +130,7 @@ __attribute__((used)) int I2C_ReadBuffer(void *pBuffer, uint8_t Size)
 	return Size;
 }
 
-__attribute__((used)) bool I2C_WriteBuffer(const void *pBuffer, uint8_t Size)
+bool I2C_WriteBuffer(const void *pBuffer, uint8_t Size)
 {
 	const uint8_t *pData = (const uint8_t *)pBuffer;
 	uint8_t i;

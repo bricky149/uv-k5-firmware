@@ -27,27 +27,18 @@
 #include "settings.h"
 
 EEPROM_Config_t gEeprom;
+EEPROM_FM_t gFM;
 EEPROM_Calibration_t gCalibration;
 
 #if defined(ENABLE_FMRADIO)
 void SETTINGS_SaveFM(void)
 {
-	struct {
-		uint16_t Frequency;
-		uint8_t Channel;
-		bool IsChannelSelected;
-	} State;
 
 #if defined(ENABLE_UART)
 	UART_LogSend("sFm\r\n", 5);
 #endif
 
-	memset(&State, 0xFF, sizeof(State));
-	State.Channel = gEeprom.FM_SelectedChannel;
-	State.Frequency = gEeprom.FM_SelectedFrequency;
-	State.IsChannelSelected = gEeprom.FM_IsMrMode;
-
-	EEPROM_WriteBuffer(0x0E88, &State);
+	EEPROM_WriteBuffer(0x0E88, &gFM);
 	for (uint8_t i = 0; i < 5; i++) {
 		EEPROM_WriteBuffer(0x0E40 + (i * 8), &gFM_Channels[i * 4]);
 	}
@@ -97,7 +88,7 @@ void SETTINGS_SaveSettings(void)
 	State[0] = 0xFF;
 	State[1] = gEeprom.CHANNEL_DISPLAY_MODE;
 	State[2] = gEeprom.CROSS_BAND_RX_TX;
-	State[3] = gEeprom.BATTERY_SAVE;
+	State[3] = 0xFF;
 	State[4] = gEeprom.DUAL_WATCH;
 	State[5] = gEeprom.BACKLIGHT;
 	State[6] = gEeprom.TAIL_NOTE_ELIMINATION;
@@ -228,7 +219,7 @@ void SETTINGS_SaveChannel(uint8_t Channel, uint8_t VFO, const VFO_Info_t *pVFO, 
 			| (pVFO->CHANNEL_BANDWIDTH << 0);
 		State8[5] = (pVFO->DTMF_PTT_ID_TX_MODE << 1) | pVFO->DTMF_DECODING_ENABLE;
 		State8[6] = pVFO->STEP_SETTING;
-		State8[7] = (pVFO->ModulationType << 2) | pVFO->CompanderMode;
+		State8[7] = (pVFO->MODULATION_MODE << 2) | pVFO->CompanderMode;
 
 		EEPROM_WriteBuffer(OffsetVFO + 8, State8);
 

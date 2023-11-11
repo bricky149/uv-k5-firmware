@@ -63,7 +63,6 @@ enum ROGER_Mode_t {
 	ROGER_MODE_ROGER = 1U,
 	ROGER_MODE_MDC   = 2U,
 };
-
 typedef enum ROGER_Mode_t ROGER_Mode_t;
 
 enum CHANNEL_DisplayMode_t {
@@ -71,8 +70,16 @@ enum CHANNEL_DisplayMode_t {
 	MDF_CHANNEL   = 1U,
 	MDF_NAME      = 2U,
 };
-
 typedef enum CHANNEL_DisplayMode_t CHANNEL_DisplayMode_t;
+
+// 1o11
+enum MDC1200_Mode_t {
+	MDC1200_MODE_OFF = 0U,
+	MDC1200_MODE_BOT = 1U,  // BEGIN OF TX
+	MDC1200_MODE_EOT = 2U,  // END OF TX
+	MDC1200_MODE_BOTH = 3U,
+};
+typedef enum MDC1200_Mode_t MDC1200_Mode_t;
 
 typedef struct {
 	VFO_Info_t VfoInfo[2];
@@ -90,20 +97,14 @@ typedef struct {
 	bool VFO_OPEN;
 	uint8_t DUAL_WATCH;
 	uint8_t CROSS_BAND_RX_TX;
-	uint8_t BATTERY_SAVE;
 	uint8_t BACKLIGHT;
 	uint8_t SCAN_RESUME_MODE;
 	uint8_t SCAN_LIST_DEFAULT;
 	bool SCAN_LIST_ENABLED[2];
 	uint8_t SCANLIST_PRIORITY_CH1[2];
 	uint8_t SCANLIST_PRIORITY_CH2[2];
-	uint16_t FM_SelectedFrequency;
-	uint8_t FM_SelectedChannel;
-	bool FM_IsMrMode;
-	uint16_t FM_FrequencyPlaying;
-	uint16_t FM_LowerLimit;
-	uint16_t FM_UpperLimit;
 	bool AUTO_KEYPAD_LOCK;
+	uint16_t FM_FrequencyPlaying;
 	ROGER_Mode_t ROGER;
 	uint8_t REPEATER_TAIL_TONE_ELIMINATION;
 	uint8_t KEY_1_SHORT_PRESS_ACTION;
@@ -120,14 +121,20 @@ typedef struct {
 	char DTMF_GROUP_CALL_CODE;
 	uint8_t DTMF_DECODE_RESPONSE;
 	uint8_t DTMF_AUTO_RESET_TIME;
+	bool DTMF_SIDE_TONE;
 	uint16_t DTMF_PRELOAD_TIME;
 	uint16_t DTMF_FIRST_CODE_PERSIST_TIME;
 	uint16_t DTMF_HASH_CODE_PERSIST_TIME;
 	uint16_t DTMF_CODE_PERSIST_TIME;
 	uint16_t DTMF_CODE_INTERVAL_TIME;
-	bool DTMF_SIDE_TONE;
-	uint8_t Padding[1];
+	uint16_t MDC1200_ID;
 } EEPROM_Config_t;
+
+typedef struct {
+	uint16_t SelectedFrequency;
+	uint8_t SelectedChannel;
+	bool IsMrMode;
+} EEPROM_FM_t;
 
 typedef struct {
 	int16_t BK4819_XTAL_FREQ_LOW;
@@ -138,6 +145,7 @@ typedef struct {
 } EEPROM_Calibration_t;
 
 extern EEPROM_Config_t gEeprom;
+extern EEPROM_FM_t gFM;
 extern EEPROM_Calibration_t gCalibration;
 
 void SETTINGS_SaveFM(void);

@@ -31,6 +31,20 @@ void CRC_Init(void)
 	CRC_IV = 0;
 }
 
+void CRC_InitReverse(void)
+{
+	CRC_CR =
+		CRC_CR_CRC_EN_BITS_DISABLE          |
+		CRC_CR_INPUT_REV_BITS_NORMAL        |
+		CRC_CR_INPUT_INV_BITS_BIT_INVERTED  |
+		CRC_CR_OUTPUT_REV_BITS_REVERSED     |
+		CRC_CR_OUTPUT_INV_BITS_BIT_INVERTED |
+		CRC_CR_DATA_WIDTH_BITS_8            |
+		CRC_CR_CRC_SEL_BITS_CRC_16_CCITT;
+
+	CRC_IV = 0;
+}
+
 uint16_t CRC_Calculate(const void *pBuffer, uint16_t Size)
 {
 	const uint8_t *pData = (const uint8_t *)pBuffer;

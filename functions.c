@@ -29,6 +29,7 @@
 #include "driver/system.h"
 #include "functions.h"
 #include "helper/battery.h"
+#include "mdc1200.h"
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
@@ -41,7 +42,7 @@ void FUNCTION_Init(void)
 {
 	gCurrentCodeType = gSelectedCodeType;
 	if (gCssScanMode == CSS_SCAN_MODE_OFF) {
-		if (gRxVfo->ModulationType != MOD_FM) {
+		if (gRxVfo->MODULATION_MODE != MOD_FM) {
 			gCurrentCodeType = CODE_TYPE_OFF;
 		} else {
 			gCurrentCodeType = gRxVfo->pRX->CodeType;
@@ -107,7 +108,7 @@ void FUNCTION_Select(FUNCTION_Type_t Function)
 		break;
 
 	case FUNCTION_POWER_SAVE:
-		gBatterySave = gEeprom.BATTERY_SAVE * 10;
+		gBatterySave = 40;
 		gRxIdleMode = true;
 
 		BK4819_Sleep();
@@ -123,15 +124,20 @@ void FUNCTION_Select(FUNCTION_Type_t Function)
 			BK1080_Sleep();
 		}
 #endif
-
 		GUI_DisplayScreen();
 		RADIO_SetTxParameters();
 		BK4819_SetGpioOut(BK4819_GPIO5_PIN1_RED);
-
+		BK4819_DisableMDC1200Rx();
 		DTMF_Reply();
+		if (gCurrentVfo->MDC1200_MODE == MDC1200_MODE_BOT ||
+			gCurrentVfo->MDC1200_MODE == MDC1200_MODE_BOTH) {
 
+			SYSTEM_DelayMs(30);
+			BK4819_SendMDC1200(MDC1200_OP_CODE_PTT_ID, 0x80, gEeprom.MDC1200_ID, true, gCurrentVfo->CHANNEL_BANDWIDTH);
+		}
 		break;
 	}
+
 	gBatterySaveCountdown = 1000;
 	gSchedulePowerSave = false;
 #if defined(ENABLE_FMRADIO)

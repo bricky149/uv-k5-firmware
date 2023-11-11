@@ -116,7 +116,7 @@ uint8_t gIsLocked = 0xFF;
 
 // --------
 
-__attribute__((used)) void NUMBER_Get(char *pDigits, uint32_t *pInteger)
+void NUMBER_Get(char *pDigits, uint32_t *pInteger)
 {
 	uint32_t Value = 0;
 	uint32_t Multiplier = 10000000;

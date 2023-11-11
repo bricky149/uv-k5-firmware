@@ -56,7 +56,6 @@ typedef struct {
 		char Version[16];
 		bool bHasCustomAesKey;
 		bool bIsInLockScreen;
-		uint8_t Padding[2];
 		uint32_t Challenge[4];
 	} Data;
 } REPLY_0514_t;
@@ -65,7 +64,6 @@ typedef struct {
 	Header_t Header;
 	uint16_t Offset;
 	uint8_t Size;
-	uint8_t Padding;
 	uint32_t Timestamp;
 } CMD_051B_t;
 
@@ -121,7 +119,6 @@ typedef struct {
 	Header_t Header;
 	struct {
 		bool bIsLocked;
-		uint8_t Padding[2];
 	} Data;
 } REPLY_052D_t;
 
@@ -191,7 +188,7 @@ static void SendVersion(void)
 	SendReply(&Reply, sizeof(Reply));
 }
 
-__attribute__((used)) static bool IsBadChallenge(const uint32_t *pKey, const uint32_t *pIn, const uint32_t *pResponse)
+static bool IsBadChallenge(const uint32_t *pKey, const uint32_t *pIn, const uint32_t *pResponse)
 {
 	uint8_t i;
 	uint32_t IV[4];

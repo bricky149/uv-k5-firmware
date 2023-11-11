@@ -44,6 +44,7 @@
 #include "frequencies.h"
 #include "functions.h"
 #include "helper/battery.h"
+#include "mdc1200.h"
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
@@ -314,8 +315,8 @@ void APP_StartListening(FUNCTION_Type_t Function)
 		gScheduleDualWatch = false;
 	}
 
-	BK4819_SetModulation(gRxVfo->ModulationType);
-	if (gRxVfo->ModulationType != MOD_FM) {
+	BK4819_SetModulation(gRxVfo->MODULATION_MODE);
+	if (gRxVfo->MODULATION_MODE != MOD_FM) {
 		BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
 		BK4819_DisableAGC();
 		BK4819_SetCompander(0);
@@ -484,6 +485,7 @@ void APP_CheckRadioInterrupts(void)
 			g_SquelchLost = false;
 			BK4819_ClearGpioOut(BK4819_GPIO6_PIN2_GREEN);
 		}
+		MDC1200_process_rx(Mask);
 	}
 }
 
@@ -554,7 +556,7 @@ void APP_Update(void)
 	}
 
 	if (gSchedulePowerSave) {
-		if (gEeprom.BATTERY_SAVE == 0 || gScanState != SCAN_OFF || gCssScanMode != CSS_SCAN_MODE_OFF
+		if (gScanState != SCAN_OFF || gCssScanMode != CSS_SCAN_MODE_OFF
 #if defined(ENABLE_FMRADIO)
 				|| gFmRadioMode
 #endif
@@ -582,7 +584,7 @@ void APP_Update(void)
 		} else if (gEeprom.DUAL_WATCH == DUAL_WATCH_OFF || gScanState != SCAN_OFF || gCssScanMode != CSS_SCAN_MODE_OFF || bUpdateRSSI) {
 			CurrentRSSI = BK4819_GetRSSI();
 			UI_UpdateRSSI(CurrentRSSI);
-			gBatterySave = gEeprom.BATTERY_SAVE * 10;
+			gBatterySave = 40;
 			gRxIdleMode = true;
 
 			BK4819_Sleep();
@@ -729,7 +731,7 @@ void APP_TimeSlice10ms(void)
 				gScanHitCount = 0;
 			}
 			BK4819_DisableFrequencyScan();
-			if (gScanHitCount < 2) {
+			if (gScanHitCount < 3) {
 				BK4819_EnableFrequencyScan();
 			} else {
 				BK4819_SetScanFrequency(gScanFrequency);
@@ -763,7 +765,7 @@ void APP_TimeSlice10ms(void)
 				if (Code != 0xFF) {
 					if (Code == gScanCssResultCode && gScanCssResultType == CODE_TYPE_CONTINUOUS_TONE) {
 						gScanHitCount++;
-						if (gScanHitCount >= 2) {
+						if (gScanHitCount >= 3) {
 							gScanCssState = SCAN_CSS_STATE_FOUND;
 							gScanUseCssResult = true;
 						}
@@ -788,7 +790,7 @@ void APP_TimeSlice10ms(void)
 }
 
 void APP_TimeSlice40ms(void) {
-	if (gRxVfo->ModulationType == MOD_AM) {
+	if (gRxVfo->MODULATION_MODE == MOD_AM) {
 		BK4819_NaiveAGC();
 	}
 }
@@ -940,11 +942,18 @@ void APP_TimeSlice500ms(void)
 		}
 	}
 
-	if (gDTMF_RecvTimeout) {
+	if (gDTMF_RecvTimeout > 0) {
 		gDTMF_RecvTimeout--;
 		if (gDTMF_RecvTimeout == 0) {
 			gDTMF_WriteIndex = 0;
 			memset(gDTMF_Received, 0, sizeof(gDTMF_Received));
+		}
+	}
+
+	if (mdc1200_rx_ready_tick_500ms > 0) {
+		mdc1200_rx_ready_tick_500ms--;
+		if (mdc1200_rx_ready_tick_500ms == 0) {
+			gUpdateDisplay = true;
 		}
 	}
 }

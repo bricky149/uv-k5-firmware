@@ -71,7 +71,7 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 	case MENU_TXP: case MENU_SFT_D:
 	case MENU_TDR: case MENU_WX:
 	case MENU_SC_REV: case MENU_MDF:
-	case MENU_W_N: case MENU_MOD:
+	case MENU_W_N: case MENU_DEMOD:
 	case MENU_ROGER:
 		*pMin = 0;
 		*pMax = 2;
@@ -83,6 +83,10 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 	case MENU_R_CTCS: case MENU_T_CTCS:
 		*pMin = 0;
 		*pMax = 50;
+		break;
+	case MENU_MDC_ID:
+		*pMin = 0;
+		*pMax = 0xFFFF;
 		break;
 	case MENU_BCL: case MENU_AUTOLK:
 	case MENU_S_ADD1: case MENU_S_ADD2:
@@ -103,7 +107,7 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 		*pMin = 0;
 		*pMax = 199;
 		break;
-	case MENU_SAVE: case MENU_MIC:
+	case MENU_MIC:
 		*pMin = 0;
 		*pMax = 4;
 		break;
@@ -113,6 +117,7 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 		break;
 	case MENU_D_RSP: case MENU_PTT_ID:
 	case MENU_COMPND: case MENU_F_LOCK:
+	case MENU_MDCMOD:
 		*pMin = 0;
 		*pMax = 3;
 		break;
@@ -215,6 +220,15 @@ void MENU_AcceptSetting(void)
 		gRequestSaveChannel = 1;
 		return;
 
+	case MENU_MDCMOD:
+		gTxVfo->MDC1200_MODE = gSubMenuSelection;
+		gRequestSaveChannel = 1;
+		break;
+
+	case MENU_MDC_ID:
+		gEeprom.MDC1200_ID = gSubMenuSelection;
+		break;
+
 	case MENU_SFT_D:
 		gTxVfo->FREQUENCY_DEVIATION_SETTING = gSubMenuSelection;
 		gRequestSaveChannel = 1;
@@ -240,10 +254,6 @@ void MENU_AcceptSetting(void)
 		gRequestSaveChannel = 2;
 		gEeprom.MrChannel[0] = gSubMenuSelection;
 		return;
-
-	case MENU_SAVE:
-		gEeprom.BATTERY_SAVE = gSubMenuSelection;
-		break;
 
 	case MENU_ABR:
 		gEeprom.BACKLIGHT = gSubMenuSelection;
@@ -368,8 +378,8 @@ void MENU_AcceptSetting(void)
 		gRequestSaveChannel = 1;
 		return;
 
-	case MENU_MOD:
-		gTxVfo->ModulationType = gSubMenuSelection;
+	case MENU_DEMOD:
+		gTxVfo->MODULATION_MODE = gSubMenuSelection;
 		gRequestSaveChannel = 1;
 		return;
 
@@ -400,11 +410,11 @@ void MENU_AcceptSetting(void)
 		break;
 
 	case MENU_BATCAL:
-		gBatteryCalibration[0] = (520ul * gSubMenuSelection) / 760;  // 5.20V empty, blinking above this value, reduced functionality below
-		gBatteryCalibration[1] = (700ul * gSubMenuSelection) / 760;  // 7.00V,  ~5%, 1 bars above this value
-		gBatteryCalibration[2] = (745ul * gSubMenuSelection) / 760;  // 7.45V, ~17%, 2 bars above this value
-		gBatteryCalibration[3] =          gSubMenuSelection;         // 7.6V,  ~29%, 3 bars above this value
-		gBatteryCalibration[4] = (788ul * gSubMenuSelection) / 760;  // 7.88V, ~65%, 4 bars above this value
+		gBatteryCalibration[0] = (520ul * gSubMenuSelection) / 760; // 5.20V empty, blinking above this value
+		gBatteryCalibration[1] = (700ul * gSubMenuSelection) / 760; // 7.00V,  ~5%, 1 bars above this value
+		gBatteryCalibration[2] = (745ul * gSubMenuSelection) / 760; // 7.45V, ~17%, 2 bars above this value
+		gBatteryCalibration[3] =          gSubMenuSelection;        // 7.6V,  ~29%, 3 bars above this value
+		gBatteryCalibration[4] = (788ul * gSubMenuSelection) / 760; // 7.88V, ~65%, 4 bars above this value
 		gBatteryCalibration[5] = 2300;
 		EEPROM_WriteBuffer(0x1F40, gBatteryCalibration);
 		break;
@@ -517,6 +527,14 @@ void MENU_ShowCurrentSetting(void)
 		}
 		break;
 
+	case MENU_MDCMOD:
+		gSubMenuSelection = gTxVfo->MDC1200_MODE;
+		break;
+
+	case MENU_MDC_ID:
+		gSubMenuSelection = gEeprom.MDC1200_ID;
+		break;
+
 	case MENU_SFT_D:
 		gSubMenuSelection = gTxVfo->FREQUENCY_DEVIATION_SETTING;
 		break;
@@ -535,10 +553,6 @@ void MENU_ShowCurrentSetting(void)
 
 	case MENU_MEM_CH:
 		gSubMenuSelection = gEeprom.MrChannel[0];
-		break;
-
-	case MENU_SAVE:
-		gSubMenuSelection = gEeprom.BATTERY_SAVE;
 		break;
 
 	case MENU_ABR:
@@ -641,8 +655,8 @@ void MENU_ShowCurrentSetting(void)
 		gSubMenuSelection = gTxVfo->CompanderMode;
 		break;
 
-	case MENU_MOD:
-		gSubMenuSelection = gTxVfo->ModulationType;
+	case MENU_DEMOD:
+		gSubMenuSelection = gTxVfo->MODULATION_MODE;
 		break;
 
 	case MENU_DEL_CH:
@@ -673,12 +687,8 @@ void MENU_ShowCurrentSetting(void)
 
 //
 
-static void MENU_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
+static void MENU_Key_DIGITS(KEY_Code_t Key)
 {
-	if (bKeyHeld || !bKeyPressed) {
-		return;
-	}
-
 	INPUTBOX_Append(Key);
 	uint16_t Value = 0;
 	gRequestDisplayScreen = DISPLAY_MENU;
@@ -778,64 +788,60 @@ static void MENU_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	}
 }
 
-static void MENU_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
+static void MENU_Key_EXIT(void)
 {
-	if (!bKeyHeld && bKeyPressed) {
-		if (gCssScanMode == CSS_SCAN_MODE_OFF) {
-			if (gIsInSubMenu) {
-				if (gInputBoxIndex == 0 || gMenuCursor != MENU_OFFSET) {
-					gIsInSubMenu = false;
-					gAskForConfirmation = 0;
-					gInputBoxIndex = 0;
-					gFlagRefreshSetting = true;
-				} else {
-					gInputBoxIndex--;
-					gInputBox[gInputBoxIndex] = 10;
-				}
-				gRequestDisplayScreen = DISPLAY_MENU;
-				return;
+	if (gCssScanMode == CSS_SCAN_MODE_OFF) {
+		if (gIsInSubMenu) {
+			if (gInputBoxIndex == 0 || gMenuCursor != MENU_OFFSET) {
+				gIsInSubMenu = false;
+				gAskForConfirmation = 0;
+				gInputBoxIndex = 0;
+				gFlagRefreshSetting = true;
+			} else {
+				gInputBoxIndex--;
+				gInputBox[gInputBoxIndex] = 10;
 			}
-			gRequestDisplayScreen = DISPLAY_MAIN;
-		} else {
-			MENU_StopCssScan();
 			gRequestDisplayScreen = DISPLAY_MENU;
+			return;
 		}
-		gPttWasReleased = true;
+		gRequestDisplayScreen = DISPLAY_MAIN;
+	} else {
+		MENU_StopCssScan();
+		gRequestDisplayScreen = DISPLAY_MENU;
 	}
+	gPttWasReleased = true;
 }
 
-static void MENU_Key_MENU(bool bKeyPressed, bool bKeyHeld)
+static void MENU_Key_MENU(void)
 {
-	if (!bKeyHeld && bKeyPressed) {
-		gRequestDisplayScreen = DISPLAY_MENU;
-		if (!gIsInSubMenu) {
-			gAskForConfirmation = 0;
-			gIsInSubMenu = true;
-		} else {
-			if (gMenuCursor == MENU_RESET || gMenuCursor == MENU_MEM_CH || gMenuCursor == MENU_DEL_CH) {
-				switch (gAskForConfirmation) {
-				case 0:
-					gAskForConfirmation = 1;
-					break;
-				case 1:
-					gAskForConfirmation = 2;
-					UI_DisplayMenu(); // Needed for "WAIT!" string
-					if (gMenuCursor == MENU_RESET) {
-						MENU_AcceptSetting();
-						NVIC_SystemReset();
-					}
-					gFlagAcceptSetting = true;
-					gIsInSubMenu = false;
-					gAskForConfirmation = 0;
+	gRequestDisplayScreen = DISPLAY_MENU;
+	if (!gIsInSubMenu) {
+		gAskForConfirmation = 0;
+		gIsInSubMenu = true;
+	} else {
+		if (gMenuCursor == MENU_RESET || gMenuCursor == MENU_MEM_CH || gMenuCursor == MENU_DEL_CH) {
+			switch (gAskForConfirmation) {
+			case 0:
+				gAskForConfirmation = 1;
+				break;
+			case 1:
+				gAskForConfirmation = 2;
+				UI_DisplayMenu(); // Needed for "WAIT!" string
+				if (gMenuCursor == MENU_RESET) {
+					MENU_AcceptSetting();
+					NVIC_SystemReset();
 				}
-			} else {
 				gFlagAcceptSetting = true;
 				gIsInSubMenu = false;
+				gAskForConfirmation = 0;
 			}
-			gCssScanMode = CSS_SCAN_MODE_OFF;
+		} else {
+			gFlagAcceptSetting = true;
+			gIsInSubMenu = false;
 		}
-		gInputBoxIndex = 0;
+		gCssScanMode = CSS_SCAN_MODE_OFF;
 	}
+	gInputBoxIndex = 0;
 }
 
 static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
@@ -916,10 +922,14 @@ void MENU_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	case KEY_0: case KEY_1: case KEY_2: case KEY_3:
 	case KEY_4: case KEY_5: case KEY_6: case KEY_7:
 	case KEY_8: case KEY_9:
-		MENU_Key_DIGITS(Key, bKeyPressed, bKeyHeld);
+		if (!bKeyHeld && bKeyPressed) {
+			MENU_Key_DIGITS(Key);
+		}
 		break;
 	case KEY_MENU:
-		MENU_Key_MENU(bKeyPressed, bKeyHeld);
+		if (!bKeyHeld && bKeyPressed) {
+			MENU_Key_MENU();
+		}
 		break;
 	case KEY_UP:
 		MENU_Key_UP_DOWN(bKeyPressed, bKeyHeld, 1);
@@ -928,7 +938,9 @@ void MENU_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		MENU_Key_UP_DOWN(bKeyPressed, bKeyHeld, -1);
 		break;
 	case KEY_EXIT:
-		MENU_Key_EXIT(bKeyPressed, bKeyHeld);
+		if (!bKeyHeld && bKeyPressed) {
+			MENU_Key_EXIT();
+		}
 		break;
 	case KEY_F:
 		GENERIC_Key_F(bKeyPressed, bKeyHeld);

@@ -20,6 +20,7 @@
 #include "driver/st7565.h"
 #include "external/printf/printf.h"
 #include "functions.h"
+#include "mdc1200.h"
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
@@ -121,6 +122,10 @@ void UI_DisplayMain(void)
 				}
 				UI_PrintString(String, 2, 127, 2 + (i * 3), 8, false);
 				continue;
+			} else if (mdc1200_rx_ready_tick_500ms > 0) {
+				sprintf(String, "MDC1200 ID %04x", mdc1200_unit_id);
+				UI_PrintString(String, 2, 127, 2 + (i * 3), 8, false);
+				continue;
 			} else if (bIsSameVfo) {
 				memcpy(pLine0 + 2, BITMAP_VFO_Default, sizeof(BITMAP_VFO_Default));
 			}
@@ -179,7 +184,7 @@ void UI_DisplayMain(void)
 				Channel = gEeprom.TX_VFO;
 			}
 		}
-		if (State) {
+		if (State > 0) {
 			memset(String, 0, sizeof(String));
 			switch (State) {
 			case 1:
@@ -286,7 +291,7 @@ void UI_DisplayMain(void)
 		}
 
 		// 0x931E
-		switch (gEeprom.VfoInfo[i].ModulationType) {
+		switch (gEeprom.VfoInfo[i].MODULATION_MODE) {
 		case 1:
 			memcpy(pLine1 + 27, BITMAP_AM, sizeof(BITMAP_AM));
 			break;
