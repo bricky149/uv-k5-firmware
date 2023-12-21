@@ -554,7 +554,9 @@ void BOARD_EEPROM_Init(void)
 	memcpy(&gEeprom.POWER_ON_PASSWORD, Data, 4);
 
 	// 0EA0..0EA7
-	//EEPROM_ReadBuffer(0x0EA0, Data, 8);
+	// Non-stock memory layout
+	EEPROM_ReadBuffer(0x0EA0, Data, 4);
+	memcpy(&gEeprom.MDC1200_ID, Data, 4);
 
 	// 0EA8..0EAF
 	EEPROM_ReadBuffer(0x0EA8, Data, 8);
@@ -620,11 +622,11 @@ void BOARD_EEPROM_Init(void)
 
 	// 0F40..0F47
 	EEPROM_ReadBuffer(0x0F40, Data, 8);
-	gSetting_F_LOCK         = (Data[0] < 4) ? Data[0] : F_LOCK_OFF;
+	gSetting_F_LOCK = (Data[0] < 4) ? Data[0] : F_LOCK_OFF;
 
-	gSetting_350TX          = (Data[1] < 2) ? Data[1] : true;
-	gSetting_200TX          = (Data[3] < 2) ? Data[3] : false;
-	gSetting_500TX          = (Data[4] < 2) ? Data[4] : false;
+	gSetting_350TX  = (Data[1] < 2) ? Data[1] : true;
+	gSetting_200TX  = (Data[3] < 2) ? Data[3] : false;
+	gSetting_500TX  = (Data[4] < 2) ? Data[4] : false;
 
 	if (!gEeprom.VFO_OPEN) {
 		gEeprom.ScreenChannel[0] = gEeprom.MrChannel[0];

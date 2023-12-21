@@ -24,7 +24,7 @@
 enum BK4819_MOD_Type_t {
 	MOD_FM = 0U,
 	MOD_AM = 1U,
-	MOD_SSB = 2U,
+	MOD_DSB = 2U, // SSB
 };
 
 typedef enum BK4819_MOD_Type_t BK4819_MOD_Type_t;
@@ -34,7 +34,8 @@ enum BK4819_AF_Type_t {
 	BK4819_AF_OPEN = 1U,
 	BK4819_AF_ALAM = 2U,
 	BK4819_AF_BEEP = 3U,
-	BK4819_AF_SSB = 5U,
+	BK4819_AF_DSB = 4U,  // SSB
+	BK4819_AF_USB = 5U,  // SSB
 	BK4819_AF_CTCO = 6U,
 	BK4819_AF_AM = 7U,
 	BK4819_AF_FSKO = 8U,
@@ -43,9 +44,9 @@ enum BK4819_AF_Type_t {
 typedef enum BK4819_AF_Type_t BK4819_AF_Type_t;
 
 enum BK4819_FilterBandwidth_t {
-	BK4819_FILTER_BW_WIDE = 0U,
-	BK4819_FILTER_BW_NARROW = 1U,
-	BK4819_FILTER_BW_NARROWER = 2U,
+	BK4819_FILTER_BW_WIDE = 0U,     // 25kHz
+	BK4819_FILTER_BW_NARROW = 1U,   // 12.5kHz
+	BK4819_FILTER_BW_NARROWER = 2U, // 6.25kHz
 };
 
 typedef enum BK4819_FilterBandwidth_t BK4819_FilterBandwidth_t;

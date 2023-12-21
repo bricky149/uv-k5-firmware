@@ -59,8 +59,9 @@ void SETTINGS_SaveVfoIndices(void)
 	State[3] = gEeprom.ScreenChannel[1];
 	State[4] = gEeprom.MrChannel[1];
 	State[5] = gEeprom.FreqChannel[1];
-	State[6] = 0xFF;
-	State[7] = 0xFF;
+	for (uint8_t i = 6; i < 8; i++) {
+		State[i] = 0xFF;
+	}
 
 	EEPROM_WriteBuffer(0x0E80, State);
 }
@@ -79,8 +80,9 @@ void SETTINGS_SaveSettings(void)
 	State[2] = gEeprom.TX_TIMEOUT_TIMER;
 	State[3] = 0xFF;
 	State[4] = gEeprom.KEY_LOCK;
-	State[5] = 0xFF;
-	State[6] = 0xFF;
+	for (uint8_t i = 5; i < 7; i++) {
+		State[i] = 0xFF;
+	}
 	State[7] = gEeprom.MIC_SENSITIVITY;
 
 	EEPROM_WriteBuffer(0x0E70, State);
@@ -112,17 +114,17 @@ void SETTINGS_SaveSettings(void)
 
 	EEPROM_WriteBuffer(0x0E98, Buf);
 
-	//State[0] = gEeprom.VOICE_PROMPT;
-	//EEPROM_WriteBuffer(0x0EA0, State);
+	Buf[0] = gEeprom.MDC1200_ID;
+
+	EEPROM_WriteBuffer(0x0EA0, Buf);
 
 	State[0] = 0xFF;
 	State[1] = gEeprom.ROGER;
 	State[2] = gEeprom.REPEATER_TAIL_TONE_ELIMINATION;
 	State[3] = gEeprom.TX_VFO;
-	State[4] = 0xFF;
-	State[5] = 0xFF;
-	State[6] = 0xFF;
-	State[7] = 0xFF;
+	for (uint8_t i = 4; i < 8; i++) {
+		State[i] = 0xFF;
+	}
 
 	EEPROM_WriteBuffer(0x0EA8, State);
 
@@ -141,12 +143,9 @@ void SETTINGS_SaveSettings(void)
 
 	State[0] = gEeprom.DTMF_CODE_PERSIST_TIME / 10U;
 	State[1] = gEeprom.DTMF_CODE_INTERVAL_TIME / 10U;
-	State[2] = 0xFF;
-	State[3] = 0xFF;
-	State[4] = 0xFF;
-	State[5] = 0xFF;
-	State[6] = 0xFF;
-	State[7] = 0xFF;
+	for (uint8_t i = 2; i < 8; i++) {
+		State[i] = 0xFF;
+	}
 
 	EEPROM_WriteBuffer(0x0ED8, State);
 
@@ -166,9 +165,9 @@ void SETTINGS_SaveSettings(void)
 	State[2] = 0xFF;
 	State[3] = gSetting_200TX;
 	State[4] = gSetting_500TX;
-	State[5] = 0xFF;
-	State[6] = 0xFF;
-	State[7] = 0xFF;
+	for (uint8_t i = 5; i < 8; i++) {
+		State[i] = 0xFF;
+	}
 
 	EEPROM_WriteBuffer(0x0F40, State);
 

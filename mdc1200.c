@@ -451,7 +451,7 @@ void MDC1200_process_rx(const uint16_t interrupt_bits)
 
 	const bool rx_sync             = (interrupt_bits & BK4819_REG_02_FSK_RX_SYNC) ? true : false;
 	const bool rx_sync_neg         = (rx_sync_flags & (1u << 7)) ? true : false;
-	const bool rx_sync_pos         = (rx_sync_flags & (1u << 6)) ? true : false;
+	//const bool rx_sync_pos         = (rx_sync_flags & (1u << 6)) ? true : false;
 	const bool rx_fifo_almost_full = (interrupt_bits & BK4819_REG_02_FSK_FIFO_ALMOST_FULL) ? true : false;
 	const bool rx_finished         = (interrupt_bits & BK4819_REG_02_FSK_RX_FINISHED) ? true : false;
 

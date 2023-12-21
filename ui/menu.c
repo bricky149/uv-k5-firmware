@@ -169,7 +169,7 @@ static const char gSubMenu_COMPND[4][6] = {
 static const char gSubMenu_DEMOD[3][4] = {
 	"FM",
 	"AM",
-	"SSB",
+	"DSB", // SSB
 };
 
 static const char gSubMenu_RESET[2][4] = {
@@ -226,6 +226,7 @@ void UI_DisplayMenu(void)
 
 	uint32_t kHz;
 	char Contact[16];
+	uint32_t Vol;
 
 	switch (gMenuCursor) {
 	case MENU_SQL:
@@ -270,7 +271,7 @@ void UI_DisplayMenu(void)
 		break;
 
 	case MENU_OFFSET:
-		uint8_t i = 0;
+		i = 0;
 		while (i < 3) {
 			String[i] = (gInputBox[i] == 10) ? '-' : gInputBox[i] + '0';
 			i++;
@@ -418,8 +419,8 @@ void UI_DisplayMenu(void)
 		break;
 
 	case MENU_BATCAL:
-		uint32_t vol = gBatteryVoltageAverage * gBatteryCalibration[3] / gSubMenuSelection;
-		sprintf(String, "%u.%02uV-%#4u", vol / 100, vol % 100, gSubMenuSelection);
+		Vol = gBatteryVoltageAverage * gBatteryCalibration[3] / gSubMenuSelection;
+		sprintf(String, "%u.%02uV-%#4u", Vol / 100, Vol % 100, gSubMenuSelection);
 		break;
 	}
 	UI_PrintString(String, 50, 127, 2, 8, true);

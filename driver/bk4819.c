@@ -149,9 +149,11 @@ void BK4819_WriteU8(uint8_t Data)
 
 void BK4819_NaiveAGC(void)
 {
+	uint8_t Floor = 138;
+	uint8_t Ceiling = 153;
 	// Check if we need to adjust gain
 	uint16_t RSSI = BK4819_GetRSSI();
-	if (RSSI >= 131 && RSSI <= 143) {
+	if (RSSI >= Floor && RSSI <= Ceiling) {
 		return;
 	}
 	// Beken's AGC is not helpful in AM mode
@@ -161,13 +163,13 @@ void BK4819_NaiveAGC(void)
 	do {
 		BK4819_WriteRegister(0x13, // 1o11
 			(3u << 8) |            // LNA Short
-			(7u << 5) |     // LNA
+			(6u << 5) |            // LNA
 			(3u << 3) |            // MIXER
 			(GainIndex << 0));     // PGA
 		RSSI = BK4819_GetRSSI();
-		if (RSSI < 131) {
+		if (RSSI < Floor) {
 			GainIndex++;
-		} else if (RSSI > 143) {
+		} else if (RSSI > Ceiling) {
 			GainIndex--;
 		} else {
 			break;
@@ -363,7 +365,7 @@ void BK4819_SetModulation(BK4819_MOD_Type_t type) {
 	uint8_t modTypeReg47Values[3] = {1, 7, 5};
 	BK4819_SetAF(modTypeReg47Values[type]);
 	BK4819_SetRegValue(afDacGainRegSpec, 0xF);
-	BK4819_WriteRegister(0x3D, type == MOD_SSB ? 0 : 0x2AAB);
+	BK4819_WriteRegister(0x3D, type == MOD_DSB ? 0 : 0x2AAB);
 	BK4819_SetRegValue(afcDisableRegSpec, type != MOD_FM);
 }
 

@@ -1,7 +1,7 @@
 #ifndef DP32G030_IRQ_H
 #define DP32G030_IRQ_H
 
-enum {
+enum IRQn_Type {
 	DP32_WWDT_IRQn = 0,
 	DP32_IWDT_IRQn,
 	DP32_RTC_IRQn,

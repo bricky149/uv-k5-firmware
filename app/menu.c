@@ -146,7 +146,8 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 
 void MENU_AcceptSetting(void)
 {
-	uint16_t Min, Max;
+	uint16_t Min;
+	uint16_t Max;
 	if (!MENU_GetLimits(gMenuCursor, &Min, &Max)) {
 		if (gSubMenuSelection < Min) {
 			gSubMenuSelection = Min;
@@ -690,14 +691,16 @@ void MENU_ShowCurrentSetting(void)
 static void MENU_Key_DIGITS(KEY_Code_t Key)
 {
 	INPUTBOX_Append(Key);
-	uint16_t Value = 0;
 	gRequestDisplayScreen = DISPLAY_MENU;
+	uint16_t Value = 0;
+	uint16_t Min;
+	uint16_t Max;
 
 	if (!gIsInSubMenu) {
 		switch (gInputBoxIndex) {
 		case 1:
 			Value = gInputBox[0];
-			if (Value && Value <= gMenuListCount) {
+			if (Value > 0 && Value <= gMenuListCount) {
 				gMenuCursor = Value - 1;
 				gFlagRefreshSetting = true;
 				return;
@@ -752,7 +755,6 @@ static void MENU_Key_DIGITS(KEY_Code_t Key)
 			break;
 
 		default:
-			uint16_t Min, Max;
 			if (MENU_GetLimits(gMenuCursor, &Min, &Max)) {
 				gInputBoxIndex = 0;
 				return;
@@ -867,10 +869,13 @@ static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 
 	bool bCheckScanList;
 	uint8_t VFO = 0;
+	int32_t Offset;
+	uint16_t Min;
+	uint16_t Max;
 
 	switch (gMenuCursor) {
 	case MENU_OFFSET:
-		int32_t Offset = (Direction * gTxVfo->StepFrequency) + gSubMenuSelection;
+		Offset = (Direction * gTxVfo->StepFrequency) + gSubMenuSelection;
 		if (Offset < 0) {
 			Offset = 99999990;
 		} else if (Offset > 99999990) {
@@ -893,8 +898,7 @@ static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 		break;
 
 	default:
-		//MENU_ClampSelection(Direction) called once
-		uint16_t Min, Max;
+		//MENU_ClampSelection(Direction);
 		if (!MENU_GetLimits(gMenuCursor, &Min, &Max)) {
 			uint16_t Selection = gSubMenuSelection;
 			if (Selection < Min) {

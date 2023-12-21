@@ -120,7 +120,7 @@ void ST7565_Init(void)
 
 	SPI_WaitForUndocumentedTxFifoStatusBit();
 	SPI_EnableMasterMode(&SPI0->CR);
-	SPI1_Init();
+	//SPI1_Init();
 }
 
 void ST7565_HardwareReset(void)

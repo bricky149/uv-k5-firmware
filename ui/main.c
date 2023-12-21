@@ -124,7 +124,7 @@ void UI_DisplayMain(void)
 				continue;
 			} else if (mdc1200_rx_ready_tick_500ms > 0) {
 				sprintf(String, "MDC1200 ID %04x", mdc1200_unit_id);
-				UI_PrintString(String, 2, 127, 2 + (i * 3), 8, false);
+				UI_PrintString(String, 2, 127, i * 3, 8, false);
 				continue;
 			} else if (bIsSameVfo) {
 				memcpy(pLine0 + 2, BITMAP_VFO_Default, sizeof(BITMAP_VFO_Default));
@@ -290,6 +290,7 @@ void UI_DisplayMain(void)
 			}
 		}
 
+		const FREQ_Config_t *pConfig;
 		// 0x931E
 		switch (gEeprom.VfoInfo[i].MODULATION_MODE) {
 		case 1:
@@ -299,7 +300,6 @@ void UI_DisplayMain(void)
 			memcpy(pLine1 + 27, BITMAP_SSB, sizeof(BITMAP_SSB));
 			break;
 		default:
-			const FREQ_Config_t *pConfig;
 			if (LevelMode == LEVEL_MODE_TX) {
 				pConfig = gEeprom.VfoInfo[i].pTX;
 			} else {
