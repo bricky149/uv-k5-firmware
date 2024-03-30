@@ -29,7 +29,9 @@
 #include "driver/system.h"
 #include "functions.h"
 #include "helper/battery.h"
+#if defined(ENABLE_MDC1200)
 #include "mdc1200.h"
+#endif
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
@@ -127,14 +129,16 @@ void FUNCTION_Select(FUNCTION_Type_t Function)
 		GUI_DisplayScreen();
 		RADIO_SetTxParameters();
 		BK4819_SetGpioOut(BK4819_GPIO5_PIN1_RED);
-		BK4819_DisableMDC1200Rx();
 		DTMF_Reply();
+#if defined(ENABLE_MDC1200)
+		BK4819_DisableMDC1200Rx();	
 		if (gCurrentVfo->MDC1200_MODE == MDC1200_MODE_BOT ||
-			gCurrentVfo->MDC1200_MODE == MDC1200_MODE_BOTH) {
-
+			gCurrentVfo->MDC1200_MODE == MDC1200_MODE_BOTH)
+		{
 			SYSTEM_DelayMs(30);
 			BK4819_SendMDC1200(MDC1200_OP_CODE_PTT_ID, 0x80, gEeprom.MDC1200_ID, true, gCurrentVfo->CHANNEL_BANDWIDTH);
 		}
+#endif
 		break;
 	}
 

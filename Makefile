@@ -1,5 +1,6 @@
 TARGET = firmware
 
+ENABLE_MDC1200 := 0
 ENABLE_FMRADIO := 1
 ENABLE_SWD := 0
 ENABLE_UART := 1
@@ -69,7 +70,9 @@ OBJS += frequencies.o
 OBJS += functions.o
 OBJS += helper/battery.o
 OBJS += helper/boot.o
+ifeq ($(ENABLE_MDC1200),1)
 OBJS += mdc1200.o
+endif
 OBJS += misc.o
 OBJS += radio.o
 OBJS += scheduler.o

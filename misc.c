@@ -120,7 +120,7 @@ void NUMBER_Get(char *pDigits, uint32_t *pInteger)
 {
 	uint32_t Value = 0;
 	uint32_t Multiplier = 10000000;
-	for (uint8_t i = 0; i < 8; i++) {
+	for (int i = 0; i < 8; i++) {
 		if (pDigits[i] > 9) {
 			break;
 		}
@@ -132,7 +132,7 @@ void NUMBER_Get(char *pDigits, uint32_t *pInteger)
 
 void NUMBER_ToDigits(uint32_t Value, char *pDigits)
 {
-	for (uint8_t i = 0; i < 8; i++) {
+	for (int i = 0; i < 8; i++) {
 		uint32_t Result = Value / 10U;
 		pDigits[7 - i] = Value - (Result * 10U);
 		Value = Result;

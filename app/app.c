@@ -44,7 +44,9 @@
 #include "frequencies.h"
 #include "functions.h"
 #include "helper/battery.h"
+#if defined(ENABLE_MDC1200)
 #include "mdc1200.h"
+#endif
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
@@ -485,7 +487,9 @@ void APP_CheckRadioInterrupts(void)
 			g_SquelchLost = false;
 			BK4819_ClearGpioOut(BK4819_GPIO6_PIN2_GREEN);
 		}
+#if defined(ENABLE_MDC1200)
 		MDC1200_process_rx(Mask);
+#endif
 	}
 }
 
@@ -950,12 +954,14 @@ void APP_TimeSlice500ms(void)
 		}
 	}
 
+#if defined(ENABLE_MDC1200)
 	if (mdc1200_rx_ready_tick_500ms > 0) {
 		mdc1200_rx_ready_tick_500ms--;
 		if (mdc1200_rx_ready_tick_500ms == 0) {
 			gUpdateDisplay = true;
 		}
 	}
+#endif
 }
 
 void CHANNEL_Next(bool bBackup, int8_t Direction)

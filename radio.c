@@ -28,7 +28,9 @@
 #include "frequencies.h"
 #include "functions.h"
 #include "helper/battery.h"
+#if defined(ENABLE_MDC1200)
 #include "mdc1200.h"
+#endif
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
@@ -394,12 +396,12 @@ void RADIO_ConfigureSquelchAndOutputPower(VFO_Info_t *pInfo)
 	Band = FREQUENCY_GetBand(pInfo->pTX->Frequency);
 	EEPROM_ReadBuffer(0x1ED0 + (Band * 0x10) + (pInfo->OUTPUT_POWER * 3), Txp, 3);
 	// 1o11
-	// make low even lower
-	if (pInfo->OUTPUT_POWER == OUTPUT_POWER_LOW) {
-		for (uint8_t i = 0; i < 3; i++) {
-			Txp[i] /= 6;
-		}
-	}
+	//if (pInfo->OUTPUT_POWER == OUTPUT_POWER_LOW) {
+	//	for (int i = 0; i < 3; i++) {
+	//		Txp[i] /= 6;
+	//	}
+	//}
+
 	pInfo->TXP_CalculatedSetting =
 		FREQUENCY_CalculateOutputPower(
 				Txp[0],
@@ -563,9 +565,10 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 	} else {
 		BK4819_EnableDTMF();
 		InterruptMask |= BK4819_REG_3F_DTMF_5TONE_FOUND;
-
+#if defined(ENABLE_MDC1200)
 		BK4819_EnableMDC1200Rx();
 		InterruptMask |= BK4819_REG_3F_FSK_RX_SYNC | BK4819_REG_3F_FSK_RX_FINISHED | BK4819_REG_3F_FSK_FIFO_ALMOST_FULL;
+#endif
 	}
 	BK4819_WriteRegister(BK4819_REG_3F, InterruptMask);
 
@@ -745,11 +748,13 @@ void RADIO_SendEndOfTransmission(void)
 		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
 		gEnableSpeaker = false;
 	}
+#if defined(ENABLE_MDC1200)
 	if (gCurrentVfo->MDC1200_MODE == MDC1200_MODE_EOT ||
-		gCurrentVfo->MDC1200_MODE == MDC1200_MODE_BOTH) {
-
+		gCurrentVfo->MDC1200_MODE == MDC1200_MODE_BOTH)
+	{
 		BK4819_SendMDC1200(MDC1200_OP_CODE_POST_ID, 0x00, gEeprom.MDC1200_ID, false, gCurrentVfo->CHANNEL_BANDWIDTH);
 	}
+#endif
 	BK4819_ExitDTMF_TX(true);
 }
 

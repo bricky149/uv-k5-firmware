@@ -71,13 +71,13 @@ void BATTERY_GetReadings(bool bDisplayBatteryLevel)
 		if (gChargingWithTypeC) {
 			gUpdateStatus = true;
 		}
-		gChargingWithTypeC = 0;
+		gChargingWithTypeC = false;
 	} else {
 		if (!gChargingWithTypeC) {
 			gUpdateStatus = true;
 			BACKLIGHT_TurnOn();
 		}
-		gChargingWithTypeC = 1;
+		gChargingWithTypeC = true;
 	}
 
 	if (PreviousBatteryLevel != gBatteryDisplayLevel) {

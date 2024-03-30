@@ -21,7 +21,9 @@
 #include "driver/gpio.h"
 #include "driver/system.h"
 #include "driver/systick.h"
+#if defined(ENABLE_MDC1200)
 #include "mdc1200.h"
+#endif
 
 static const uint16_t FSK_RogerTable[7] = {
 	0xF1A2, 0x7446, 0x61A4, 0x6544,
@@ -32,11 +34,13 @@ static uint16_t gBK4819_GpioOutState;
 
 bool gRxIdleMode;
 
+#if defined(ENABLE_MDC1200)
 // 1o11
 __inline static uint16_t ScaleFreq(const uint16_t freq)
 {	// with rounding
 	return (((uint32_t)freq * 338311u) + (1u << 14)) >> 15; // max freq = 12695
 }
+#endif
 
 void BK4819_Init(void)
 {
@@ -89,7 +93,7 @@ uint16_t BK4819_ReadRegister(BK4819_REGISTER_t Register)
 	PORTCON_PORTC_IE = (PORTCON_PORTC_IE & ~PORTCON_PORTC_IE_C2_MASK) | PORTCON_PORTC_IE_C2_BITS_ENABLE;
 	GPIOC->DIR = (GPIOC->DIR & ~GPIO_DIR_2_MASK) | GPIO_DIR_2_BITS_INPUT;
 	Value = 0;
-	for (uint8_t i = 0; i < 16; i++) {
+	for (int i = 0; i < 16; i++) {
 		Value <<= 1;
 		Value |= GPIO_CheckBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
 
@@ -115,7 +119,7 @@ void BK4819_WriteRegister(BK4819_REGISTER_t Register, uint16_t Data)
 	BK4819_WriteU8(Register);
 
 	//BK4819_WriteU16(Data);
-	for (uint8_t i = 0; i < 16; i++) {
+	for (int i = 0; i < 16; i++) {
 		if ((Data & 0x8000U) == 0) {
 			GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
 		} else {
@@ -135,7 +139,7 @@ void BK4819_WriteU8(uint8_t Data)
 {
 	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
 
-	for (uint8_t i = 0; i < 8; i++) {
+	for (int i = 0; i < 8; i++) {
 		if ((Data & 0x80U) == 0) {
 			GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SDA);
 		} else {
@@ -161,11 +165,11 @@ void BK4819_NaiveAGC(void)
 	// while adjusting PGA to control distortion
 	uint8_t GainIndex = 5;
 	do {
-		BK4819_WriteRegister(0x13, // 1o11
-			(3u << 8) |            // LNA Short
-			(6u << 5) |            // LNA
-			(3u << 3) |            // MIXER
-			(GainIndex << 0));     // PGA
+		BK4819_WriteRegister(BK4819_REG_13, // 1o11
+			(3u << 8) |                     // 3 LNA Short
+			(6u << 5) |                     // 5 LNA
+			(3u << 3) |                     // 3 MIXER
+			(GainIndex << 0));              // 6 PGA
 		RSSI = BK4819_GetRSSI();
 		if (RSSI < Floor) {
 			GainIndex++;
@@ -209,7 +213,7 @@ void BK4819_DisableAGC(void)
 	BK4819_WriteRegister(BK4819_REG_20, 0x8DEF);
 
 	// fagci
-	for (uint8_t i = 0; i < 8; i++) {
+	for (int i = 0; i < 8; i++) {
 		BK4819_WriteRegister(BK4819_REG_06, (i & 7) << 13 | 0x4A << 7 | 0x36);
 	}
 	//for (i = 0; i < 8; i++) {
@@ -346,7 +350,7 @@ void BK4819_SetupSquelch(uint8_t SquelchOpenRSSIThresh, uint8_t SquelchCloseRSSI
 	BK4819_WriteRegister(BK4819_REG_4E,      // 1o11
 			(1u << 14) |                     // 1 ???
 			(4u << 11) |                     // 5 squelch = open delay .. 0 ~ 7
-			(2u <<  9) |                     // 3 squelch = close delay .. 0 ~ 3
+			(3u <<  9) |                     // 3 squelch = close delay .. 0 ~ 3
 			(SquelchOpenGlitchThresh << 0)); // 0 ~ 255
 	BK4819_WriteRegister(BK4819_REG_4F, (SquelchCloseNoiseThresh << 8) | SquelchOpenNoiseThresh);
 	BK4819_WriteRegister(BK4819_REG_78, (SquelchOpenRSSIThresh << 8) | SquelchCloseRSSIThresh);
@@ -373,7 +377,11 @@ void BK4819_SetAF(BK4819_AF_Type_t AF)
 {
 	// AF Output Inverse Mode = Inverse
 	// Undocumented bits 0x2040
-	BK4819_WriteRegister(BK4819_REG_47, 0x6040 | (AF << 8));
+	//BK4819_WriteRegister(BK4819_REG_47, 0x6040 | (AF << 8));
+
+	// 1o11
+	BK4819_WriteRegister(BK4819_REG_47, 0);
+	BK4819_WriteRegister(BK4819_REG_47, (1u << 14) | (1u << 13) | ((AF & 15u) << 8) | (1u << 6));
 }
 
 void BK4819_RX_TurnOn(void)
@@ -901,6 +909,7 @@ void BK4819_PlayRogerMDC(void)
 	BK4819_WriteRegister(BK4819_REG_58, 0);
 }
 
+#if defined(ENABLE_MDC1200)
 void BK4819_DisableMDC1200Rx(void)
 {
 	// REG_70
@@ -1386,6 +1395,7 @@ void BK4819_SendMDC1200(uint8_t op, uint8_t arg, uint16_t id, bool long_preamble
 
 	BK4819_WriteRegister(0x50, 0x3B20);  // 0011 1011 0010 0000
 }
+#endif
 
 void BK4819_Enable_AfDac_DiscMode_TxDsp(void)
 {

@@ -30,7 +30,9 @@
 #endif
 #include "helper/battery.h"
 #include "helper/boot.h"
+#if defined(ENABLE_MDC1200)
 #include "mdc1200.h"
+#endif
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
@@ -60,7 +62,10 @@ void Main(void)
 	SYSTICK_Init();
 	BOARD_Init();
 	BK4819_Init();
+
+#if defined(ENABLE_MDC1200)
 	MDC1200_Init();
+#endif
 
 #if defined(ENABLE_UART)
 	UART_Init();
@@ -83,7 +88,7 @@ void Main(void)
 	RADIO_SetupRegisters(true);
 
 	BOARD_ADC_GetBatteryInfo(&gBatteryCurrentVoltage, &gBatteryCurrent);
-	for (uint8_t i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++) {
 		BOARD_ADC_GetBatteryInfo(&gBatteryVoltages[i], &gBatteryCurrent);
 	}
 	BATTERY_GetReadings(false);
@@ -109,6 +114,7 @@ void Main(void)
 	SYSCON_REGISTER |= SYSCON_REGISTER_SLEEPDEEP_BITS_ENABLE;
 
 	while (1) {
+		__asm volatile ("wfi":::"memory");
 		// Original evaluates both if-statements
 		if (!gNextTimeslice) {
 			continue;

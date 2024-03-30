@@ -76,7 +76,7 @@ static const MENU_Item_t MenuList[56] = {
 	{ "PONMSG", MENU_PONMSG },
 	{ "ROGER", MENU_ROGER },
 	{ "COMPND", MENU_COMPND },
-	{ "DEMOD", MENU_DEMOD },
+	{ "MOD", MENU_MOD },
 	{ "DEL-CH", MENU_DEL_CH },
 	{ "RESET", MENU_RESET },
 	{ "350TX", MENU_350TX },
@@ -166,10 +166,10 @@ static const char gSubMenu_COMPND[4][6] = {
 	"TX/RX",
 };
 
-static const char gSubMenu_DEMOD[3][4] = {
+static const char gSubMenu_MOD[3][3] = {
 	"FM",
 	"AM",
-	"DSB", // SSB
+	"SB", // SSB
 };
 
 static const char gSubMenu_RESET[2][4] = {
@@ -177,11 +177,10 @@ static const char gSubMenu_RESET[2][4] = {
 	"ALL",
 };
 
-static const char gSubMenu_F_LOCK[4][4] = {
+static const char gSubMenu_F_LOCK[3][4] = {
 	"OFF",
 	"FCC",
 	"CE",
-	"GB",
 };
 
 bool gIsInSubMenu;
@@ -299,8 +298,8 @@ void UI_DisplayMenu(void)
 		}
 		break;
 
-	case MENU_DEMOD:
-		strcpy(String, gSubMenu_DEMOD[gSubMenuSelection]);
+	case MENU_MOD:
+		strcpy(String, gSubMenu_MOD[gSubMenuSelection]);
 		break;
 
 	case MENU_BCL:
@@ -383,11 +382,13 @@ void UI_DisplayMenu(void)
 		sprintf(String, "%u*10ms", gSubMenuSelection);
 		break;
 
+#if defined(ENABLE_MDC1200)
 	case MENU_MDC_ID:
 		sprintf(String, "%04x", gSubMenuSelection);
 		break;
 
 	case MENU_MDCMOD:
+#endif
 	case MENU_PTT_ID:
 		strcpy(String, gSubMenu_PTT_ID[gSubMenuSelection]);
 		break;

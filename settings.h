@@ -25,7 +25,6 @@ enum {
 	F_LOCK_OFF = 0U,
 	F_LOCK_FCC = 1U,
 	F_LOCK_CE  = 2U,
-	F_LOCK_GB  = 3U,
 };
 
 enum {

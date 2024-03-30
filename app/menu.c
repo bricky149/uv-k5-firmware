@@ -71,8 +71,8 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 	case MENU_TXP: case MENU_SFT_D:
 	case MENU_TDR: case MENU_WX:
 	case MENU_SC_REV: case MENU_MDF:
-	case MENU_W_N: case MENU_DEMOD:
-	case MENU_ROGER:
+	case MENU_W_N: case MENU_MOD:
+	case MENU_ROGER: case MENU_F_LOCK:
 		*pMin = 0;
 		*pMax = 2;
 		break;
@@ -84,10 +84,12 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 		*pMin = 0;
 		*pMax = 50;
 		break;
+#if defined(ENABLE_MDC1200)
 	case MENU_MDC_ID:
 		*pMin = 0;
 		*pMax = 0xFFFF;
 		break;
+#endif
 	case MENU_BCL: case MENU_AUTOLK:
 	case MENU_S_ADD1: case MENU_S_ADD2:
 	case MENU_STE:
@@ -115,9 +117,11 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 		*pMin = 1;
 		*pMax = 2;
 		break;
-	case MENU_D_RSP: case MENU_PTT_ID:
-	case MENU_COMPND: case MENU_F_LOCK:
+#if defined(ENABLE_MDC1200)
 	case MENU_MDCMOD:
+#endif
+	case MENU_D_RSP: case MENU_PTT_ID:
+	case MENU_COMPND:
 		*pMin = 0;
 		*pMax = 3;
 		break;
@@ -221,14 +225,15 @@ void MENU_AcceptSetting(void)
 		gRequestSaveChannel = 1;
 		return;
 
+#if defined(ENABLE_MDC1200)
 	case MENU_MDCMOD:
 		gTxVfo->MDC1200_MODE = gSubMenuSelection;
 		gRequestSaveChannel = 1;
 		break;
-
 	case MENU_MDC_ID:
 		gEeprom.MDC1200_ID = gSubMenuSelection;
 		break;
+#endif
 
 	case MENU_SFT_D:
 		gTxVfo->FREQUENCY_DEVIATION_SETTING = gSubMenuSelection;
@@ -379,7 +384,7 @@ void MENU_AcceptSetting(void)
 		gRequestSaveChannel = 1;
 		return;
 
-	case MENU_DEMOD:
+	case MENU_MOD:
 		gTxVfo->MODULATION_MODE = gSubMenuSelection;
 		gRequestSaveChannel = 1;
 		return;
@@ -528,13 +533,14 @@ void MENU_ShowCurrentSetting(void)
 		}
 		break;
 
+#if defined(ENABLE_MDC1200)
 	case MENU_MDCMOD:
 		gSubMenuSelection = gTxVfo->MDC1200_MODE;
 		break;
-
 	case MENU_MDC_ID:
 		gSubMenuSelection = gEeprom.MDC1200_ID;
 		break;
+#endif
 
 	case MENU_SFT_D:
 		gSubMenuSelection = gTxVfo->FREQUENCY_DEVIATION_SETTING;
@@ -656,7 +662,7 @@ void MENU_ShowCurrentSetting(void)
 		gSubMenuSelection = gTxVfo->CompanderMode;
 		break;
 
-	case MENU_DEMOD:
+	case MENU_MOD:
 		gSubMenuSelection = gTxVfo->MODULATION_MODE;
 		break;
 

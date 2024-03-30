@@ -132,31 +132,24 @@ bool FREQUENCY_Check(VFO_Info_t *pInfo)
 	Frequency = pInfo->pTX->Frequency;
 	switch (gSetting_F_LOCK) {
 	case F_LOCK_FCC:
-		if (Frequency >= 14400000 && Frequency <= 14799990) {
+		// https://www.fcc.gov/engineering-technology/policy-and-rules-division/general/radio-spectrum-allocation
+		if (Frequency >= 14400000 && Frequency <= 14800000) {
 			return false;
 		}
-		if (Frequency >= 42000000 && Frequency <= 44999990) {
+		if (Frequency >= 42000000 && Frequency <= 45000000) {
 			return false;
 		}
 		break;
 
 	case F_LOCK_CE:
-		if (Frequency >= 14400000 && Frequency <= 14599990) {
+		// https://www.iaru-r1.org/about-us/committees-and-working-groups/vhf-uhf-shf-committee-c5/vhf-up-bandplanning/
+		if (Frequency >= 14400000 && Frequency <= 14600000) {
 			return false;
 		}
-		if (Frequency >= 44600000 && Frequency <= 44699990) {
+		if (Frequency >= 43000000 && Frequency <= 44000000) {
 			return false;
 		}
-		break;
-
-	case F_LOCK_GB:
-		if (Frequency >= 14400000 && Frequency <= 14799990) {
-			return false;
-		}
-		if (Frequency >= 43000000 && Frequency <= 43999990) {
-			return false;
-		}
-		if (Frequency >= 44600000 && Frequency <= 44699990) {
+		if (Frequency >= 44600000 && Frequency <= 44620000) {
 			return false;
 		}
 		break;

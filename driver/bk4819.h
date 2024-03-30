@@ -141,9 +141,11 @@ uint8_t BK4819_GetCTCType(void);
 void BK4819_PlayRoger(void);
 void BK4819_PlayRogerMDC(void);
 
+#if defined(ENABLE_MDC1200)
 void BK4819_DisableMDC1200Rx(void);
 void BK4819_EnableMDC1200Rx(void);
 void BK4819_SendMDC1200(uint8_t op, uint8_t arg, uint16_t id, bool long_preamble, BK4819_FilterBandwidth_t Bandwidth);
+#endif
 
 void BK4819_Enable_AfDac_DiscMode_TxDsp(void);
 
