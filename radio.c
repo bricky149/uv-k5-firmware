@@ -562,6 +562,9 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 
 	if (gRxVfo->MODULATION_MODE != MOD_FM || !gRxVfo->DTMF_DECODING_ENABLE) {
 		BK4819_DisableDTMF();
+#if defined(ENABLE_MDC1200)
+		BK4819_DisableMDC1200Rx();
+#endif
 	} else {
 		BK4819_EnableDTMF();
 		InterruptMask |= BK4819_REG_3F_DTMF_5TONE_FOUND;
@@ -662,7 +665,7 @@ void RADIO_PrepareTX(void)
 	if (!FREQUENCY_Check(gCurrentVfo)) {
 		if (gCurrentVfo->BUSY_CHANNEL_LOCK && gCurrentFunction == FUNCTION_RECEIVE) {
 			State = VFO_STATE_BUSY;
-		} else if (gBatteryDisplayLevel == 0) {
+		} else if (gBatteryDisplayLevel == 1) {
 			State = VFO_STATE_BAT_LOW;
 		} else if (gBatteryDisplayLevel == 6) {
 			State = VFO_STATE_VOL_HIGH;
@@ -727,10 +730,10 @@ void RADIO_SendEndOfTransmission(void)
 {
 	if (gEeprom.ROGER == ROGER_MODE_ROGER) {
 		BK4819_PlayRoger();
-	} else if (gEeprom.ROGER == ROGER_MODE_MDC) {
-		BK4819_PlayRogerMDC();
 	}
-	if (gDTMF_CallState == DTMF_CALL_STATE_NONE && (gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_EOT || gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_BOTH)) {
+	if ((gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_EOT || gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_BOTH)
+		&& gDTMF_CallState == DTMF_CALL_STATE_NONE)
+	{
 		if (gEeprom.DTMF_SIDE_TONE) {
 			GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
 			gEnableSpeaker = true;

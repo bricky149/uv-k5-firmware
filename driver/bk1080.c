@@ -19,7 +19,7 @@
 #include "driver/gpio.h"
 #include "driver/i2c.h"
 
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+//#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 static const uint16_t BK1080_RegisterTable[34] = {
 	0x0008, 0x1080, 0x0201, 0x0000,
@@ -42,7 +42,7 @@ void BK1080_Enable(void)
 {
 	GPIO_ClearBit(&GPIOB->DATA, GPIOB_PIN_BK1080);
 	if (!gIsInitBK1080) {
-		for (uint8_t i = 0; i < ARRAY_SIZE(BK1080_RegisterTable); i++) {
+		for (int i = 0; i < 34; i++) {
 			BK1080_WriteRegister(i, BK1080_RegisterTable[i]);
 		}
 		BK1080_WriteRegister(BK1080_REG_25_INTERNAL, 0xA83C);

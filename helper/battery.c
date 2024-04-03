@@ -39,27 +39,14 @@ uint16_t gBatteryCheckCounter;
 
 void BATTERY_GetReadings(bool bDisplayBatteryLevel)
 {
-	uint16_t Voltage;
-	uint8_t PreviousBatteryLevel;
+	uint8_t PreviousBatteryLevel = gBatteryDisplayLevel;
+	uint16_t Voltage = (gBatteryVoltages[0] + gBatteryVoltages[1] + gBatteryVoltages[2] + gBatteryVoltages[3]) / 4;
 
-	PreviousBatteryLevel = gBatteryDisplayLevel;
-
-	Voltage = (gBatteryVoltages[0] + gBatteryVoltages[1] + gBatteryVoltages[2] + gBatteryVoltages[3]) / 4;
-
-	if (gBatteryCalibration[5] < Voltage) {
-		gBatteryDisplayLevel = 6;
-	} else if (gBatteryCalibration[4] < Voltage) {
-		gBatteryDisplayLevel = 5;
-	} else if (gBatteryCalibration[3] < Voltage) {
-		gBatteryDisplayLevel = 4;
-	} else if (gBatteryCalibration[2] < Voltage) {
-		gBatteryDisplayLevel = 3;
-	} else if (gBatteryCalibration[1] < Voltage) {
-		gBatteryDisplayLevel = 2;
-	} else if (gBatteryCalibration[0] < Voltage) {
-		gBatteryDisplayLevel = 1;
-	} else {
-		gBatteryDisplayLevel = 0;
+	for (uint8_t i = 6; i > 0; i--) {
+		if (gBatteryCalibration[i - 1] < Voltage) {
+			gBatteryDisplayLevel = i;
+			break;
+		}
 	}
 
 	gBatteryVoltageAverage = (Voltage * 760) / gBatteryCalibration[3];
@@ -67,6 +54,7 @@ void BATTERY_GetReadings(bool bDisplayBatteryLevel)
 	if (gScreenToDisplay == DISPLAY_MENU) {
 		gUpdateDisplay = true;
 	}
+
 	if (gBatteryCurrent < 501) {
 		if (gChargingWithTypeC) {
 			gUpdateStatus = true;
@@ -81,7 +69,7 @@ void BATTERY_GetReadings(bool bDisplayBatteryLevel)
 	}
 
 	if (PreviousBatteryLevel != gBatteryDisplayLevel) {
-		if (gBatteryDisplayLevel < 2) {
+		if (gBatteryDisplayLevel == 1) {
 			gLowBattery = true;
 		} else {
 			gLowBattery = false;

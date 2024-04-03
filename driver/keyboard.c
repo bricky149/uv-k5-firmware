@@ -21,7 +21,7 @@
 #include "driver/keyboard.h"
 #include "driver/systick.h"
 
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+//#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 KEY_Code_t gKeyReading0 = KEY_INVALID;
 KEY_Code_t gKeyReading1 = KEY_INVALID;
@@ -102,12 +102,12 @@ KEY_Code_t KEYBOARD_Poll(void)
 	if (!GPIO_CheckBit(&GPIOC->DATA, GPIOC_PIN_PTT)) {
         // Double check for pin stability
         if (!GPIO_CheckBit(&GPIOC->DATA, GPIOC_PIN_PTT)) {
-		    Key = KEY_PTT;
+            Key = KEY_PTT;
         }
 	}
 
 	// *****************
-    for (uint8_t j = 0; j < ARRAY_SIZE(keyboard); j++) {
+    for (uint8_t row = 0; row < 5; row++) {
         // Set all high
         GPIOA->DATA |=  1 << GPIOA_PIN_KEYBOARD_4 |
                         1 << GPIOA_PIN_KEYBOARD_5 |
@@ -117,16 +117,16 @@ KEY_Code_t KEYBOARD_Poll(void)
         SYSTICK_DelayUs(1);
 
         // Clear the pin we are selecting
-        GPIOA->DATA &= keyboard[j].set_to_zero_mask;
+        GPIOA->DATA &= keyboard[row].set_to_zero_mask;
         // Wait for the pins to stabilise. 1 works for me.
         SYSTICK_DelayUs(1);
 
         // Read all 4 GPIO pins at once
         uint16_t reg = GPIOA->DATA;
-        for (uint8_t i = 0; i < ARRAY_SIZE(keyboard[j].pins); i++) {
-            uint16_t mask = 1 << keyboard[j].pins[i].pin;
+        for (uint8_t i = 0; i < 4; i++) {
+            uint16_t mask = 1 << keyboard[row].pins[i].pin;
             if (!(reg & mask)) {
-                Key = keyboard[j].pins[i].key;
+                Key = keyboard[row].pins[i].key;
                 break;
             }
         }

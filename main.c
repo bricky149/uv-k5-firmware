@@ -88,12 +88,12 @@ void Main(void)
 	RADIO_SetupRegisters(true);
 
 	BOARD_ADC_GetBatteryInfo(&gBatteryCurrentVoltage, &gBatteryCurrent);
-	for (int i = 0; i < 4; i++) {
+	for (uint8_t i = 0; i < 4; i++) {
 		BOARD_ADC_GetBatteryInfo(&gBatteryVoltages[i], &gBatteryCurrent);
 	}
 	BATTERY_GetReadings(false);
 
-	if (!gChargingWithTypeC && gBatteryDisplayLevel == 0) {
+	if (!gChargingWithTypeC && gBatteryDisplayLevel == 1) {
 		FUNCTION_Select(FUNCTION_POWER_SAVE);
 		GPIO_ClearBit(&GPIOB->DATA, GPIOB_PIN_BACKLIGHT);
 	} else {

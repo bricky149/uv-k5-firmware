@@ -899,10 +899,10 @@ void APP_TimeSlice500ms(void)
 
 	if (gLowBattery) {
 		gLowBatteryBlink = ++gLowBatteryCountdown & 1;
-		UI_DisplayBattery(gLowBatteryCountdown);
+		UI_DisplayBattery(gLowBatteryBlink);
 		if (gLowBatteryCountdown >= 30 && gCurrentFunction != FUNCTION_TRANSMIT) {
 			gLowBatteryCountdown = 0;
-			if (!gChargingWithTypeC && gBatteryDisplayLevel == 0) {
+			if (!gChargingWithTypeC) {
 				FUNCTION_Select(FUNCTION_POWER_SAVE);
 				ST7565_HardwareReset();
 				GPIO_ClearBit(&GPIOB->DATA, GPIOB_PIN_BACKLIGHT);

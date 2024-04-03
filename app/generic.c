@@ -146,7 +146,6 @@ void GENERIC_Key_PTT(bool bKeyPressed)
 					return;
 				}
 				gRequestDisplayScreen = DISPLAY_MAIN;
-				gFlagPrepareTX = true;
 				gInputBoxIndex = 0;
 				return;
 			}

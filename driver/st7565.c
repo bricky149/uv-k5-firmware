@@ -21,7 +21,7 @@
 #include "driver/spi.h"
 #include "driver/st7565.h"
 
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+//#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 uint8_t gStatusLine[128];
 uint8_t gFrameBuffer[7][128];
@@ -57,14 +57,14 @@ void ST7565_BlitFullScreen(void)
 	SPI_DisableMasterMode(&SPI0->CR);
 	ST7565_WriteByte(0x40);
 
-	uint8_t Line;
-	uint8_t Column;
-	for (Line = 0; Line < ARRAY_SIZE(gFrameBuffer); Line++) {
+	uint8_t Line; // ARRAY_SIZE(gFrameBuffer)
+	uint8_t Column; // ARRAY_SIZE(gFrameBuffer[0])
+	for (Line = 0; Line < 7; Line++) {
 		ST7565_SelectColumnAndLine(4U, Line + 1U);
 		SPI_WaitForUndocumentedTxFifoStatusBit();
 
 		GPIO_SetBit(&GPIOB->DATA, GPIOB_PIN_ST7565_A0);
-		for (Column = 0; Column < ARRAY_SIZE(gFrameBuffer[0]); Column++) {
+		for (Column = 0; Column < 128; Column++) {
 			while ((SPI0->FIFOST & SPI_FIFOST_TFF_MASK) != SPI_FIFOST_TFF_BITS_NOT_FULL) {
 			}
 			SPI0->WDR = gFrameBuffer[Line][Column];
@@ -84,10 +84,10 @@ void ST7565_BlitStatusLine(void)
 	SPI_WaitForUndocumentedTxFifoStatusBit();
 
 	GPIO_SetBit(&GPIOB->DATA, GPIOB_PIN_ST7565_A0);
-	for (uint8_t i = 0; i < ARRAY_SIZE(gStatusLine); i++) {
+	for (uint8_t Column = 0; Column < 128; Column++) {
 		while ((SPI0->FIFOST & SPI_FIFOST_TFF_MASK) != SPI_FIFOST_TFF_BITS_NOT_FULL) {
 		}
-		SPI0->WDR = gStatusLine[i];
+		SPI0->WDR = gStatusLine[Column];
 	}
 	SPI_WaitForUndocumentedTxFifoStatusBit();
 

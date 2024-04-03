@@ -139,7 +139,6 @@ uint8_t BK4819_GetCDCSSCodeType(void);
 uint8_t BK4819_GetCTCType(void);
 
 void BK4819_PlayRoger(void);
-void BK4819_PlayRogerMDC(void);
 
 #if defined(ENABLE_MDC1200)
 void BK4819_DisableMDC1200Rx(void);

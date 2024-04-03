@@ -16,7 +16,7 @@
 
 #include "dcs.h"
 
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+//#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 const uint16_t CTCSS_Options[50] = {
 	0x029E, 0x02B5, 0x02CF, 0x02E8,
@@ -100,7 +100,7 @@ uint8_t DCS_GetCdcssCode(uint32_t Code)
 		if (((Code >> 9) & 0x7U) == 4) {
 			uint8_t j;
 
-			for (j = 0; j < ARRAY_SIZE(DCS_Options); j++) {
+			for (j = 0; j < 104; j++) {
 				if (DCS_Options[j] == (Code & 0x1FF)) {
 					if (DCS_GetGolayCodeWord(2, j) == Code) {
 						return j;
@@ -124,8 +124,8 @@ uint8_t DCS_GetCtcssCode(uint16_t Code)
 	int Smallest;
 	uint8_t Result = 0xFF;
 
-	Smallest = ARRAY_SIZE(CTCSS_Options);
-	for (i = 0; i < ARRAY_SIZE(CTCSS_Options); i++) {
+	Smallest = 50; // ARRAY_SIZE(CTCSS_Options)
+	for (i = 0; i < 50; i++) {
 		int Delta;
 
 		Delta = Code - CTCSS_Options[i];

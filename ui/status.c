@@ -33,21 +33,26 @@ void UI_DisplayStatus(void)
 	if (gCurrentFunction == FUNCTION_POWER_SAVE) {
 		memcpy(gStatusLine, BITMAP_PowerSave, sizeof(BITMAP_PowerSave));
 	}
-	if (gBatteryDisplayLevel < 2) {
+
+	switch (gBatteryDisplayLevel) {
+	case 5:
+		memcpy(gStatusLine + 110, BITMAP_BatteryLevel5, sizeof(BITMAP_BatteryLevel5));
+		break;
+	case 4:
+		memcpy(gStatusLine + 110, BITMAP_BatteryLevel4, sizeof(BITMAP_BatteryLevel4));
+		break;
+	case 3:
+		memcpy(gStatusLine + 110, BITMAP_BatteryLevel3, sizeof(BITMAP_BatteryLevel3));
+		break;
+	case 2:
+		memcpy(gStatusLine + 110, BITMAP_BatteryLevel2, sizeof(BITMAP_BatteryLevel2));
+		break;
+	default:
 		if (gLowBatteryBlink == 1) {
 			memcpy(gStatusLine + 110, BITMAP_BatteryLevel1, sizeof(BITMAP_BatteryLevel1));
 		}
-	} else {
-		if (gBatteryDisplayLevel == 2) {
-			memcpy(gStatusLine + 110, BITMAP_BatteryLevel2, sizeof(BITMAP_BatteryLevel2));
-		} else if (gBatteryDisplayLevel == 3) {
-			memcpy(gStatusLine + 110, BITMAP_BatteryLevel3, sizeof(BITMAP_BatteryLevel3));
-		} else if (gBatteryDisplayLevel == 4) {
-			memcpy(gStatusLine + 110, BITMAP_BatteryLevel4, sizeof(BITMAP_BatteryLevel4));
-		} else {
-			memcpy(gStatusLine + 110, BITMAP_BatteryLevel5, sizeof(BITMAP_BatteryLevel5));
-		}
 	}
+
 	if (gChargingWithTypeC) {
 		memcpy(gStatusLine + 100, BITMAP_USB_C, sizeof(BITMAP_USB_C));
 	}
@@ -56,7 +61,6 @@ void UI_DisplayStatus(void)
 	} else if (gWasFKeyPressed) {
 		memcpy(gStatusLine + 90, BITMAP_F_Key, sizeof(BITMAP_F_Key));
 	}
-
 	if (gEeprom.CROSS_BAND_RX_TX != CROSS_BAND_OFF) {
 		memcpy(gStatusLine + 58, BITMAP_WX, sizeof(BITMAP_WX));
 	}

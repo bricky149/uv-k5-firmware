@@ -478,9 +478,7 @@ void BOARD_ADC_GetBatteryInfo(uint16_t *pVoltage, uint16_t *pCurrent)
 {
 	ADC_Start(); // Delayed start needed or else screen displays garbage
 
-	while (!ADC_CheckEndOfConversion(ADC_CH9) || !ADC_CheckEndOfConversion(ADC_CH4)) {
-		// LTO builds return bad readings when battery is low because code is too fast
-		// Waiting for both values should slow this down enough to get valid readings
+	while (!ADC_CheckEndOfConversion(ADC_CH9)) {
 	}
 	*pVoltage = ADC_GetValue(ADC_CH4);
 	*pCurrent = ADC_GetValue(ADC_CH9);
@@ -615,7 +613,7 @@ void BOARD_EEPROM_Init(void)
 	// 0F18..0F1F
 	EEPROM_ReadBuffer(0x0F18, Data, 8);
 	gEeprom.SCAN_LIST_DEFAULT        = (Data[0] < 2) ? Data[0] : false;
-	for (int i = 0; i < 2; i++) {
+	for (uint8_t i = 0; i < 2; i++) {
 		uint8_t j = (i * 3) + 1;
 		gEeprom.SCAN_LIST_ENABLED[i]     = (Data[j] < 2) ? Data[j] : false;
 		gEeprom.SCANLIST_PRIORITY_CH1[i] = Data[j + 1];

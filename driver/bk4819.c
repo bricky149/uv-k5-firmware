@@ -14,33 +14,31 @@
  *     limitations under the License.
  */
 
-
 #include "bsp/dp32g030/gpio.h"
 #include "bsp/dp32g030/portcon.h"
 #include "driver/bk4819.h"
 #include "driver/gpio.h"
 #include "driver/system.h"
 #include "driver/systick.h"
+
 #if defined(ENABLE_MDC1200)
 #include "mdc1200.h"
-#endif
 
 static const uint16_t FSK_RogerTable[7] = {
 	0xF1A2, 0x7446, 0x61A4, 0x6544,
 	0x4E8A, 0xE044, 0xEA84,
 };
 
-static uint16_t gBK4819_GpioOutState;
-
-bool gRxIdleMode;
-
-#if defined(ENABLE_MDC1200)
 // 1o11
 __inline static uint16_t ScaleFreq(const uint16_t freq)
 {	// with rounding
 	return (((uint32_t)freq * 338311u) + (1u << 14)) >> 15; // max freq = 12695
 }
 #endif
+
+static uint16_t gBK4819_GpioOutState;
+
+bool gRxIdleMode;
 
 void BK4819_Init(void)
 {
@@ -350,7 +348,7 @@ void BK4819_SetupSquelch(uint8_t SquelchOpenRSSIThresh, uint8_t SquelchCloseRSSI
 	BK4819_WriteRegister(BK4819_REG_4E,      // 1o11
 			(1u << 14) |                     // 1 ???
 			(4u << 11) |                     // 5 squelch = open delay .. 0 ~ 7
-			(3u <<  9) |                     // 3 squelch = close delay .. 0 ~ 3
+			(2u <<  9) |                     // 3 squelch = close delay .. 0 ~ 3
 			(SquelchOpenGlitchThresh << 0)); // 0 ~ 255
 	BK4819_WriteRegister(BK4819_REG_4F, (SquelchCloseNoiseThresh << 8) | SquelchOpenNoiseThresh);
 	BK4819_WriteRegister(BK4819_REG_78, (SquelchOpenRSSIThresh << 8) | SquelchCloseRSSIThresh);
@@ -880,33 +878,6 @@ void BK4819_PlayRoger(void)
 	BK4819_EnterTxMute();
 	BK4819_WriteRegister(BK4819_REG_70, 0);
 	BK4819_WriteRegister(BK4819_REG_30, 0xC1FE);
-}
-
-void BK4819_PlayRogerMDC(void)
-{
-	uint8_t i;
-
-	BK4819_SetAF(BK4819_AF_MUTE);
-	BK4819_WriteRegister(BK4819_REG_58, 0x37C3); // FSK Enable, RX Bandwidth FFSK1200/1800, 0xAA or 0x55 Preamble, 11 RX Gain,
-    											 // 101 RX Mode, FFSK1200/1800 TX
-	BK4819_WriteRegister(BK4819_REG_72, 0x3065); // Set Tone2 to 1200Hz
-	BK4819_WriteRegister(BK4819_REG_70, 0x00E0); // Enable Tone2 and Set Tone2 Gain
-	BK4819_WriteRegister(BK4819_REG_5D, 0x0D00); // Set FSK data length to 13 bytes
-	BK4819_WriteRegister(BK4819_REG_59, 0x8068); // 4 byte sync length, 6 byte preamble, clear TX FIFO
-	BK4819_WriteRegister(BK4819_REG_59, 0x0068); // Same, but clear TX FIFO is now unset (clearing done)
-	BK4819_WriteRegister(BK4819_REG_5A, 0x5555); // First two sync bytes
-	BK4819_WriteRegister(BK4819_REG_5B, 0x55AA); // End of sync bytes. Total 4 bytes: 555555aa
-	BK4819_WriteRegister(BK4819_REG_5C, 0xAA30); // Disable CRC
-	for (i = 0; i < 7; i++) {
-		BK4819_WriteRegister(BK4819_REG_5F, FSK_RogerTable[i]); // Send the data from the roger table
-	}
-	SYSTEM_DelayMs(20);
-	BK4819_WriteRegister(BK4819_REG_59, 0x0868); // 4 sync bytes, 6 byte preamble, Enable FSK TX
-	SYSTEM_DelayMs(180);
-	// Stop FSK TX, reset Tone2, disable FSK.
-	BK4819_WriteRegister(BK4819_REG_59, 0x0068);
-	BK4819_WriteRegister(BK4819_REG_70, 0);
-	BK4819_WriteRegister(BK4819_REG_58, 0);
 }
 
 #if defined(ENABLE_MDC1200)

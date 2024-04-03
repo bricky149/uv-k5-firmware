@@ -17,7 +17,7 @@
 #include <string.h>
 #include "ui/inputbox.h"
 
-#define ARRAY_SIZE(x) (int)(sizeof(x) / sizeof(x[0]))
+//#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 char gInputBox[8];
 uint8_t gInputBoxIndex;
@@ -25,8 +25,8 @@ uint8_t gInputBoxIndex;
 uint16_t INPUTBOX_GetValue(void)
 {
 	int i = gInputBoxIndex;
-	if (i > ARRAY_SIZE(gInputBox)) {
-		i = ARRAY_SIZE(gInputBox);
+	if (i > 8) {
+		i = 8; // ARRAY_SIZE(gInputBox)
 	}
 	uint16_t val = 0;
 	uint16_t mul = 1;

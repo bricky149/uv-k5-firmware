@@ -36,7 +36,7 @@ static void Render(void)
 	strcpy(String, "LOCK");
 	UI_PrintString(String, 0, 127, 1, 10, true);
 
-	for (int i = 0; i < 6; i++) {
+	for (uint8_t i = 0; i < 6; i++) {
 		if (gInputBox[i] == 10) {
 			String[i] = '-';
 		} else {
