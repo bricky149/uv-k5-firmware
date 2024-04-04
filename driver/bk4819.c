@@ -151,41 +151,43 @@ void BK4819_WriteU8(uint8_t Data)
 
 void BK4819_NaiveAGC(void)
 {
-	uint8_t Floor = 138;
-	uint8_t Ceiling = 153;
+	const uint8_t Floor = 132;
+	const uint8_t Ceiling = 143;
 	// Check if we need to adjust gain
 	uint16_t RSSI = BK4819_GetRSSI();
 	if (RSSI >= Floor && RSSI <= Ceiling) {
 		return;
 	}
-	// Beken's AGC is not helpful in AM mode
-	// We can keep the sensitivity of high LNA
-	// while adjusting PGA to control distortion
-	uint8_t GainIndex = 5;
+	// Beken's AGC is not helpful in AM mode as it overamplifies signal
+	// Manually adjust gain to avoid distortion while keeping signal readable
+	uint8_t LnaIndex = 7;
+	uint8_t PgaIndex = 0;
 	do {
 		BK4819_WriteRegister(BK4819_REG_13, // 1o11
 			(3u << 8) |                     // 3 LNA Short
-			(6u << 5) |                     // 5 LNA
+			(LnaIndex << 5) |               // 5 LNA
 			(3u << 3) |                     // 3 MIXER
-			(GainIndex << 0));              // 6 PGA
+			(PgaIndex << 0));               // 6 PGA
 		RSSI = BK4819_GetRSSI();
-		if (RSSI < Floor) {
-			GainIndex++;
-		} else if (RSSI > Ceiling) {
-			GainIndex--;
+		if (RSSI > Ceiling) {
+			// Signal too strong
+			LnaIndex--;
+		} else if (RSSI < Floor) {
+			// Signal too weak
+			PgaIndex++;
 		} else {
 			break;
 		}
-	} while (GainIndex <= 7);
+	} while (LnaIndex <= 7 && PgaIndex <= 7);
 }
 
 void BK4819_EnableAGC(void)
 {
-	BK4819_WriteRegister(BK4819_REG_7E,
-		(0u << 15) | // 0 AGC fix mode
-		(1u << 12) | // 3 AGC fix index
-		(5u <<  3) | // 5 DC filter bandwidth for Tx (MIC In)
-		(6u <<  0)); // 6 DC filter bandwidth for Rx (I.F In)
+	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
+		(0u << 15) |                    // 0 AGC fix mode
+		(1u << 12) |                    // 3 AGC fix index (1 lowest value w/o whispiness)
+		(5u <<  3) |                    // 5 DC filter bandwidth for Tx
+		(6u <<  0));                    // 6 DC filter bandwidth for Rx
 
     BK4819_WriteRegister(BK4819_REG_12, 0x037C);
     BK4819_WriteRegister(BK4819_REG_11, 0x027B);
@@ -198,11 +200,11 @@ void BK4819_EnableAGC(void)
 
 void BK4819_DisableAGC(void)
 {
-	BK4819_WriteRegister(BK4819_REG_7E,
-		(1u << 15) | // 0 AGC fix mode
-		(1u << 12) | // 3 AGC fix index
-		(5u <<  3) | // 5 DC filter bandwidth for Tx (MIC In)
-		(6u <<  0)); // 6 DC filter bandwidth for Rx (I.F In)
+	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
+		(1u << 15) |                    // 0 AGC fix mode
+		(1u << 12) |                    // 3 AGC fix index (1 lowest value w/o whispiness)
+		(5u <<  3) |                    // 5 DC filter bandwidth for Tx
+		(6u <<  0));                    // 6 DC filter bandwidth for Rx
 
 	BK4819_WriteRegister(BK4819_REG_13, 0x03BE);
 
