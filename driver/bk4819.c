@@ -1,4 +1,6 @@
 /* Copyright 2023 Dual Tachyon
+ * Copyright 2023 fagci
+ * Copyright 2023 OneOfEleven
  * https://github.com/DualTachyon
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,8 +38,17 @@ __inline static uint16_t ScaleFreq(const uint16_t freq)
 }
 #endif
 
-static uint16_t gBK4819_GpioOutState;
+// 1o11
+typedef struct
+{
+	uint16_t reg_val;
+	int8_t   gain_dB;
+} t_gain_table;
 
+static const uint8_t RSSI_CEILING = 143; // S9
+static const uint8_t RSSI_FLOOR = 125;   // S6
+
+static uint16_t gBK4819_GpioOutState;
 bool gRxIdleMode;
 
 void BK4819_Init(void)
@@ -149,43 +160,115 @@ void BK4819_WriteU8(uint8_t Data)
 	}
 }
 
-void BK4819_NaiveAGC(void)
-{
-	const uint8_t Floor = 132;
-	const uint8_t Ceiling = 143;
-	// Check if we need to adjust gain
-	uint16_t RSSI = BK4819_GetRSSI();
-	if (RSSI >= Floor && RSSI <= Ceiling) {
-		return;
-	}
-	// Beken's AGC is not helpful in AM mode as it overamplifies signal
-	// Manually adjust gain to avoid distortion while keeping signal readable
-	uint8_t LnaIndex = 7;
-	uint8_t PgaIndex = 0;
+#if defined(ENABLE_1o11_AM_FIX)
+// 1o11
+void BK4819_AMFix(void) {
+	static const t_gain_table gain_table[] =
+	{
+		#if 1
+		// Prioritise LNA - found this to be better
+		{0x03BE,  -7}, // 3 5 3 6 .. 0dB  -4dB  0dB  -3dB ..  -7dB original
+		{0x03F8, -33}, // 3 7 3 0 .. 0dB   0dB  0dB -33dB .. -33dB
+		{0x0399, -31}, // 3 4 3 1 .. 0dB  -4dB  0dB -27dB .. -31dB
+		{0x037A, -30}, // 3 3 3 2 .. 0dB  -9dB  0dB -21dB .. -30dB
+		{0x033E, -29}, // 3 1 3 6 .. 0dB  -2dB  0dB -27dB .. -29dB
+		{0x03F9, -27}, // 3 7 3 1 .. 0dB   0dB  0dB -27dB .. -27dB
+		{0x03BA, -25}, // 3 5 3 2 .. 0dB  -4dB  0dB -21dB .. -25dB
+		{0x037B, -24}, // 3 4 3 3 .. 0dB  -6dB  0dB -15dB .. -24dB
+		{0x03DA, -23}, // 3 6 3 2 .. 0dB  -2dB  0dB -21dB .. -23dB
+		{0x039B, -21}, // 3 4 3 3 .. 0dB  -6dB  0dB -15dB .. -21dB
+		{0x03BB, -19}, // 3 5 3 3 .. 0dB  -4dB  0dB -15dB .. -19dB
+		{0x037C, -18}, // 3 3 3 4 .. 0dB  -9dB  0dB  -9dB .. -18dB
+		{0x03DB, -17}, // 3 6 3 3 .. 0dB  -2dB  0dB -15dB .. -17dB
+		{0x03FB, -15}, // 3 7 3 3 .. 0dB   0dB  0dB -15dB .. -15dB
+		{0x03BC, -13}, // 3 5 3 4 .. 0dB  -4dB  0dB  -9dB .. -13dB
+		{0x037E, -12}, // 3 3 3 6 .. 0dB  -9dB  0dB  -3dB .. -12dB
+		{0x03CC, -11}, // 3 6 3 4 .. 0dB  -2dB  0dB  -9dB .. -11dB
+		{0x03BD, -10}, // 3 5 3 5 .. 0dB  -4dB  0dB  -6dB .. -10dB
+		{0x03FC,  -9}, // 3 7 3 4 .. 0dB   0dB  0dB  -9dB ..  -9dB
+		{0x03CD,  -8}, // 3 6 3 5 .. 0dB  -2dB  0dB  -6dB ..  -8dB
+		{0x03BE,  -7}, // 3 5 3 6 .. 0dB  -4dB  0dB  -3dB ..  -7dB original
+		{0x03FD,  -6}, // 3 7 3 5 .. 0dB   0dB  0dB  -6dB ..  -6dB
+		{0x03DE,  -5}, // 3 6 3 6 .. 0dB  -2dB  0dB  -3dB ..  -5dB
+		{0x03BF,  -4}, // 3 5 3 7 .. 0dB  -4dB  0dB   0dB ..  -4dB
+		{0x03FE,  -3}, // 3 7 3 6 .. 0dB   0dB  0dB  -3dB ..  -3dB
+		{0x03DF,  -2}, // 3 6 3 7 .. 0dB  -2dB  0dB   0dB ..  -2dB
+		{0x03FF,   0}  // 3 7 3 7 .. 0dB   0dB  0dB   0dB ..   0dB
+		#else
+		// Suppress LNA
+		{0x03BE,  -7}, // 3 5 3 6 .. 0dB  -4dB  0dB  -3dB ..  -7dB original
+		{0x031F, -24}  // 3 0 3 7 .. 0dB -24dB  0dB   0dB .. -24dB
+		{0x033E, -22}, // 3 1 3 6 .. 0dB -19dB  0dB  -3dB .. -22dB
+		{0x035D, -20}, // 3 2 3 5 .. 0dB -14dB  0dB  -6dB .. -20dB
+		{0x033F, -19}, // 3 1 3 7 .. 0dB -19dB  0dB   0dB .. -19dB
+		{0x037C, -18}, // 3 3 3 4 .. 0dB  -9dB  0dB  -9dB .. -18dB
+		{0x035E, -17}, // 3 2 3 6 .. 0dB -14dB  0dB  -3dB .. -17dB
+		{0x037D, -15}, // 3 4 3 4 .. 0dB  -9dB  0dB  -6dB .. -15dB
+		{0x035F, -14}, // 3 2 3 7 .. 0dB -14dB  0dB   0dB .. -14dB
+		{0x03BC, -13}, // 3 5 3 4 .. 0dB  -4dB  0dB  -9dB .. -13dB
+		{0x037E, -12}, // 3 3 3 6 .. 0dB  -9dB  0dB  -3dB .. -12dB
+		{0x03CC, -11}, // 3 6 3 4 .. 0dB  -2dB  0dB  -9dB .. -11dB
+		{0x03BD, -10}, // 3 5 3 5 .. 0dB  -4dB  0dB  -6dB .. -10dB
+		{0x037F,  -9}, // 3 3 3 7 .. 0dB  -9dB  0dB   0dB ..  -9dB
+		{0x03CD,  -8}, // 3 6 3 5 .. 0dB  -2dB  0dB  -6dB ..  -8dB
+		{0x03BE,  -7}, // 3 5 3 6 .. 0dB  -4dB  0dB  -3dB ..  -7dB original
+		{0x03CE,  -6}, // 3 4 3 7 .. 0dB  -6dB  0dB   0dB ..  -6dB
+		{0x03DE,  -5}, // 3 6 3 6 .. 0dB  -2dB  0dB  -3dB ..  -5dB
+		{0x03BF,  -4}, // 3 5 3 7 .. 0dB  -4dB  0dB   0dB ..  -4dB
+		{0x03FE,  -3}, // 3 7 3 6 .. 0dB   0dB  0dB  -3dB ..  -3dB
+		{0x03DF,  -2}, // 3 6 3 7 .. 0dB  -2dB  0dB   0dB ..  -2dB
+		{0x03FF,   0}  // 3 7 3 7 .. 0dB   0dB  0dB   0dB ..   0dB
+		#endif
+	};
+	const uint16_t RSSI = BK4819_GetRSSI();
+	uint8_t i = gain_table.length();
 	do {
-		BK4819_WriteRegister(BK4819_REG_13, // 1o11
-			(3u << 8) |                     // 3 LNA Short
-			(LnaIndex << 5) |               // 5 LNA
-			(3u << 3) |                     // 3 MIXER
-			(PgaIndex << 0));               // 6 PGA
-		RSSI = BK4819_GetRSSI();
-		if (RSSI > Ceiling) {
-			// Signal too strong
-			LnaIndex--;
-		} else if (RSSI < Floor) {
-			// Signal too weak
-			PgaIndex++;
-		} else {
+		if (RSSI + gain_table[--i].gain_dB <= RSSI_CEILING) {
 			break;
 		}
-	} while (LnaIndex <= 7 && PgaIndex <= 7);
+	} while (i > 1);
+	BK4819_WriteRegister(BK4819_REG_13, gain_table[i].reg_val);
 }
+#else
+void BK4819_AMFix(void) {
+	uint16_t RSSI = BK4819_GetRSSI();
+	if (RSSI >= RSSI_FLOOR || RSSI <= RSSI_CEILING) {
+		return;
+	}
+	uint8_t AgcFixIndex = (BK4819_ReadRegister(BK4819_REG_7E) >> 12) & 3;
+	do {
+		BK4819_WriteRegister(BK4819_REG_7E, // 1o11
+			(1u << 15) |                    // 0 AGC fix mode
+			(AgcFixIndex << 12) |           // 3 AGC fix index
+			(5u <<  3) |                    // 5 DC filter bandwidth for Tx
+			(6u <<  0));                    // 6 DC filter bandwidth for Rx
+		RSSI = BK4819_GetRSSI();
+		if (RSSI > RSSI_CEILING) {
+			if (AgcFixIndex == 4) {
+				break;
+			} else if (AgcFixIndex != 0) {
+				AgcFixIndex--;
+			} else {
+				AgcFixIndex = 7;
+			}
+		} else if (RSSI < RSSI_FLOOR) {
+			if (AgcFixIndex == 3) {
+				break;
+			} else if (AgcFixIndex != 8) {
+				AgcFixIndex++;
+			} else {
+				AgcFixIndex = 0;
+			}
+		}
+	} while (RSSI > RSSI_CEILING || RSSI < RSSI_FLOOR);
+}
+#endif
 
 void BK4819_EnableAGC(void)
 {
 	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
 		(0u << 15) |                    // 0 AGC fix mode
-		(1u << 12) |                    // 3 AGC fix index (1 lowest value w/o whispiness)
+		(3u << 12) |                    // 3 AGC fix index
 		(5u <<  3) |                    // 5 DC filter bandwidth for Tx
 		(6u <<  0));                    // 6 DC filter bandwidth for Rx
 
@@ -200,9 +283,18 @@ void BK4819_EnableAGC(void)
 
 void BK4819_DisableAGC(void)
 {
+	// AGC Fix Index
+	// Should adjust LNA and PGA but the steps between values
+	// are too large to get the most out of using it.
+	// OneOfEleven was right to use a gain table and use that
+	// to do the BK4819's job for it, given it was never
+	// designed to handle AM signals in the first place.
+	// 3 (max) has too much volume
+	// 2 seems to match FM radio volume
+	// 1 is the lowest w/o wispiness from the speaker
 	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
 		(1u << 15) |                    // 0 AGC fix mode
-		(1u << 12) |                    // 3 AGC fix index (1 lowest value w/o whispiness)
+		(2u << 12) |                    // 3 AGC fix index
 		(5u <<  3) |                    // 5 DC filter bandwidth for Tx
 		(6u <<  0));                    // 6 DC filter bandwidth for Rx
 
@@ -315,13 +407,10 @@ void BK4819_SetFilterBandwidth(BK4819_FilterBandwidth_t Bandwidth)
 	}
 }
 
-void BK4819_SetupPowerAmplifier(uint16_t Bias, uint32_t Frequency)
+void BK4819_SetupPowerAmplifier(uint8_t Bias, uint32_t Frequency)
 {
 	uint8_t Gain;
 
-	if (Bias > 255) {
-		Bias = 255;
-	}
 	if (Frequency < 28000000) {
 		// Gain 1 = 1
 		// Gain 2 = 0
@@ -498,34 +587,6 @@ void BK4819_EnableDTMF(void)
 		);
 }
 
-void BK4819_PlayTone(uint16_t Frequency, bool bTuningGainSwitch)
-{
-	uint16_t ToneConfig;
-
-	BK4819_EnterTxMute();
-	BK4819_SetAF(BK4819_AF_BEEP);
-
-	if (bTuningGainSwitch == 0) {
-		ToneConfig = 0
-			| BK4819_REG_70_ENABLE_TONE1
-			| (96U << BK4819_REG_70_SHIFT_TONE1_TUNING_GAIN);
-	} else {
-		ToneConfig = 0
-			| BK4819_REG_70_ENABLE_TONE1
-			| (28U << BK4819_REG_70_SHIFT_TONE1_TUNING_GAIN);
-	}
-	BK4819_WriteRegister(BK4819_REG_70, ToneConfig);
-
-	BK4819_WriteRegister(BK4819_REG_30, 0);
-	BK4819_WriteRegister(BK4819_REG_30, 0
-			| BK4819_REG_30_ENABLE_AF_DAC
-			| BK4819_REG_30_ENABLE_DISC_MODE
-			| BK4819_REG_30_ENABLE_TX_DSP
-			);
-
-	BK4819_WriteRegister(BK4819_REG_71, (uint16_t)((Frequency * 1032444) / 100000));
-}
-
 void BK4819_EnterTxMute(void)
 {
 	BK4819_WriteRegister(BK4819_REG_50, 0xBB20);
@@ -540,23 +601,6 @@ void BK4819_Sleep(void)
 {
 	BK4819_WriteRegister(BK4819_REG_30, 0);
 	BK4819_WriteRegister(BK4819_REG_37, 0x1D00);
-}
-
-void BK4819_TurnsOffTones_TurnsOnRX(void)
-{
-	BK4819_WriteRegister(BK4819_REG_70, 0);
-	BK4819_SetAF(BK4819_AF_MUTE);
-	BK4819_ExitTxMute();
-
-	BK4819_WriteRegister(BK4819_REG_30, 0);
-	BK4819_WriteRegister(BK4819_REG_30, 0
-			| BK4819_REG_30_ENABLE_VCO_CALIB
-			| BK4819_REG_30_ENABLE_RX_LINK
-			| BK4819_REG_30_ENABLE_AF_DAC
-			| BK4819_REG_30_ENABLE_DISC_MODE
-			| BK4819_REG_30_ENABLE_PLL_VCO
-			| BK4819_REG_30_ENABLE_RX_DSP
-			);
 }
 
 void BK4819_PrepareTransmit(void)
@@ -777,9 +821,7 @@ void BK4819_EnableCTCSS(void)
 
 uint16_t BK4819_GetRSSI(void)
 {
-	uint16_t RawRSSI = BK4819_ReadRegister(BK4819_REG_67) & 0x01FF;
-	// Ignore the last bit so NaiveAGC can work properly
-	return RawRSSI >>= 1;
+	return BK4819_ReadRegister(BK4819_REG_67) & 0x01FF;
 }
 
 bool BK4819_GetFrequencyScanResult(uint32_t *pFrequency)
@@ -1369,12 +1411,6 @@ void BK4819_SendMDC1200(uint8_t op, uint8_t arg, uint16_t id, bool long_preamble
 	BK4819_WriteRegister(0x50, 0x3B20);  // 0011 1011 0010 0000
 }
 #endif
-
-void BK4819_Enable_AfDac_DiscMode_TxDsp(void)
-{
-	BK4819_WriteRegister(BK4819_REG_30, 0);
-	BK4819_WriteRegister(BK4819_REG_30, 0x0302);
-}
 
 void BK4819_PlayDTMFEx(bool bLocalLoopback, char Code)
 {

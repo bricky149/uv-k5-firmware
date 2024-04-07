@@ -1,7 +1,8 @@
 TARGET = firmware
 
-ENABLE_MDC1200 := 0
+ENABLE_1o11_AM_FIX := 0
 ENABLE_FMRADIO := 1
+ENABLE_MDC1200 := 0
 ENABLE_SWD := 0
 ENABLE_UART := 1
 # Broken above -O1 on stock due to not enough GPIO pin delays (driver/gpio.c)
@@ -118,13 +119,16 @@ GIT_HASH := $(shell git rev-parse --short HEAD)
 ASFLAGS = -c -mcpu=cortex-m0
 CFLAGS = -Wall -Wextra -mcpu=cortex-m0 -pipe -std=c11 -MMD
 ifeq ($(BUILD_WITH_CLANG),1)
-CFLAGS += -Oz -fno-builtin -fshort-enums -fno-delete-null-pointer-checks
+CFLAGS += -Oz -fno-builtin -fshort-enums
 else
 CFLAGS += -Os -free -freorder-blocks-algorithm=stc
 endif
 CFLAGS += -DPRINTF_INCLUDE_CONFIG_H
 CFLAGS += -DGIT_HASH=\"$(GIT_HASH)\"
 
+ifeq ($(ENABLE_1o11_AM_FIX),1)
+CFLAGS += -DEENABLE_1o11_AM_FIX
+endif
 ifeq ($(ENABLE_FMRADIO),1)
 CFLAGS += -DENABLE_FMRADIO
 endif

@@ -303,7 +303,7 @@ void UI_DisplayMain(void)
 			memcpy(pLine1 + 27, BITMAP_AM, sizeof(BITMAP_AM));
 			break;
 		case 2:
-			memcpy(pLine1 + 27, BITMAP_SSB, sizeof(BITMAP_SSB));
+			memcpy(pLine1 + 27, BITMAP_SB, sizeof(BITMAP_SB));
 			break;
 		default:
 			if (LevelMode == LEVEL_MODE_TX) {

@@ -1,4 +1,5 @@
 /* Copyright 2023 Dual Tachyon
+ * Copyright 2023 OneOfEleven
  * https://github.com/DualTachyon
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -396,11 +397,12 @@ void RADIO_ConfigureSquelchAndOutputPower(VFO_Info_t *pInfo)
 	Band = FREQUENCY_GetBand(pInfo->pTX->Frequency);
 	EEPROM_ReadBuffer(0x1ED0 + (Band * 0x10) + (pInfo->OUTPUT_POWER * 3), Txp, 3);
 	// 1o11
-	//if (pInfo->OUTPUT_POWER == OUTPUT_POWER_LOW) {
-	//	for (int i = 0; i < 3; i++) {
-	//		Txp[i] /= 6;
-	//	}
-	//}
+	if (pInfo->OUTPUT_POWER == OUTPUT_POWER_LOW) {
+		// Tested at 1.5W on 70cm band
+		for (int i = 0; i < 3; i++) {
+			Txp[i] /= 3;
+		}
+	}
 
 	pInfo->TXP_CalculatedSetting =
 		FREQUENCY_CalculateOutputPower(

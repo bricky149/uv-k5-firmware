@@ -688,6 +688,10 @@ void APP_TimeSlice10ms(void)
 		}
 	}
 
+	if (gRxVfo->MODULATION_MODE == MOD_AM) {
+		BK4819_AMFix();
+	}
+
 #if defined(ENABLE_FMRADIO)
 	if (gFmRadioCountdown > 0) {
 		return;
@@ -794,9 +798,7 @@ void APP_TimeSlice10ms(void)
 }
 
 void APP_TimeSlice40ms(void) {
-	if (gRxVfo->MODULATION_MODE == MOD_AM) {
-		BK4819_NaiveAGC();
-	}
+
 }
 
 void APP_TimeSlice500ms(void)

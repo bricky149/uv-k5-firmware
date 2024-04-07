@@ -1,4 +1,5 @@
 /* Copyright 2023 Dual Tachyon
+ * Copyright 2023 OneOfEleven
  * https://github.com/DualTachyon
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +20,7 @@
 
 #include <stdint.h>
 
-extern const uint8_t gFontBig[95][16];
+extern const uint8_t gFontBig[95][15]; // 1o11
 extern const uint8_t gFontBigDigits[11][26];
 extern const uint8_t gFontSmallDigits[11][7];
 

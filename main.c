@@ -124,7 +124,7 @@ void Main(void)
 		gNextTimeslice = false;
 
 		if (gNextTimeslice40ms) {
-			APP_TimeSlice40ms();
+			//APP_TimeSlice40ms();
 			gNextTimeslice40ms = false;
 		}
 		if (gNextTimeslice500ms) {
