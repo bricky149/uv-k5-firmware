@@ -264,16 +264,6 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 			gEeprom.VfoInfo[VFO].FrequencyReverse = (Data[3] >> 4) & 1;
 		}
 
-		if (Data[4] == 0xFF) {
-			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BK4819_FILTER_BW_WIDE;
-			gEeprom.VfoInfo[VFO].OUTPUT_POWER = OUTPUT_POWER_LOW;
-			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = 0;
-		} else {
-			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = (Data[4] & 3);
-			gEeprom.VfoInfo[VFO].OUTPUT_POWER = (Data[4] >> 2) & 3;
-			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = (Data[4] >> 4) & 1;
-		}
-
 		if (Data[5] == 0xFF) {
 			gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = 0;
 			gEeprom.VfoInfo[VFO].DTMF_PTT_ID_TX_MODE = PTT_ID_OFF;
@@ -297,6 +287,31 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 			gEeprom.VfoInfo[VFO].MODULATION_MODE = (Data[7] >> 2) & 3;
 		}
 
+		if (Data[4] == 0xFF) {
+			switch (gEeprom.VfoInfo[VFO].MODULATION_MODE) {
+			case MOD_FM:
+				gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BK4819_FILTER_BW_WIDE;
+				break;
+			case MOD_AM:
+				gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BK4819_FILTER_BW_WIDE;
+				gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = 0;
+				gEeprom.VfoInfo[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
+				gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
+				gEeprom.VfoInfo[VFO].CompanderMode = COMPND_OFF;
+				break;
+			case MOD_DSB:
+				// SSB will not work with any other bandwidth mode
+				gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BANDWIDTH_NARROWER;
+				break;
+			}
+			gEeprom.VfoInfo[VFO].OUTPUT_POWER = OUTPUT_POWER_LOW;
+			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = false;
+		} else {
+			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = (Data[4] & 3);
+			gEeprom.VfoInfo[VFO].OUTPUT_POWER = (Data[4] >> 2) & 3;
+			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = (Data[4] >> 4) & 1;
+		}
+
 		struct {
 			uint32_t Frequency;
 			uint32_t Offset;
@@ -304,8 +319,8 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		EEPROM_ReadBuffer(Base, &Info, sizeof(Info));
 
 		pRadio->ConfigRX.Frequency = Info.Frequency;
-		if (Info.Offset >= 100000000) {
-			Info.Offset = 1000000;
+		if (Info.Offset >= 1000000) {
+			Info.Offset = 0;
 		}
 		gEeprom.VfoInfo[VFO].FREQUENCY_OF_DEVIATION = Info.Offset;
 	}
@@ -343,17 +358,8 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 	}
 
 	if (gEeprom.VfoInfo[VFO].Band == BAND2_108MHz) {
+		// Airband
 		gEeprom.VfoInfo[VFO].MODULATION_MODE = MOD_AM;
-	}
-	if (gEeprom.VfoInfo[VFO].MODULATION_MODE != MOD_FM) {
-		gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = 0;
-		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
-		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
-		gEeprom.VfoInfo[VFO].CompanderMode = COMPND_OFF;
-	}
-	if (gEeprom.VfoInfo[VFO].MODULATION_MODE == MOD_DSB) {
-		// SSB will not work with any other bandwidth mode
-		gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BANDWIDTH_NARROWER;
 	}
 
 	RADIO_ConfigureSquelchAndOutputPower(pRadio);

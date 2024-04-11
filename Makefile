@@ -116,7 +116,7 @@ SIZE = arm-none-eabi-size
 GIT_HASH := $(shell git rev-parse --short HEAD)
 
 ASFLAGS = -c -mcpu=cortex-m0
-CFLAGS = -Wall -Wextra -mcpu=cortex-m0 -pipe -std=c11 -MMD
+CFLAGS = -Wall -Wextra -Werror -mcpu=cortex-m0 -pipe -std=c11 -MMD
 ifeq ($(BUILD_WITH_CLANG),1)
 CFLAGS += -Oz -fno-builtin -fshort-enums
 else

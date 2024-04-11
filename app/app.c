@@ -127,99 +127,6 @@ static void APP_EndReceive(uint8_t Mode)
 	}
 }
 
-static void APP_HandleReceive(void)
-{
-#define END_OF_RX_MODE_SKIP 0
-#define END_OF_RX_MODE_END  1
-#define END_OF_RX_MODE_TTE  2
-
-	uint8_t Mode = END_OF_RX_MODE_SKIP;
-
-	if (gFlagTteComplete) {
-		Mode = END_OF_RX_MODE_END;
-	} else if (gScanState != SCAN_OFF && IS_FREQ_CHANNEL(gNextMrChannel)) {
-		if (g_SquelchLost) {
-			return;
-		}
-		Mode = END_OF_RX_MODE_END;
-	}
-	switch (gCurrentCodeType) {
-	case CODE_TYPE_CONTINUOUS_TONE:
-	case CODE_TYPE_DIGITAL:
-	case CODE_TYPE_REVERSE_DIGITAL:
-		Mode = END_OF_RX_MODE_END;
-		break;
-
-	default:
-		break;
-	}
-
-	if (Mode == END_OF_RX_MODE_END) {
-		APP_EndReceive(Mode);
-		return;
-	}
-
-	if (g_SquelchLost) {
-		if (!gEndOfRxDetectedMaybe) {
-			switch (gCurrentCodeType) {
-			case CODE_TYPE_OFF:
-				if (gEeprom.SQUELCH_LEVEL) {
-					if (g_CxCSS_TAIL_Found) {
-						Mode = END_OF_RX_MODE_TTE;
-						g_CxCSS_TAIL_Found = false;
-					}
-				}
-				break;
-
-			case CODE_TYPE_CONTINUOUS_TONE:
-				if (g_CTCSS_Lost) {
-					gFoundCTCSS = false;
-				} else if (!gFoundCTCSS) {
-					gFoundCTCSS = true;
-					gFoundCTCSSCountdown = 100;
-				}
-				if (g_CxCSS_TAIL_Found) {
-					Mode = END_OF_RX_MODE_TTE;
-					g_CxCSS_TAIL_Found = false;
-				}
-				break;
-
-			case CODE_TYPE_DIGITAL:
-			case CODE_TYPE_REVERSE_DIGITAL:
-				if (g_CDCSS_Lost && gCDCSSCodeType == CDCSS_POSITIVE_CODE) {
-					gFoundCDCSS = false;
-				} else if (!gFoundCDCSS) {
-					gFoundCDCSS = true;
-					gFoundCDCSSCountdown = 100;
-				}
-				if (g_CxCSS_TAIL_Found) {
-					if (BK4819_GetCTCType() == 1) {
-						Mode = END_OF_RX_MODE_TTE;
-					}
-					g_CxCSS_TAIL_Found = false;
-				}
-				break;
-
-			default:
-				break;
-			}
-		}
-	} else {
-		Mode = END_OF_RX_MODE_END;
-	}
-
-	if (!gEndOfRxDetectedMaybe && Mode == END_OF_RX_MODE_SKIP &&
-		gNextTimeslice40ms && gEeprom.TAIL_NOTE_ELIMINATION &&
-		(gCurrentCodeType == CODE_TYPE_DIGITAL || gCurrentCodeType == CODE_TYPE_REVERSE_DIGITAL) &&
-		BK4819_GetCTCType() == 1)
-	{
-		Mode = END_OF_RX_MODE_TTE;
-	} else {
-		gNextTimeslice40ms = false;
-	}
-	APP_EndReceive(Mode);
-}
-
 static void APP_HandleFunction(void)
 {
 	switch (gCurrentFunction) {
@@ -271,7 +178,96 @@ static void APP_HandleFunction(void)
 		break;
 
 	case FUNCTION_RECEIVE:
-		APP_HandleReceive();
+		//APP_HandleReceive();
+#define END_OF_RX_MODE_SKIP 0
+#define END_OF_RX_MODE_END  1
+#define END_OF_RX_MODE_TTE  2
+
+		uint8_t Mode = END_OF_RX_MODE_SKIP;
+
+		if (gFlagTteComplete) {
+			Mode = END_OF_RX_MODE_END;
+		} else if (gScanState != SCAN_OFF && IS_FREQ_CHANNEL(gNextMrChannel)) {
+			if (g_SquelchLost) {
+				return;
+			}
+			Mode = END_OF_RX_MODE_END;
+		}
+		switch (gCurrentCodeType) {
+		case CODE_TYPE_CONTINUOUS_TONE:
+		case CODE_TYPE_DIGITAL:
+		case CODE_TYPE_REVERSE_DIGITAL:
+			Mode = END_OF_RX_MODE_END;
+			break;
+
+		default:
+			break;
+		}
+
+		if (Mode == END_OF_RX_MODE_END) {
+			APP_EndReceive(Mode);
+			return;
+		}
+
+		if (g_SquelchLost) {
+			if (!gEndOfRxDetectedMaybe) {
+				switch (gCurrentCodeType) {
+				case CODE_TYPE_OFF:
+					if (gEeprom.SQUELCH_LEVEL) {
+						if (g_CxCSS_TAIL_Found) {
+							Mode = END_OF_RX_MODE_TTE;
+							g_CxCSS_TAIL_Found = false;
+						}
+					}
+					break;
+
+				case CODE_TYPE_CONTINUOUS_TONE:
+					if (g_CTCSS_Lost) {
+						gFoundCTCSS = false;
+					} else if (!gFoundCTCSS) {
+						gFoundCTCSS = true;
+						gFoundCTCSSCountdown = 100;
+					}
+					if (g_CxCSS_TAIL_Found) {
+						Mode = END_OF_RX_MODE_TTE;
+						g_CxCSS_TAIL_Found = false;
+					}
+					break;
+
+				case CODE_TYPE_DIGITAL:
+				case CODE_TYPE_REVERSE_DIGITAL:
+					if (g_CDCSS_Lost && gCDCSSCodeType == CDCSS_POSITIVE_CODE) {
+						gFoundCDCSS = false;
+					} else if (!gFoundCDCSS) {
+						gFoundCDCSS = true;
+						gFoundCDCSSCountdown = 100;
+					}
+					if (g_CxCSS_TAIL_Found) {
+						if (BK4819_GetCTCType() == 1) {
+							Mode = END_OF_RX_MODE_TTE;
+						}
+						g_CxCSS_TAIL_Found = false;
+					}
+					break;
+
+				default:
+					break;
+				}
+			}
+		} else {
+			Mode = END_OF_RX_MODE_END;
+		}
+
+		if (!gEndOfRxDetectedMaybe && Mode == END_OF_RX_MODE_SKIP &&
+			gNextTimeslice40ms && gEeprom.TAIL_NOTE_ELIMINATION &&
+			(gCurrentCodeType == CODE_TYPE_DIGITAL || gCurrentCodeType == CODE_TYPE_REVERSE_DIGITAL) &&
+			BK4819_GetCTCType() == 1)
+		{
+			Mode = END_OF_RX_MODE_TTE;
+		} else {
+			gNextTimeslice40ms = false;
+		}
+		APP_EndReceive(Mode);
 		break;
 		
 	default:
@@ -320,16 +316,19 @@ void APP_StartListening(FUNCTION_Type_t Function)
 	BK4819_SetModulation(gRxVfo->MODULATION_MODE);
 	if (gRxVfo->MODULATION_MODE != MOD_FM) {
 		BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
-		BK4819_DisableAGC();
+		//BK4819_DisableAGC();
 		BK4819_SetCompander(0);
 	} else {
 		BK4819_WriteRegister(BK4819_REG_48, 0xB000
 				| (gCalibration.VOLUME_GAIN << 4)
 				| (gCalibration.DAC_GAIN << 0)
 				);
-		BK4819_EnableAGC();
+		//BK4819_EnableAGC();
 		BK4819_SetCompander(gRxVfo->CompanderMode);
 	}
+	BK4819_EnableAGC();
+	// Manually adjusting gain across all bands
+	//BK4819_DisableAGC();
 
 	FUNCTION_Select(Function);
 	if (Function == FUNCTION_MONITOR
@@ -346,7 +345,7 @@ void APP_StartListening(FUNCTION_Type_t Function)
 void APP_SetFrequencyByStep(VFO_Info_t *pInfo, int8_t Step)
 {
 	uint32_t Frequency = pInfo->ConfigRX.Frequency + (Step * pInfo->StepFrequency);
-	// dualtachyon
+	// DualTachyon
 	if (pInfo->StepFrequency == 833) {
 		const uint32_t Lower = LowerLimitFrequencyBandTable[pInfo->Band];
 		const uint32_t Delta = Frequency - Lower;
@@ -442,55 +441,6 @@ static void DUALWATCH_Alternate(void)
 
 	RADIO_SetupRegisters(false);
 	gDualWatchCountdown = 10;
-}
-
-void APP_CheckRadioInterrupts(void)
-{
-	while (BK4819_ReadRegister(BK4819_REG_0C) & 1U) {
-		BK4819_WriteRegister(BK4819_REG_02, 0);
-		uint16_t Mask = BK4819_ReadRegister(BK4819_REG_02);
-		if (Mask & BK4819_REG_02_DTMF_5TONE_FOUND) {
-			gDTMF_RequestPending = true;
-			gDTMF_RecvTimeout = 5;
-			if (gDTMF_WriteIndex > 15) {
-				for (uint8_t i = 0; i < sizeof(gDTMF_Received) - 1; i++) {
-					gDTMF_Received[i] = gDTMF_Received[i + 1];
-				}
-				gDTMF_WriteIndex = 15;
-			}
-			gDTMF_Received[gDTMF_WriteIndex++] = DTMF_GetCharacter(BK4819_GetDTMF_5TONE_Code());
-			if (gCurrentFunction == FUNCTION_RECEIVE) {
-				DTMF_HandleRequest();
-			}
-		}
-		if (Mask & BK4819_REG_02_CxCSS_TAIL) {
-			g_CxCSS_TAIL_Found = true;
-		}
-		if (Mask & BK4819_REG_02_CDCSS_LOST) {
-			g_CDCSS_Lost = true;
-			gCDCSSCodeType = BK4819_GetCDCSSCodeType();
-		}
-		if (Mask & BK4819_REG_02_CDCSS_FOUND) {
-			g_CDCSS_Lost = false;
-		}
-		if (Mask & BK4819_REG_02_CTCSS_LOST) {
-			g_CTCSS_Lost = true;
-		}
-		if (Mask & BK4819_REG_02_CTCSS_FOUND) {
-			g_CTCSS_Lost = false;
-		}
-		if (Mask & BK4819_REG_02_SQUELCH_LOST) {
-			g_SquelchLost = true;
-			BK4819_SetGpioOut(BK4819_GPIO6_PIN2_GREEN);
-		}
-		if (Mask & BK4819_REG_02_SQUELCH_FOUND) {
-			g_SquelchLost = false;
-			BK4819_ClearGpioOut(BK4819_GPIO6_PIN2_GREEN);
-		}
-#if defined(ENABLE_MDC1200)
-		MDC1200_process_rx(Mask);
-#endif
-	}
 }
 
 void APP_EndTransmission(void)
@@ -663,15 +613,59 @@ void APP_TimeSlice10ms(void)
 	}
 
 	if ((gCurrentFunction != FUNCTION_POWER_SAVE || !gRxIdleMode) && gScreenToDisplay != DISPLAY_SCANNER) {
-		APP_CheckRadioInterrupts();
-	}
-	if (gCurrentFunction == FUNCTION_TRANSMIT) {
-		if (gRTTECountdown > 0) {
-			gRTTECountdown--;
-			if (gRTTECountdown == 0) {
-				FUNCTION_Select(FUNCTION_FOREGROUND);
-				gUpdateDisplay = true;
+		//APP_CheckRadioInterrupts();
+		while (BK4819_ReadRegister(BK4819_REG_0C) & 1U) {
+			BK4819_WriteRegister(BK4819_REG_02, 0);
+			uint16_t Mask = BK4819_ReadRegister(BK4819_REG_02);
+			if (Mask & BK4819_REG_02_DTMF_5TONE_FOUND) {
+				gDTMF_RequestPending = true;
+				gDTMF_RecvTimeout = 5;
+				if (gDTMF_WriteIndex > 15) {
+					for (uint8_t i = 0; i < sizeof(gDTMF_Received) - 1; i++) {
+						gDTMF_Received[i] = gDTMF_Received[i + 1];
+					}
+					gDTMF_WriteIndex = 15;
+				}
+				gDTMF_Received[gDTMF_WriteIndex++] = DTMF_GetCharacter(BK4819_GetDTMF_5TONE_Code());
+				if (gCurrentFunction == FUNCTION_RECEIVE) {
+					DTMF_HandleRequest();
+				}
 			}
+			if (Mask & BK4819_REG_02_CxCSS_TAIL) {
+				g_CxCSS_TAIL_Found = true;
+			}
+			if (Mask & BK4819_REG_02_CDCSS_LOST) {
+				g_CDCSS_Lost = true;
+				gCDCSSCodeType = BK4819_GetCDCSSCodeType();
+			}
+			if (Mask & BK4819_REG_02_CDCSS_FOUND) {
+				g_CDCSS_Lost = false;
+			}
+			if (Mask & BK4819_REG_02_CTCSS_LOST) {
+				g_CTCSS_Lost = true;
+			}
+			if (Mask & BK4819_REG_02_CTCSS_FOUND) {
+				g_CTCSS_Lost = false;
+			}
+			if (Mask & BK4819_REG_02_SQUELCH_LOST) {
+				g_SquelchLost = true;
+				BK4819_SetGpioOut(BK4819_GPIO6_PIN2_GREEN);
+			}
+			if (Mask & BK4819_REG_02_SQUELCH_FOUND) {
+				g_SquelchLost = false;
+				BK4819_ClearGpioOut(BK4819_GPIO6_PIN2_GREEN);
+			}
+	#if defined(ENABLE_MDC1200)
+			MDC1200_process_rx(Mask);
+	#endif
+		}
+	}
+
+	if (gCurrentFunction == FUNCTION_TRANSMIT && gRTTECountdown > 0) {
+		gRTTECountdown--;
+		if (gRTTECountdown == 0) {
+			FUNCTION_Select(FUNCTION_FOREGROUND);
+			gUpdateDisplay = true;
 		}
 	}
 
@@ -688,9 +682,10 @@ void APP_TimeSlice10ms(void)
 		}
 	}
 
-	if (gRxVfo->MODULATION_MODE == MOD_AM) {
-		BK4819_AMFix();
-	}
+	// if (gRxVfo->MODULATION_MODE == MOD_AM) {
+	//	// Manually adjust gain tables
+	// 	BK4819_AMFix();
+	// }
 
 #if defined(ENABLE_FMRADIO)
 	if (gFmRadioCountdown > 0) {
@@ -925,7 +920,7 @@ void APP_TimeSlice500ms(void)
 	}
 
 	if (gDTMF_CallState != DTMF_CALL_STATE_NONE && gCurrentFunction != FUNCTION_TRANSMIT && gCurrentFunction != FUNCTION_RECEIVE) {
-		if (gDTMF_AUTO_RESET_TIME) {
+		if (gDTMF_AUTO_RESET_TIME > 0) {
 			gDTMF_AUTO_RESET_TIME--;
 			if (gDTMF_AUTO_RESET_TIME == 0) {
 				gDTMF_CallState = DTMF_CALL_STATE_NONE;

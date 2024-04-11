@@ -146,10 +146,10 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
 	if (gScreenToDisplay == DISPLAY_MAIN && gDTMF_InputMode) {
 		if (Key == KEY_SIDE1 && !bKeyHeld && bKeyPressed) {
-			if (gDTMF_InputIndex) {
+			if (gDTMF_InputIndex > 0) {
 				gDTMF_InputIndex--;
 				gDTMF_InputBox[gDTMF_InputIndex] = '-';
-				if (gDTMF_InputIndex) {
+				if (gDTMF_InputIndex > 0) {
 					gPttWasReleased = true;
 					gRequestDisplayScreen = DISPLAY_MAIN;
 					return;

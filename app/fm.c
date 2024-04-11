@@ -319,7 +319,7 @@ static void FM_Key_EXIT(void)
 		} else {
 			gInputBoxIndex--;
 			gInputBox[gInputBoxIndex] = 10;
-			if (gInputBoxIndex) {
+			if (gInputBoxIndex > 0) {
 				if (gInputBoxIndex != 1) {
 					gRequestDisplayScreen = DISPLAY_FM;
 					return;

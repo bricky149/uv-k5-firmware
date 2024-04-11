@@ -112,7 +112,7 @@ typedef struct VFO_Info_t {
 	uint8_t Band;
 	uint8_t DTMF_DECODING_ENABLE;
 	PTT_ID_t DTMF_PTT_ID_TX_MODE;
-	uint8_t BUSY_CHANNEL_LOCK;
+	bool BUSY_CHANNEL_LOCK;
 	uint8_t MODULATION_MODE;
 	char Name[16];
 	uint8_t MDC1200_MODE;

@@ -39,13 +39,14 @@ __inline static uint16_t ScaleFreq(const uint16_t freq)
 #endif
 
 // 1o11
+#if 0
 typedef struct
 {
 	uint16_t reg_val;
 	int8_t   gain_dB;
 } t_gain_table;
 static const t_gain_table gain_table[] = {
-#if 0
+
 	// Prioritise LNA - slightly less deaf but with more distortion
 	{0x03BE,  -7}, // 3 5 3 6 .. 0dB  -4dB  0dB  -3dB ..  -7dB original
 	{0x03F8, -33}, // 3 7 3 0 .. 0dB   0dB  0dB -33dB .. -33dB
@@ -74,7 +75,7 @@ static const t_gain_table gain_table[] = {
 	{0x03FE,  -3}, // 3 7 3 6 .. 0dB   0dB  0dB  -3dB ..  -3dB
 	{0x03DF,  -2}, // 3 6 3 7 .. 0dB  -2dB  0dB   0dB ..  -2dB
 	{0x03FF,   0}  // 3 7 3 7 .. 0dB   0dB  0dB   0dB ..   0dB
-#else
+//#else
 	// Suppress LNA - less distortion but slightly more deaf
 	{0x03BE,  -7}, // 3 5 3 6 .. 0dB  -4dB  0dB  -3dB ..  -7dB original
 	{0x031C, -33}, // 3 0 3 4 .. 0dB -24dB  0dB  -9dB .. -33dB
@@ -103,11 +104,12 @@ static const t_gain_table gain_table[] = {
 	{0x03FE,  -3}, // 3 7 3 6 .. 0dB   0dB  0dB  -3dB ..  -3dB
 	{0x03DF,  -2}, // 3 6 3 7 .. 0dB  -2dB  0dB   0dB ..  -2dB
 	{0x03FF,   0}  // 3 7 3 7 .. 0dB   0dB  0dB   0dB ..   0dB
-#endif
+
 };
 int8_t gRSSIGainAdjustment;
 static const uint8_t RSSI_CEILING = 143; // S9
 static const uint8_t RSSI_FLOOR   = 137; // S8
+#endif
 
 static uint16_t gBK4819_GpioOutState;
 bool gRxIdleMode;
@@ -222,27 +224,27 @@ void BK4819_WriteU8(uint8_t Data)
 }
 
 // 1o11
-void BK4819_AMFix(void) {
-	uint16_t RSSI = BK4819_GetRSSI();
-	// Check if we need to adjust gain
-	if (RSSI <= RSSI_CEILING && RSSI >= RSSI_FLOOR) {
-		return;
-	}
-	// Store uncompensated reading
-	const uint16_t OriginalRSSI = RSSI;
-	// Compensate for previous gain adjustments
-	// Average with original reading to reduce gain hunting
-	RSSI = ((RSSI - gRSSIGainAdjustment) + OriginalRSSI) / 2;
-	uint8_t i = 27;
-	do {
-		if (RSSI + gain_table[--i].gain_dB <= RSSI_CEILING) {
-			break;
-		}
-	} while (i > 1);
-	// Store new gain adjustment
-	gRSSIGainAdjustment = gain_table[i].gain_dB;
-	BK4819_WriteRegister(BK4819_REG_13, gain_table[i].reg_val);
-}
+// void BK4819_AMFix(uint8_t GainReg) {
+// 	uint16_t RSSI = BK4819_GetRSSI();
+// 	// Check if we need to adjust gain
+// 	if (RSSI <= RSSI_CEILING && RSSI >= RSSI_FLOOR) {
+// 		return;
+// 	}
+// 	// Store uncompensated reading
+// 	const uint16_t OriginalRSSI = RSSI;
+// 	// Compensate for previous gain adjustments
+// 	// Average with original reading to reduce gain hunting
+// 	RSSI = ((RSSI - gRSSIGainAdjustment) + OriginalRSSI) / 2;
+// 	uint8_t i = 27;
+// 	do {
+// 		if (RSSI + gain_table[--i].gain_dB <= RSSI_CEILING) {
+// 			// Store new gain adjustment
+// 			gRSSIGainAdjustment = gain_table[i].gain_dB;
+// 			break;
+// 		}
+// 	} while (i > 1);
+// 	BK4819_WriteRegister(GainReg, gain_table[i].reg_val);
+// }
 // Deaf on weak signals compared to the above
 // void BK4819_AMFix(void) {
 // 	// Read existing AGC fix index so we don't suddenly peak
@@ -268,10 +270,12 @@ void BK4819_EnableAGC(void)
 		(5u <<  3) |                    // 5 DC filter bandwidth for Tx
 		(6u <<  0));                    // 6 DC filter bandwidth for Rx
 
-    BK4819_WriteRegister(BK4819_REG_12, 0x037C);
-    BK4819_WriteRegister(BK4819_REG_11, 0x027B);
-    BK4819_WriteRegister(BK4819_REG_10, 0x007A);
-    BK4819_WriteRegister(BK4819_REG_14, 0x0018);
+	// AGC fix indexes?
+	BK4819_WriteRegister(BK4819_REG_13, 0x03BE); // 3
+	BK4819_WriteRegister(BK4819_REG_12, 0x039D); // 2
+	BK4819_WriteRegister(BK4819_REG_11, 0x037D); // 1
+	BK4819_WriteRegister(BK4819_REG_10, 0x035C); // 0
+	BK4819_WriteRegister(BK4819_REG_14, 0x033C); // -1
 
 	BK4819_WriteRegister(BK4819_REG_49, 0x2A38);
 	BK4819_WriteRegister(BK4819_REG_7B, 0x8420);
@@ -295,7 +299,12 @@ void BK4819_DisableAGC(void)
 		(5u <<  3) |                    // 5 DC filter bandwidth for Tx
 		(6u <<  0));                    // 6 DC filter bandwidth for Rx
 
-	BK4819_WriteRegister(BK4819_REG_13, 0x03BE);
+	// AGC fix indexes?
+	BK4819_WriteRegister(BK4819_REG_13, 0x03BE); // 3
+	BK4819_WriteRegister(BK4819_REG_12, 0x037C); // 2
+	BK4819_WriteRegister(BK4819_REG_11, 0x027B); // 1
+	BK4819_WriteRegister(BK4819_REG_10, 0x007A); // 0
+	BK4819_WriteRegister(BK4819_REG_14, 0x0018); // -1
 
 	BK4819_WriteRegister(BK4819_REG_7B, 0x318C);
 	BK4819_WriteRegister(BK4819_REG_7C, 0x595E);
