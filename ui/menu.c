@@ -166,10 +166,11 @@ static const char gSubMenu_COMPND[4][6] = {
 	"TX/RX",
 };
 
-static const char gSubMenu_MOD[3][3] = {
+static const char gSubMenu_MOD[4][4] = {
 	"FM",
 	"AM",
-	"SB", // SSB
+	"LSB", // SSB
+	"USB", // SSB
 };
 
 static const char gSubMenu_RESET[2][4] = {

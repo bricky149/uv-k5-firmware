@@ -326,7 +326,7 @@ void APP_StartListening(FUNCTION_Type_t Function)
 		//BK4819_EnableAGC();
 		BK4819_SetCompander(gRxVfo->CompanderMode);
 	}
-	BK4819_EnableAGC();
+	BK4819_EnableAGC(gRxVfo->MODULATION_MODE);
 	// Manually adjusting gain across all bands
 	//BK4819_DisableAGC();
 

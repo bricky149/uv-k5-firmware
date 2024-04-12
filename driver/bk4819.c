@@ -262,7 +262,7 @@ void BK4819_WriteU8(uint8_t Data)
 // 		(AgcFixIndex << 12));           // 3 AGC fix index
 // }
 
-void BK4819_EnableAGC(void)
+void BK4819_EnableAGC(uint8_t ModType)
 {
 	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
 		(0u << 15) |                    // 0 AGC fix mode
@@ -272,27 +272,40 @@ void BK4819_EnableAGC(void)
 
 	// AGC fix indexes?
 	BK4819_WriteRegister(BK4819_REG_13, 0x03BE); // 3
-	BK4819_WriteRegister(BK4819_REG_12, 0x039D); // 2
-	BK4819_WriteRegister(BK4819_REG_11, 0x037D); // 1
-	BK4819_WriteRegister(BK4819_REG_10, 0x035C); // 0
-	BK4819_WriteRegister(BK4819_REG_14, 0x033C); // -1
+	BK4819_WriteRegister(BK4819_REG_12, 0x037E); // 2
+	BK4819_WriteRegister(BK4819_REG_11, 0x035D); // 1
+	BK4819_WriteRegister(BK4819_REG_10, 0x033D); // 0
+	BK4819_WriteRegister(BK4819_REG_14, 0x031C); // -1
 
-	BK4819_WriteRegister(BK4819_REG_49, 0x2A38);
+	//BK4819_WriteRegister(BK4819_REG_49, 0x2A38); // 00 1010100 0111000
+	if (ModType != MOD_AM) {
+		BK4819_WriteRegister(BK4819_REG_49, // RF energy above/below sensitivity
+			(0u  << 14) |                   // 0  High/Low Lo selection
+			(84u <<  7) |                   // 84 RF AGC high threshold
+			(56u <<  0));                   // 56 RF AGC low threshold
+	} else {
+		BK4819_WriteRegister(BK4819_REG_49, // RF energy above/below sensitivity
+			(0u  << 14) |                   // 0  High/Low Lo selection
+			(46u <<  7) |                   // 84 RF AGC high threshold
+			(32u <<  0));                   // 56 RF AGC low threshold
+	}
+
 	BK4819_WriteRegister(BK4819_REG_7B, 0x8420);
 }
 
 void BK4819_DisableAGC(void)
 {
 	// AGC Fix Index
-	// Should adjust LNA and PGA but the steps between values
-	// are too large to get the most out of using it.
+	// Should adjust LNA and PGA but the steps between default
+	// values are too large to get the most out of using it.
 	// OneOfEleven was right to use a gain table and use that
 	// to do the BK4819's job for it, given it was never
 	// designed to handle AM signals in the first place.
 	// 3 (max) has too much volume
 	// 2 seems to match FM radio volume
 	// 1 is the lowest w/o wispiness from the speaker
-	// 4 (min) is the equivalent of no AGC
+	// 0 is nothing special
+	// 4 (min) should be the equivalent of no AGC
 	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
 		(1u << 15) |                    // 0 AGC fix mode
 		(4u << 12) |                    // 3 AGC fix index
@@ -407,8 +420,7 @@ void BK4819_SetFilterBandwidth(BK4819_FilterBandwidth_t Bandwidth)
 		BK4819_WriteRegister(BK4819_REG_43, 0x4048);
 		break;
 	case BK4819_FILTER_BW_NARROWER:
-		// fagci
-		BK4819_WriteRegister(BK4819_REG_43, 0x18);
+		BK4819_WriteRegister(BK4819_REG_43, 0x2058);
 		break;
 	}
 }
@@ -461,10 +473,18 @@ void BK4819_SetRegValue(RegisterSpec s, uint16_t v) {
 }
 void BK4819_SetModulation(BK4819_MOD_Type_t type) {
 	// BK4819_AF_Type_t
-	uint8_t modTypeReg47Values[3] = {1, 7, 5};
+	uint8_t modTypeReg47Values[4] = {1, 7, 4, 5};
 	BK4819_SetAF(modTypeReg47Values[type]);
+	//BK4819_WriteRegister(0x3D, type == MOD_DSB ? 0 : 0x2AAB);
+	switch (modTypeReg47Values[type]) {
+	case MOD_LSB:
+	case MOD_USB:
+		BK4819_WriteRegister(BK4819_REG_3D, 0x2B45);
+		break;
+	default:
+		BK4819_WriteRegister(BK4819_REG_3D, 0);
+	}
 	BK4819_SetRegValue(afDacGainRegSpec, 0xF);
-	BK4819_WriteRegister(0x3D, type == MOD_DSB ? 0 : 0x2AAB);
 	BK4819_SetRegValue(afcDisableRegSpec, type != MOD_FM);
 }
 
@@ -472,11 +492,7 @@ void BK4819_SetAF(BK4819_AF_Type_t AF)
 {
 	// AF Output Inverse Mode = Inverse
 	// Undocumented bits 0x2040
-	//BK4819_WriteRegister(BK4819_REG_47, 0x6040 | (AF << 8));
-
-	// 1o11
-	BK4819_WriteRegister(BK4819_REG_47, 0);
-	BK4819_WriteRegister(BK4819_REG_47, (1u << 14) | (1u << 13) | ((AF & 15u) << 8) | (1u << 6));
+	BK4819_WriteRegister(BK4819_REG_47, 0x6040 | (AF << 8));
 }
 
 void BK4819_RX_TurnOn(void)
@@ -494,7 +510,22 @@ void BK4819_RX_TurnOn(void)
 	// Enable DSP
 	// Enable XTAL
 	// Enable Band Gap
-	BK4819_WriteRegister(BK4819_REG_37, 0x1F0F);
+	//BK4819_WriteRegister(BK4819_REG_37, 0x1F0F);
+
+	// DSP Voltage Setting = 1
+	// ANA LDO = 2.4v
+	// VCO LDO = 2.7v
+	// RF LDO = 2.7v
+	// PLL LDO = 2.4v
+	// ANA LDO enable
+	// VCO LDO enable
+	// RF LDO enable
+	// PLL LDO enable
+	// Reserved bit is 1 instead of 0
+	// Enable DSP
+	// Enable XTAL
+	// Enable Band Gap
+	BK4819_WriteRegister(BK4819_REG_37, 0x160F);
 
 	// Turn off everything
 	BK4819_WriteRegister(BK4819_REG_30, 0);

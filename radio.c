@@ -299,7 +299,7 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 				gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
 				gEeprom.VfoInfo[VFO].CompanderMode = COMPND_OFF;
 				break;
-			case MOD_DSB:
+			default:
 				// SSB will not work with any other bandwidth mode
 				gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BANDWIDTH_NARROWER;
 				break;

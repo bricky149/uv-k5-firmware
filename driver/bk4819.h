@@ -24,7 +24,8 @@
 enum BK4819_MOD_Type_t {
 	MOD_FM = 0U,
 	MOD_AM = 1U,
-	MOD_DSB = 2U, // SSB
+	MOD_LSB = 2U, // SSB
+	MOD_USB = 3U, // SSB
 };
 
 typedef enum BK4819_MOD_Type_t BK4819_MOD_Type_t;
@@ -34,7 +35,7 @@ enum BK4819_AF_Type_t {
 	BK4819_AF_OPEN = 1U,
 	BK4819_AF_ALAM = 2U,
 	BK4819_AF_BEEP = 3U,
-	BK4819_AF_DSB = 4U,  // SSB
+	BK4819_AF_LSB = 4U,  // SSB
 	BK4819_AF_USB = 5U,  // SSB
 	BK4819_AF_CTCO = 6U,
 	BK4819_AF_AM = 7U,
@@ -67,7 +68,7 @@ void BK4819_WriteRegister(BK4819_REGISTER_t Register, uint16_t Data);
 void BK4819_WriteU8(uint8_t Data);
 
 //void BK4819_AMFix(uint8_t GainReg);
-void BK4819_EnableAGC(void);
+void BK4819_EnableAGC(uint8_t ModType);
 void BK4819_DisableAGC(void);
 
 void BK4819_SetGpioOut(BK4819_GPIO_PIN_t Pin);
