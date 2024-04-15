@@ -71,8 +71,8 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 	case MENU_TXP: case MENU_SFT_D:
 	case MENU_TDR: case MENU_WX:
 	case MENU_SC_REV: case MENU_MDF:
-	case MENU_W_N: case MENU_MOD:
-	case MENU_ROGER: case MENU_F_LOCK:
+	case MENU_W_N: case MENU_ROGER:
+	case MENU_F_LOCK:
 		*pMin = 0;
 		*pMax = 2;
 		break;
@@ -121,7 +121,7 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 	case MENU_MDCMOD:
 #endif
 	case MENU_D_RSP: case MENU_PTT_ID:
-	case MENU_COMPND:
+	case MENU_COMPND: case MENU_MOD:
 		*pMin = 0;
 		*pMax = 3;
 		break;
@@ -416,11 +416,12 @@ void MENU_AcceptSetting(void)
 		break;
 
 	case MENU_BATCAL:
-		gBatteryCalibration[0] = (520ul * gSubMenuSelection) / 760; // 5.20V empty, blinking above this value
-		gBatteryCalibration[1] = (700ul * gSubMenuSelection) / 760; // 7.00V,  ~5%, 1 bars above this value
-		gBatteryCalibration[2] = (745ul * gSubMenuSelection) / 760; // 7.45V, ~17%, 2 bars above this value
-		gBatteryCalibration[3] =          gSubMenuSelection;        // 7.6V,  ~29%, 3 bars above this value
-		gBatteryCalibration[4] = (788ul * gSubMenuSelection) / 760; // 7.88V, ~65%, 4 bars above this value
+		// 7.6V is nominal voltage, used as basis for calibrating battery values
+		gBatteryCalibration[0] = (56ul * gSubMenuSelection) / 76; // 5.6V empty, blinking above this value
+		gBatteryCalibration[1] = (70ul * gSubMenuSelection) / 76; // 7.0V,  ~5%, 1 bars above this value
+		gBatteryCalibration[2] = (74ul * gSubMenuSelection) / 76; // 7.4V, ~14%, 2 bars above this value
+		gBatteryCalibration[3] =          gSubMenuSelection;      // 7.6V, ~29%, 3 bars above this value
+		gBatteryCalibration[4] = (79ul * gSubMenuSelection) / 76; // 7.9V, ~67%, 4 bars above this value
 		gBatteryCalibration[5] = 2300;
 		EEPROM_WriteBuffer(0x1F40, gBatteryCalibration);
 		break;

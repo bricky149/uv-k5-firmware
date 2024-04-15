@@ -127,6 +127,99 @@ static void APP_EndReceive(uint8_t Mode)
 	}
 }
 
+static void APP_HandleReceive(void)
+{
+#define END_OF_RX_MODE_SKIP 0
+#define END_OF_RX_MODE_END  1
+#define END_OF_RX_MODE_TTE  2
+
+	uint8_t Mode = END_OF_RX_MODE_SKIP;
+
+	if (gFlagTteComplete) {
+		Mode = END_OF_RX_MODE_END;
+	} else if (gScanState != SCAN_OFF && IS_FREQ_CHANNEL(gNextMrChannel)) {
+		if (g_SquelchLost) {
+			return;
+		}
+		Mode = END_OF_RX_MODE_END;
+	}
+	switch (gCurrentCodeType) {
+	case CODE_TYPE_CONTINUOUS_TONE:
+	case CODE_TYPE_DIGITAL:
+	case CODE_TYPE_REVERSE_DIGITAL:
+		Mode = END_OF_RX_MODE_END;
+		break;
+
+	default:
+		break;
+	}
+
+	if (Mode == END_OF_RX_MODE_END) {
+		APP_EndReceive(Mode);
+		return;
+	}
+
+	if (g_SquelchLost) {
+		if (!gEndOfRxDetectedMaybe) {
+			switch (gCurrentCodeType) {
+			case CODE_TYPE_OFF:
+				if (gEeprom.SQUELCH_LEVEL) {
+					if (g_CxCSS_TAIL_Found) {
+						Mode = END_OF_RX_MODE_TTE;
+						g_CxCSS_TAIL_Found = false;
+					}
+				}
+				break;
+
+			case CODE_TYPE_CONTINUOUS_TONE:
+				if (g_CTCSS_Lost) {
+					gFoundCTCSS = false;
+				} else if (!gFoundCTCSS) {
+					gFoundCTCSS = true;
+					gFoundCTCSSCountdown = 100;
+				}
+				if (g_CxCSS_TAIL_Found) {
+					Mode = END_OF_RX_MODE_TTE;
+					g_CxCSS_TAIL_Found = false;
+				}
+				break;
+
+			case CODE_TYPE_DIGITAL:
+			case CODE_TYPE_REVERSE_DIGITAL:
+				if (g_CDCSS_Lost && gCDCSSCodeType == CDCSS_POSITIVE_CODE) {
+					gFoundCDCSS = false;
+				} else if (!gFoundCDCSS) {
+					gFoundCDCSS = true;
+					gFoundCDCSSCountdown = 100;
+				}
+				if (g_CxCSS_TAIL_Found) {
+					if (BK4819_GetCTCType() == 1) {
+						Mode = END_OF_RX_MODE_TTE;
+					}
+					g_CxCSS_TAIL_Found = false;
+				}
+				break;
+
+			default:
+				break;
+			}
+		}
+	} else {
+		Mode = END_OF_RX_MODE_END;
+	}
+
+	if (!gEndOfRxDetectedMaybe && Mode == END_OF_RX_MODE_SKIP &&
+		gNextTimeslice40ms && gEeprom.TAIL_NOTE_ELIMINATION &&
+		(gCurrentCodeType == CODE_TYPE_DIGITAL || gCurrentCodeType == CODE_TYPE_REVERSE_DIGITAL) &&
+		BK4819_GetCTCType() == 1)
+	{
+		Mode = END_OF_RX_MODE_TTE;
+	} else {
+		gNextTimeslice40ms = false;
+	}
+	APP_EndReceive(Mode);
+}
+
 static void APP_HandleFunction(void)
 {
 	switch (gCurrentFunction) {
@@ -178,98 +271,9 @@ static void APP_HandleFunction(void)
 		break;
 
 	case FUNCTION_RECEIVE:
-		//APP_HandleReceive();
-#define END_OF_RX_MODE_SKIP 0
-#define END_OF_RX_MODE_END  1
-#define END_OF_RX_MODE_TTE  2
-
-		uint8_t Mode = END_OF_RX_MODE_SKIP;
-
-		if (gFlagTteComplete) {
-			Mode = END_OF_RX_MODE_END;
-		} else if (gScanState != SCAN_OFF && IS_FREQ_CHANNEL(gNextMrChannel)) {
-			if (g_SquelchLost) {
-				return;
-			}
-			Mode = END_OF_RX_MODE_END;
-		}
-		switch (gCurrentCodeType) {
-		case CODE_TYPE_CONTINUOUS_TONE:
-		case CODE_TYPE_DIGITAL:
-		case CODE_TYPE_REVERSE_DIGITAL:
-			Mode = END_OF_RX_MODE_END;
-			break;
-
-		default:
-			break;
-		}
-
-		if (Mode == END_OF_RX_MODE_END) {
-			APP_EndReceive(Mode);
-			return;
-		}
-
-		if (g_SquelchLost) {
-			if (!gEndOfRxDetectedMaybe) {
-				switch (gCurrentCodeType) {
-				case CODE_TYPE_OFF:
-					if (gEeprom.SQUELCH_LEVEL) {
-						if (g_CxCSS_TAIL_Found) {
-							Mode = END_OF_RX_MODE_TTE;
-							g_CxCSS_TAIL_Found = false;
-						}
-					}
-					break;
-
-				case CODE_TYPE_CONTINUOUS_TONE:
-					if (g_CTCSS_Lost) {
-						gFoundCTCSS = false;
-					} else if (!gFoundCTCSS) {
-						gFoundCTCSS = true;
-						gFoundCTCSSCountdown = 100;
-					}
-					if (g_CxCSS_TAIL_Found) {
-						Mode = END_OF_RX_MODE_TTE;
-						g_CxCSS_TAIL_Found = false;
-					}
-					break;
-
-				case CODE_TYPE_DIGITAL:
-				case CODE_TYPE_REVERSE_DIGITAL:
-					if (g_CDCSS_Lost && gCDCSSCodeType == CDCSS_POSITIVE_CODE) {
-						gFoundCDCSS = false;
-					} else if (!gFoundCDCSS) {
-						gFoundCDCSS = true;
-						gFoundCDCSSCountdown = 100;
-					}
-					if (g_CxCSS_TAIL_Found) {
-						if (BK4819_GetCTCType() == 1) {
-							Mode = END_OF_RX_MODE_TTE;
-						}
-						g_CxCSS_TAIL_Found = false;
-					}
-					break;
-
-				default:
-					break;
-				}
-			}
-		} else {
-			Mode = END_OF_RX_MODE_END;
-		}
-
-		if (!gEndOfRxDetectedMaybe && Mode == END_OF_RX_MODE_SKIP &&
-			gNextTimeslice40ms && gEeprom.TAIL_NOTE_ELIMINATION &&
-			(gCurrentCodeType == CODE_TYPE_DIGITAL || gCurrentCodeType == CODE_TYPE_REVERSE_DIGITAL) &&
-			BK4819_GetCTCType() == 1)
-		{
-			Mode = END_OF_RX_MODE_TTE;
-		} else {
-			gNextTimeslice40ms = false;
-		}
-		APP_EndReceive(Mode);
+		APP_HandleReceive();
 		break;
-		
+
 	default:
 		break;
 	}
@@ -316,19 +320,17 @@ void APP_StartListening(FUNCTION_Type_t Function)
 	BK4819_SetModulation(gRxVfo->MODULATION_MODE);
 	if (gRxVfo->MODULATION_MODE != MOD_FM) {
 		BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
-		//BK4819_DisableAGC();
+		BK4819_SetFGC();
 		BK4819_SetCompander(0);
 	} else {
 		BK4819_WriteRegister(BK4819_REG_48, 0xB000
 				| (gCalibration.VOLUME_GAIN << 4)
 				| (gCalibration.DAC_GAIN << 0)
 				);
-		//BK4819_EnableAGC();
+		BK4819_SetAGC();
 		BK4819_SetCompander(gRxVfo->CompanderMode);
 	}
-	BK4819_EnableAGC(gRxVfo->MODULATION_MODE);
-	// Manually adjusting gain across all bands
-	//BK4819_DisableAGC();
+	//BK4819_EnableAGC(gRxVfo->MODULATION_MODE);
 
 	FUNCTION_Select(Function);
 	if (Function == FUNCTION_MONITOR
@@ -682,10 +684,10 @@ void APP_TimeSlice10ms(void)
 		}
 	}
 
-	// if (gRxVfo->MODULATION_MODE == MOD_AM) {
-	//	// Manually adjust gain tables
-	// 	BK4819_AMFix();
-	// }
+	if (gRxVfo->MODULATION_MODE == MOD_AM) {
+		// Manually adjust gain register values
+		BK4819_AMFix();
+	}
 
 #if defined(ENABLE_FMRADIO)
 	if (gFmRadioCountdown > 0) {

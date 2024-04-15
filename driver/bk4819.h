@@ -67,9 +67,9 @@ uint16_t BK4819_ReadRegister(BK4819_REGISTER_t Register);
 void BK4819_WriteRegister(BK4819_REGISTER_t Register, uint16_t Data);
 void BK4819_WriteU8(uint8_t Data);
 
-//void BK4819_AMFix(uint8_t GainReg);
-void BK4819_EnableAGC(uint8_t ModType);
-void BK4819_DisableAGC(void);
+void BK4819_AMFix(void);
+void BK4819_SetAGC(void);
+void BK4819_SetFGC(void);
 
 void BK4819_SetGpioOut(BK4819_GPIO_PIN_t Pin);
 void BK4819_ClearGpioOut(BK4819_GPIO_PIN_t Pin);
@@ -86,9 +86,7 @@ void BK4819_SetupSquelch(
 		uint8_t SquelchOpenNoiseThresh, uint8_t SquelchCloseNoiseThresh,
 		uint8_t SquelchCloseGlitchThresh, uint8_t SquelchOpenGlitchThresh);
 
-// fagci
-void BK4819_SetRegValue(RegisterSpec s, uint16_t v);
-void BK4819_SetModulation(BK4819_MOD_Type_t type);
+void BK4819_SetModulation(BK4819_MOD_Type_t ModType);
 
 void BK4819_SetAF(BK4819_AF_Type_t AF);
 void BK4819_RX_TurnOn(void);

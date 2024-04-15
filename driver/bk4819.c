@@ -39,14 +39,13 @@ __inline static uint16_t ScaleFreq(const uint16_t freq)
 #endif
 
 // 1o11
-#if 0
 typedef struct
 {
 	uint16_t reg_val;
 	int8_t   gain_dB;
 } t_gain_table;
 static const t_gain_table gain_table[] = {
-
+#if 0
 	// Prioritise LNA - slightly less deaf but with more distortion
 	{0x03BE,  -7}, // 3 5 3 6 .. 0dB  -4dB  0dB  -3dB ..  -7dB original
 	{0x03F8, -33}, // 3 7 3 0 .. 0dB   0dB  0dB -33dB .. -33dB
@@ -75,7 +74,7 @@ static const t_gain_table gain_table[] = {
 	{0x03FE,  -3}, // 3 7 3 6 .. 0dB   0dB  0dB  -3dB ..  -3dB
 	{0x03DF,  -2}, // 3 6 3 7 .. 0dB  -2dB  0dB   0dB ..  -2dB
 	{0x03FF,   0}  // 3 7 3 7 .. 0dB   0dB  0dB   0dB ..   0dB
-//#else
+#else
 	// Suppress LNA - less distortion but slightly more deaf
 	{0x03BE,  -7}, // 3 5 3 6 .. 0dB  -4dB  0dB  -3dB ..  -7dB original
 	{0x031C, -33}, // 3 0 3 4 .. 0dB -24dB  0dB  -9dB .. -33dB
@@ -104,12 +103,11 @@ static const t_gain_table gain_table[] = {
 	{0x03FE,  -3}, // 3 7 3 6 .. 0dB   0dB  0dB  -3dB ..  -3dB
 	{0x03DF,  -2}, // 3 6 3 7 .. 0dB  -2dB  0dB   0dB ..  -2dB
 	{0x03FF,   0}  // 3 7 3 7 .. 0dB   0dB  0dB   0dB ..   0dB
-
+#endif
 };
 int8_t gRSSIGainAdjustment;
 static const uint8_t RSSI_CEILING = 143; // S9
 static const uint8_t RSSI_FLOOR   = 137; // S8
-#endif
 
 static uint16_t gBK4819_GpioOutState;
 bool gRxIdleMode;
@@ -224,27 +222,27 @@ void BK4819_WriteU8(uint8_t Data)
 }
 
 // 1o11
-// void BK4819_AMFix(uint8_t GainReg) {
-// 	uint16_t RSSI = BK4819_GetRSSI();
-// 	// Check if we need to adjust gain
-// 	if (RSSI <= RSSI_CEILING && RSSI >= RSSI_FLOOR) {
-// 		return;
-// 	}
-// 	// Store uncompensated reading
-// 	const uint16_t OriginalRSSI = RSSI;
-// 	// Compensate for previous gain adjustments
-// 	// Average with original reading to reduce gain hunting
-// 	RSSI = ((RSSI - gRSSIGainAdjustment) + OriginalRSSI) / 2;
-// 	uint8_t i = 27;
-// 	do {
-// 		if (RSSI + gain_table[--i].gain_dB <= RSSI_CEILING) {
-// 			// Store new gain adjustment
-// 			gRSSIGainAdjustment = gain_table[i].gain_dB;
-// 			break;
-// 		}
-// 	} while (i > 1);
-// 	BK4819_WriteRegister(GainReg, gain_table[i].reg_val);
-// }
+void BK4819_AMFix(void) {
+	uint16_t RSSI = BK4819_GetRSSI();
+	// Check if we need to adjust gain
+	if (RSSI <= RSSI_CEILING && RSSI >= RSSI_FLOOR) {
+		return;
+	}
+	// Store uncompensated reading
+	const uint16_t OriginalRSSI = RSSI;
+	// Compensate for previous gain adjustments
+	// Average with original reading to reduce gain hunting
+	RSSI = ((RSSI - gRSSIGainAdjustment) + OriginalRSSI) / 2;
+	uint8_t i = 27;
+	do {
+		if (RSSI + gain_table[--i].gain_dB <= RSSI_CEILING) {
+			// Store new gain adjustment
+			gRSSIGainAdjustment = gain_table[i].gain_dB;
+			break;
+		}
+	} while (i > 1);
+	BK4819_WriteRegister(BK4819_REG_13, gain_table[i].reg_val);
+}
 // Deaf on weak signals compared to the above
 // void BK4819_AMFix(void) {
 // 	// Read existing AGC fix index so we don't suddenly peak
@@ -262,7 +260,7 @@ void BK4819_WriteU8(uint8_t Data)
 // 		(AgcFixIndex << 12));           // 3 AGC fix index
 // }
 
-void BK4819_EnableAGC(uint8_t ModType)
+void BK4819_SetAGC(void)
 {
 	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
 		(0u << 15) |                    // 0 AGC fix mode
@@ -270,54 +268,48 @@ void BK4819_EnableAGC(uint8_t ModType)
 		(5u <<  3) |                    // 5 DC filter bandwidth for Tx
 		(6u <<  0));                    // 6 DC filter bandwidth for Rx
 
-	// AGC fix indexes?
-	BK4819_WriteRegister(BK4819_REG_13, 0x03BE); // 3
-	BK4819_WriteRegister(BK4819_REG_12, 0x037E); // 2
-	BK4819_WriteRegister(BK4819_REG_11, 0x035D); // 1
-	BK4819_WriteRegister(BK4819_REG_10, 0x033D); // 0
-	BK4819_WriteRegister(BK4819_REG_14, 0x031C); // -1
+	// AGC fix indexes
+	BK4819_WriteRegister(BK4819_REG_13, 0x03BE); // 3  (-7)
+	BK4819_WriteRegister(BK4819_REG_12, 0x037C); // 2  (-18)
+	BK4819_WriteRegister(BK4819_REG_11, 0x027B); // 1  (-35)
+	BK4819_WriteRegister(BK4819_REG_10, 0x017A); // 0  (-60)
+	BK4819_WriteRegister(BK4819_REG_14, 0x0038); // -1 (-85)
 
-	//BK4819_WriteRegister(BK4819_REG_49, 0x2A38); // 00 1010100 0111000
-	if (ModType != MOD_AM) {
-		BK4819_WriteRegister(BK4819_REG_49, // RF energy above/below sensitivity
-			(0u  << 14) |                   // 0  High/Low Lo selection
-			(84u <<  7) |                   // 84 RF AGC high threshold
-			(56u <<  0));                   // 56 RF AGC low threshold
-	} else {
-		BK4819_WriteRegister(BK4819_REG_49, // RF energy above/below sensitivity
-			(0u  << 14) |                   // 0  High/Low Lo selection
-			(46u <<  7) |                   // 84 RF AGC high threshold
-			(32u <<  0));                   // 56 RF AGC low threshold
-	}
+	// Affects when to adjust AGC fix index
+	BK4819_WriteRegister(BK4819_REG_49, 0x2A38); // 00 1010100 0111000
+	// if (ModType != MOD_AM) {
+	// 	BK4819_WriteRegister(BK4819_REG_49,
+	// 		(0u  << 14) |                   // 0  High/Low Lo selection
+	// 		(84u <<  7) |                   // 84 RF AGC high threshold (sensitivity vs. distortion)
+	// 		(56u <<  0));                   // 56 RF AGC low threshold
+	// } else {
+	// 	BK4819_WriteRegister(BK4819_REG_49,
+	// 		(0u  << 14) |                   // 0  High/Low Lo selection
+	// 		(52u <<  7) |                   // 84 RF AGC high threshold (sensitivity vs. distortion)
+	// 		(34u <<  0));                   // 56 RF AGC low threshold
+	// }
 
 	BK4819_WriteRegister(BK4819_REG_7B, 0x8420);
 }
 
-void BK4819_DisableAGC(void)
+void BK4819_SetFGC(void)
 {
-	// AGC Fix Index
-	// Should adjust LNA and PGA but the steps between default
-	// values are too large to get the most out of using it.
-	// OneOfEleven was right to use a gain table and use that
-	// to do the BK4819's job for it, given it was never
-	// designed to handle AM signals in the first place.
-	// 3 (max) has too much volume
-	// 2 seems to match FM radio volume
-	// 1 is the lowest w/o wispiness from the speaker
-	// 0 is nothing special
-	// 4 (min) should be the equivalent of no AGC
+	// AGC increases gain on strong signals which would explain the distortion
+	// when a signal saturates the demodulator. OneOfEleven's 'AM fix' inverts
+	// this, toning down gain registers when a signal exceeds -89dBm
+	// (~33dB above sensitivity).
 	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
 		(1u << 15) |                    // 0 AGC fix mode
-		(4u << 12) |                    // 3 AGC fix index
+		(3u << 12) |                    // 3 AGC fix index
 		(5u <<  3) |                    // 5 DC filter bandwidth for Tx
 		(6u <<  0));                    // 6 DC filter bandwidth for Rx
 
-	// AGC fix indexes?
-	BK4819_WriteRegister(BK4819_REG_13, 0x03BE); // 3
-	BK4819_WriteRegister(BK4819_REG_12, 0x037C); // 2
-	BK4819_WriteRegister(BK4819_REG_11, 0x027B); // 1
-	BK4819_WriteRegister(BK4819_REG_10, 0x007A); // 0
-	BK4819_WriteRegister(BK4819_REG_14, 0x0018); // -1
+	// AGC fix indexes
+	BK4819_WriteRegister(BK4819_REG_13, 0x03BE);   // 3
+	//BK4819_WriteRegister(BK4819_REG_12, 0x037C); // 2
+	//BK4819_WriteRegister(BK4819_REG_11, 0x027B); // 1
+	//BK4819_WriteRegister(BK4819_REG_10, 0x007A); // 0
+	//BK4819_WriteRegister(BK4819_REG_14, 0x0018); // -1
 
 	BK4819_WriteRegister(BK4819_REG_7B, 0x318C);
 	BK4819_WriteRegister(BK4819_REG_7C, 0x595E);
@@ -465,27 +457,25 @@ void BK4819_SetupSquelch(uint8_t SquelchOpenRSSIThresh, uint8_t SquelchCloseRSSI
 	BK4819_RX_TurnOn();
 }
 
-// fagci
-void BK4819_SetRegValue(RegisterSpec s, uint16_t v) {
-	uint16_t reg = BK4819_ReadRegister(s.num);
-	reg &= ~(s.mask << s.offset);
-	BK4819_WriteRegister(s.num, reg | (v << s.offset));
-}
-void BK4819_SetModulation(BK4819_MOD_Type_t type) {
-	// BK4819_AF_Type_t
-	uint8_t modTypeReg47Values[4] = {1, 7, 4, 5};
-	BK4819_SetAF(modTypeReg47Values[type]);
-	//BK4819_WriteRegister(0x3D, type == MOD_DSB ? 0 : 0x2AAB);
-	switch (modTypeReg47Values[type]) {
-	case MOD_LSB:
-	case MOD_USB:
-		BK4819_WriteRegister(BK4819_REG_3D, 0x2B45);
-		break;
-	default:
-		BK4819_WriteRegister(BK4819_REG_3D, 0);
+void BK4819_SetModulation(BK4819_MOD_Type_t ModType) {
+	switch(ModType) {
+		case MOD_FM:
+			BK4819_SetAF(BK4819_AF_OPEN);
+			BK4819_WriteRegister(BK4819_REG_3D, 0);
+			break;
+		case MOD_AM:
+			BK4819_SetAF(BK4819_AF_AM);
+			BK4819_WriteRegister(BK4819_REG_3D, 0);
+			break;
+		case MOD_LSB:
+			BK4819_SetAF(BK4819_AF_LSB);
+			BK4819_WriteRegister(BK4819_REG_3D, 0x2B45);
+			break;
+		case MOD_USB:
+			BK4819_SetAF(BK4819_AF_USB);
+			BK4819_WriteRegister(BK4819_REG_3D, 0x2B45);
+			break;
 	}
-	BK4819_SetRegValue(afDacGainRegSpec, 0xF);
-	BK4819_SetRegValue(afcDisableRegSpec, type != MOD_FM);
 }
 
 void BK4819_SetAF(BK4819_AF_Type_t AF)
@@ -510,7 +500,7 @@ void BK4819_RX_TurnOn(void)
 	// Enable DSP
 	// Enable XTAL
 	// Enable Band Gap
-	//BK4819_WriteRegister(BK4819_REG_37, 0x1F0F);
+	BK4819_WriteRegister(BK4819_REG_37, 0x1F0F);
 
 	// DSP Voltage Setting = 1
 	// ANA LDO = 2.4v
@@ -525,7 +515,7 @@ void BK4819_RX_TurnOn(void)
 	// Enable DSP
 	// Enable XTAL
 	// Enable Band Gap
-	BK4819_WriteRegister(BK4819_REG_37, 0x160F);
+	//BK4819_WriteRegister(BK4819_REG_37, 0x160F);
 
 	// Turn off everything
 	BK4819_WriteRegister(BK4819_REG_30, 0);
