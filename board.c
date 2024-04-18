@@ -16,12 +16,14 @@
  */
 
 #include <string.h>
+#include "ARMCM0.h"
 #include "app/dtmf.h"
 #if defined(ENABLE_FMRADIO)
 #include "app/fm.h"
 #endif
 #include "board.h"
 #include "bsp/dp32g030/gpio.h"
+#include "bsp/dp32g030/irq.h"
 #include "bsp/dp32g030/portcon.h"
 #include "bsp/dp32g030/saradc.h"
 #include "bsp/dp32g030/syscon.h"
@@ -40,15 +42,34 @@
 #include "misc.h"
 #include "settings.h"
 
-static const uint32_t DefaultFrequencyTable[5] = {
-	14502500,
-	14552500,
-	43477500,
-	43502500,
-	43697500,
-};
+static void BOARD_EnableInterrupts(void)
+{
+	// #define NVIC_EnableIRQ              __NVIC_EnableIRQ
+	// #define NVIC_GetEnableIRQ           __NVIC_GetEnableIRQ
+	// #define NVIC_DisableIRQ             __NVIC_DisableIRQ
+	// #define NVIC_GetPendingIRQ          __NVIC_GetPendingIRQ
+	// #define NVIC_SetPendingIRQ          __NVIC_SetPendingIRQ
+	// #define NVIC_ClearPendingIRQ        __NVIC_ClearPendingIRQ
+	// #define NVIC_SetPriority            __NVIC_SetPriority
+	// #define NVIC_GetPriority            __NVIC_GetPriority
 
-void BOARD_GPIO_Init(void)
+	// CM0 only has 2 priority bits, ergo up to 4 discrete levels can
+	// be set. Anything more would be processed to fit within those bits
+	// but allows us to specify what IRQs are more important in code.
+
+	// Maybe we could have IRQ handlers instead of handling
+	// events ourselves somewhere in code?
+
+	NVIC_SetPriority((IRQn_Type)DP32_SPI0_IRQn, 1);
+	NVIC_EnableIRQ((IRQn_Type)DP32_SPI0_IRQn);
+
+	NVIC_SetPriority((IRQn_Type)DP32_SARADC_IRQn, 2);
+	NVIC_EnableIRQ((IRQn_Type)DP32_SARADC_IRQn);
+
+	// SysTick IRQs run at lowest priority (3)
+}
+
+static void BOARD_GPIO_Init(void)
 {
 	GPIOA->DIR |= 0
 		// A7 = UART1 TX default as OUTPUT from bootloader!
@@ -105,7 +126,7 @@ void BOARD_GPIO_Init(void)
 #endif
 }
 
-void BOARD_PORTCON_Init(void)
+static void BOARD_PORTCON_Init(void)
 {
 	// PORT A pin selection
 
@@ -450,7 +471,7 @@ void BOARD_PORTCON_Init(void)
 		;
 }
 
-void BOARD_ADC_Init(void)
+static void BOARD_ADC_Init(void)
 {
 	ADC_Config_t Config;
 
@@ -490,6 +511,7 @@ void BOARD_Init(void)
 	BOARD_GPIO_Init();
 	BOARD_ADC_Init();
 	ST7565_Init();
+	BOARD_EnableInterrupts();
 #if defined(ENABLE_FMRADIO)
 	BK1080_Sleep();
 #endif
@@ -508,7 +530,7 @@ void BOARD_EEPROM_Init(void)
 	gEeprom.CHAN_1_CALL      = IS_MR_CHANNEL(Data[0]) ? Data[0] : MR_CHANNEL_FIRST;
 	gEeprom.SQUELCH_LEVEL    = (Data[1] < 10) ? Data[1] : 2;
 	gEeprom.TX_TIMEOUT_TIMER = (Data[2] < 11) ? Data[2] : 2;
-	gEeprom.KEY_LOCK         = (Data[4] <  2) ? Data[4] : 0;
+	gEeprom.KEY_LOCK         = (Data[4] <  2) ? Data[4] : false;
 	gEeprom.MIC_SENSITIVITY  = (Data[7] <  5) ? Data[7] : 3;
 	// 0E78..0E7F
 	//EEPROM_ReadBuffer(0x0E78, Data, 8);
@@ -560,13 +582,13 @@ void BOARD_EEPROM_Init(void)
 
 	// 0EA8..0EAF
 	EEPROM_ReadBuffer(0x0EA8, Data, 8);
-	gEeprom.ROGER                          = (Data[1] <  3) ? Data[1] : ROGER_MODE_OFF;
+	gEeprom.ROGER                          = (Data[1] <  2) ? Data[1] : 0;
 	gEeprom.REPEATER_TAIL_TONE_ELIMINATION = (Data[2] < 11) ? Data[2] : 0;
 	gEeprom.TX_VFO                         = (Data[3] <  2) ? Data[3] : 0;
 
 	// 0ED0..0ED7
 	EEPROM_ReadBuffer(0x0ED0, Data, 16);
-	gEeprom.DTMF_SIDE_TONE               = (Data[0] <   2) ? Data[0] : 0;
+	gEeprom.DTMF_SIDE_TONE               = (Data[0] <   2) ? Data[0] : false;
 	gEeprom.DTMF_SEPARATE_CODE           = DTMF_ValidateCodes((char *)(Data + 1), 1) ? Data[1] : '*';
 	gEeprom.DTMF_GROUP_CALL_CODE         = DTMF_ValidateCodes((char *)(Data + 2), 1) ? Data[2] : '#';
 	gEeprom.DTMF_DECODE_RESPONSE         = (Data[3] <   4) ? Data[3] : 0;
@@ -612,21 +634,21 @@ void BOARD_EEPROM_Init(void)
 
 	// 0F18..0F1F
 	EEPROM_ReadBuffer(0x0F18, Data, 8);
-	gEeprom.SCAN_LIST_DEFAULT        = (Data[0] < 2) ? Data[0] : false;
+	gEeprom.SCAN_LIST_DEFAULT        = (Data[0] < 2) ? Data[0] : 0;
 	for (uint8_t i = 0; i < 2; i++) {
 		uint8_t j = (i * 3) + 1;
-		gEeprom.SCAN_LIST_ENABLED[i]     = (Data[j] < 2) ? Data[j] : false;
+		gEeprom.SCAN_LIST_ENABLED[i]     = (Data[j] < 2) ? Data[j] : 0;
 		gEeprom.SCANLIST_PRIORITY_CH1[i] = Data[j + 1];
 		gEeprom.SCANLIST_PRIORITY_CH2[i] = Data[j + 2];
 	}
 
 	// 0F40..0F47
 	EEPROM_ReadBuffer(0x0F40, Data, 8);
-	gSetting_F_LOCK = (Data[0] < 3) ? Data[0] : F_LOCK_OFF;
+	gSetting_F_LOCK = (Data[0] < 4) ? Data[0] : F_LOCK_OFF;
 
-	gSetting_350TX  = (Data[1] < 2) ? Data[1] : true;
-	gSetting_200TX  = (Data[3] < 2) ? Data[3] : false;
-	gSetting_500TX  = (Data[4] < 2) ? Data[4] : false;
+	gSetting_350TX  = (Data[1] < 2) ? Data[1] : 0;
+	gSetting_200TX  = (Data[3] < 2) ? Data[3] : 0;
+	gSetting_500TX  = (Data[4] < 2) ? Data[4] : 0;
 
 	if (!gEeprom.VFO_OPEN) {
 		gEeprom.ScreenChannel[0] = gEeprom.MrChannel[0];
@@ -679,6 +701,7 @@ void BOARD_FactoryReset(bool bIsAll)
 	// DO NOT TOUCH
 	uint8_t Template[8];
 	memset(Template, 0xFF, 8);
+
 	for (i = 0x0C80; i < 0x1E00; i += 8) {
 		if (
 			!(i >= 0x0EE0 && i < 0x0F18) && // ANI ID + DTMF codes
@@ -694,17 +717,6 @@ void BOARD_FactoryReset(bool bIsAll)
 				!(i >= 0x0E88 && i < 0x0E90))) // FM settings
 			) {
 			EEPROM_WriteBuffer(i, Template);
-		}
-	}
-	if (bIsAll) {
-		RADIO_InitInfo(gRxVfo, FREQ_CHANNEL_FIRST + 5, 5, 41002500);
-		for (i = 0; i < 5; i++) {
-			const uint32_t Frequency = DefaultFrequencyTable[i];
-
-			gRxVfo->ConfigRX.Frequency = Frequency;
-			gRxVfo->ConfigTX.Frequency = Frequency;
-			gRxVfo->Band = FREQUENCY_GetBand(Frequency);
-			SETTINGS_SaveChannel(MR_CHANNEL_FIRST + i, 0, gRxVfo, 2);
 		}
 	}
 }

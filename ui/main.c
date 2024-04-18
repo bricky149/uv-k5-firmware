@@ -299,13 +299,7 @@ void UI_DisplayMain(void)
 		const FREQ_Config_t *pConfig;
 		// 0x931E
 		switch (gEeprom.VfoInfo[i].MODULATION_MODE) {
-		case 1:
-			memcpy(pLine1 + 27, BITMAP_AM, sizeof(BITMAP_AM));
-			break;
-		case 2:
-			memcpy(pLine1 + 27, BITMAP_SB, sizeof(BITMAP_SB));
-			break;
-		default:
+		case 0:
 			if (LevelMode == LEVEL_MODE_TX) {
 				pConfig = gEeprom.VfoInfo[i].pTX;
 			} else {
@@ -327,6 +321,12 @@ void UI_DisplayMain(void)
 			if (gEeprom.VfoInfo[i].CompanderMode != COMPND_OFF) {
 				memcpy(pLine1 + 94, BITMAP_C, sizeof(BITMAP_C));
 			}
+			break;
+		case 1:
+			memcpy(pLine1 + 27, BITMAP_AM, sizeof(BITMAP_AM));
+			break;
+		default:
+			memcpy(pLine1 + 27, BITMAP_SB, sizeof(BITMAP_SB));
 		}
 
 		// 0x936C

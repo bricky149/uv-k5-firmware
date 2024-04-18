@@ -153,12 +153,6 @@ static const char gSubMenu_PTT_ID[4][5] = {
 	"BOTH",
 };
 
-static const char gSubMenu_ROGER[3][6] = {
-	"OFF",
-	"ROGER",
-	"MDC",
-};
-
 static const char gSubMenu_COMPND[4][6] = {
 	"OFF",
 	"TX",
@@ -178,10 +172,11 @@ static const char gSubMenu_RESET[2][4] = {
 	"ALL",
 };
 
-static const char gSubMenu_F_LOCK[3][4] = {
+static const char gSubMenu_F_LOCK[4][7] = {
 	"OFF",
 	"FCC",
 	"CE",
+	"PMR446",
 };
 
 bool gIsInSubMenu;
@@ -310,6 +305,7 @@ void UI_DisplayMenu(void)
 	case MENU_STE:
 	case MENU_D_ST:
 	case MENU_D_DCD:
+	case MENU_ROGER:
 	case MENU_350TX:
 	case MENU_200TX:
 	case MENU_500TX:
@@ -402,10 +398,6 @@ void UI_DisplayMenu(void)
 		} else {
 			memcpy(String, Contact, 8);
 		}
-		break;
-
-	case MENU_ROGER:
-		strcpy(String, gSubMenu_ROGER[gSubMenuSelection]);
 		break;
 
 	case MENU_COMPND:

@@ -20,7 +20,11 @@
 #include "driver/keyboard.h"
 
 void ACTION_Power(void);
-void ACTION_Scan(bool bFlag);
+#if defined(ENABLE_FMRADIO)
+void ACTION_Scan(bool bRestart);
+#else
+void ACTION_Scan(void);
+#endif
 void ACTION_FM(void);
 
 void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld);

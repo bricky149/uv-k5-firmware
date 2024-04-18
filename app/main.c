@@ -231,7 +231,11 @@ static void MAIN_Key_STAR(bool bKeyPressed, bool bKeyHeld)
 			if (!bKeyHeld || !bKeyPressed) {
 				return;
 			}
+#if defined(ENABLE_FMRADIO)
 			ACTION_Scan(false);
+#else
+			ACTION_Scan();
+#endif
 			return;
 		}
 		if (gScanState == SCAN_OFF) {

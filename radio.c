@@ -117,19 +117,13 @@ void RADIO_InitInfo(VFO_Info_t *pInfo, uint8_t ChannelSave, uint8_t Band, uint32
 {
 	memset(pInfo, 0, sizeof(*pInfo));
 	pInfo->Band = Band;
-	pInfo->SCANLIST1_PARTICIPATION = false;
-	pInfo->SCANLIST2_PARTICIPATION = false;
 	pInfo->STEP_SETTING = STEP_6_25kHz;
 	pInfo->StepFrequency = StepFrequencyTable[3];
 	pInfo->CHANNEL_SAVE = ChannelSave;
-	pInfo->FrequencyReverse = false;
-	pInfo->OUTPUT_POWER = OUTPUT_POWER_LOW;
 	pInfo->ConfigRX.Frequency = Frequency;
 	pInfo->ConfigTX.Frequency = Frequency;
 	pInfo->pRX = &pInfo->ConfigRX;
 	pInfo->pTX = &pInfo->ConfigTX;
-	pInfo->FREQUENCY_OF_DEVIATION = 0;
-	pInfo->CompanderMode = COMPND_OFF;
 	if (ChannelSave == (FREQ_CHANNEL_FIRST + BAND2_108MHz)) {
 		pInfo->MODULATION_MODE = MOD_AM;
 	}
@@ -252,7 +246,7 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		}
 		gEeprom.VfoInfo[VFO].ConfigTX.Code = Tmp;
 
-		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = (Data[2] >> 0) & 0x0F;
+		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = (Data[2] & 0x0F);
 		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = (Data[2] >> 4) & 0x0F;
 
 		// Non-stock memory layout from now on
@@ -262,6 +256,16 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		} else {
 			gEeprom.VfoInfo[VFO].FREQUENCY_DEVIATION_SETTING = (Data[3] & 3);
 			gEeprom.VfoInfo[VFO].FrequencyReverse = (Data[3] >> 4) & 1;
+		}
+
+		if (Data[4] == 0xFF) {
+			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BK4819_FILTER_BW_WIDE;
+			gEeprom.VfoInfo[VFO].OUTPUT_POWER = OUTPUT_POWER_LOW;
+			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = 0;
+		} else {
+			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = (Data[4] & 3);
+			gEeprom.VfoInfo[VFO].OUTPUT_POWER = (Data[4] >> 2) & 3;
+			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = (Data[4] >> 4) & 1;
 		}
 
 		if (Data[5] == 0xFF) {
@@ -282,34 +286,15 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		if (Data[7] == 0xFF) {
 			gEeprom.VfoInfo[VFO].CompanderMode = COMPND_OFF;
 			gEeprom.VfoInfo[VFO].MODULATION_MODE = MOD_FM;
+#if defined (ENABLE_MDC1200)
+			gEeprom.VfoInfo[VFO].MDC1200_MODE = MDC1200_MODE_OFF;
+#endif
 		} else {
 			gEeprom.VfoInfo[VFO].CompanderMode = (Data[7] & 3);
 			gEeprom.VfoInfo[VFO].MODULATION_MODE = (Data[7] >> 2) & 3;
-		}
-
-		if (Data[4] == 0xFF) {
-			switch (gEeprom.VfoInfo[VFO].MODULATION_MODE) {
-			case MOD_FM:
-				gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BK4819_FILTER_BW_WIDE;
-				break;
-			case MOD_AM:
-				gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BK4819_FILTER_BW_WIDE;
-				gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = 0;
-				gEeprom.VfoInfo[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
-				gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
-				gEeprom.VfoInfo[VFO].CompanderMode = COMPND_OFF;
-				break;
-			default:
-				// SSB will not work with any other bandwidth mode
-				gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BANDWIDTH_NARROWER;
-				break;
-			}
-			gEeprom.VfoInfo[VFO].OUTPUT_POWER = OUTPUT_POWER_LOW;
-			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = false;
-		} else {
-			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = (Data[4] & 3);
-			gEeprom.VfoInfo[VFO].OUTPUT_POWER = (Data[4] >> 2) & 3;
-			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = (Data[4] >> 4) & 1;
+#if defined (ENABLE_MDC1200)
+			gEeprom.VfoInfo[VFO].MDC1200_MODE = (Data[7] >> 4) & 3;
+#endif
 		}
 
 		struct {
@@ -360,6 +345,18 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 	if (gEeprom.VfoInfo[VFO].Band == BAND2_108MHz) {
 		// Airband
 		gEeprom.VfoInfo[VFO].MODULATION_MODE = MOD_AM;
+	}
+	if (gEeprom.VfoInfo[VFO].MODULATION_MODE != MOD_FM) {
+		gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = false;
+		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
+		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
+		gEeprom.VfoInfo[VFO].CompanderMode = COMPND_OFF;
+	}
+	switch (gEeprom.VfoInfo[VFO].MODULATION_MODE) {
+	case MOD_LSB:
+	case MOD_USB:
+		// SSB will not work with any other bandwidth mode
+		gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BANDWIDTH_NARROWER;
 	}
 
 	RADIO_ConfigureSquelchAndOutputPower(pRadio);
@@ -736,7 +733,7 @@ void RADIO_PrepareCssTX(void)
 
 void RADIO_SendEndOfTransmission(void)
 {
-	if (gEeprom.ROGER == ROGER_MODE_ROGER) {
+	if (gEeprom.ROGER) {
 		BK4819_PlayRoger();
 	}
 	if ((gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_EOT || gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_BOTH)

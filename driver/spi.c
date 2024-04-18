@@ -14,10 +14,8 @@
  *     limitations under the License.
  */
 
-#include "ARMCM0.h"
 #include "bsp/dp32g030/spi.h"
 #include "bsp/dp32g030/syscon.h"
-#include "bsp/dp32g030/irq.h"
 #include "driver/spi.h"
 
 void SPI0_Init(void)
@@ -40,14 +38,6 @@ void SPI0_Init(void)
 
 	SPI_Enable(&SPI0->CR);
 }
-
-// Original firmware does not use SPI1
-//void SPI1_Init(void)
-//{
-//	SPI_Disable(&SPI1->CR);
-//	NVIC_DisableIRQ((IRQn_Type)DP32_SPI1_IRQn);
-//	SPI_Enable(&SPI1->CR);
-//}
 
 void SPI_WaitForUndocumentedTxFifoStatusBit(void)
 {
@@ -90,13 +80,13 @@ void SPI_Configure(volatile SPI_Port_t *pPort, SPI_Config_t *pConfig)
 		| ((pConfig->TXFIFO_HFULL << SPI_IE_TXFIFO_HFULL_SHIFT) & SPI_IE_TXFIFO_HFULL_MASK)
 		;
 
-	if (pPort->IE) {
+	//if (pPort->IE) {
 	//	if (pPort == SPI0) {
-			NVIC_EnableIRQ((IRQn_Type)DP32_SPI0_IRQn);
+	//		NVIC_EnableIRQ((IRQn_Type)DP32_SPI0_IRQn);
 	//	} else if (pPort == SPI1) {
 	//		NVIC_EnableIRQ((IRQn_Type)DP32_SPI1_IRQn);
 	//	}
-	}
+	//}
 }
 
 void SPI_EnableMasterMode(volatile uint32_t *pCR)

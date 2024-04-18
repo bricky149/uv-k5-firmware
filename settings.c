@@ -90,7 +90,7 @@ void SETTINGS_SaveSettings(void)
 	State[0] = 0xFF;
 	State[1] = gEeprom.CHANNEL_DISPLAY_MODE;
 	State[2] = gEeprom.CROSS_BAND_RX_TX;
-	State[3] = 0xFF;
+	//State[3] = 0xFF;
 	State[4] = gEeprom.DUAL_WATCH;
 	State[5] = gEeprom.BACKLIGHT;
 	State[6] = gEeprom.TAIL_NOTE_ELIMINATION;
@@ -98,7 +98,7 @@ void SETTINGS_SaveSettings(void)
 
 	EEPROM_WriteBuffer(0x0E78, State);
 
-	State[0] = 0xFF;
+	//State[0] = 0xFF;
 	State[1] = gEeprom.KEY_1_SHORT_PRESS_ACTION;
 	State[2] = gEeprom.KEY_1_LONG_PRESS_ACTION;
 	State[3] = gEeprom.KEY_2_SHORT_PRESS_ACTION;
@@ -115,10 +115,11 @@ void SETTINGS_SaveSettings(void)
 	EEPROM_WriteBuffer(0x0E98, Buf);
 
 	Buf[0] = gEeprom.MDC1200_ID;
+	//Buf[1] = 0xFF;
 
 	EEPROM_WriteBuffer(0x0EA0, Buf);
 
-	State[0] = 0xFF;
+	//State[0] = 0xFF;
 	State[1] = gEeprom.ROGER;
 	State[2] = gEeprom.REPEATER_TAIL_TONE_ELIMINATION;
 	State[3] = gEeprom.TX_VFO;
@@ -212,20 +213,21 @@ void SETTINGS_SaveChannel(uint8_t Channel, uint8_t VFO, const VFO_Info_t *pVFO, 
 		State8[2] = (pVFO->ConfigTX.CodeType << 4) | pVFO->ConfigRX.CodeType;
 		// Non-stock memory layout from now on
 		State8[3] = (pVFO->FrequencyReverse << 4) | pVFO->FREQUENCY_DEVIATION_SETTING;
-		State8[4] = 0
-			| (pVFO->BUSY_CHANNEL_LOCK << 4)
+		State8[4] = (pVFO->BUSY_CHANNEL_LOCK << 4)
 			| (pVFO->OUTPUT_POWER << 2)
 			| (pVFO->CHANNEL_BANDWIDTH << 0);
 		State8[5] = (pVFO->DTMF_PTT_ID_TX_MODE << 1) | pVFO->DTMF_DECODING_ENABLE;
 		State8[6] = pVFO->STEP_SETTING;
-		State8[7] = (pVFO->MODULATION_MODE << 2) | pVFO->CompanderMode;
+		State8[7] = (pVFO->MDC1200_MODE << 4)
+			| (pVFO->MODULATION_MODE << 2)
+			| (pVFO->CompanderMode << 0);
 
 		EEPROM_WriteBuffer(OffsetVFO + 8, State8);
 
 		SETTINGS_UpdateChannel(Channel, pVFO, true);
 
 		if (IS_MR_CHANNEL(Channel)) {
-			// dualtachyon
+			// DualTachyon
 			memset(&State32, 0, sizeof(State32));
 			EEPROM_WriteBuffer(OffsetMR + 0x0F50, State32);
 			EEPROM_WriteBuffer(OffsetMR + 0x0F58, State32);

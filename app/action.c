@@ -84,43 +84,49 @@ static void ACTION_Monitor(void)
 #endif
 }
 
+#if defined(ENABLE_FMRADIO)
 void ACTION_Scan(bool bRestart)
 {
-#if defined(ENABLE_FMRADIO)
-	if (gFmRadioMode) {
-		if (gCurrentFunction != FUNCTION_RECEIVE && gCurrentFunction != FUNCTION_MONITOR && gCurrentFunction != FUNCTION_TRANSMIT) {
-			uint16_t Frequency;
-
-			GUI_SelectNextDisplay(DISPLAY_FM);
-			if (gFM_ScanState != FM_SCAN_OFF) {
-				FM_PlayAndUpdate();
-			} else {
-				if (bRestart) {
-					gFM_AutoScan = true;
-					gFM_ChannelPosition = 0;
-					FM_EraseChannels();
-					Frequency = 760;
-				} else {
-					gFM_AutoScan = false;
-					gFM_ChannelPosition = 0;
-					Frequency = gEeprom.FM_FrequencyPlaying;
-				}
-				BK1080_GetFrequencyDeviation(Frequency);
-				FM_Tune(Frequency, 1, bRestart);
-			}
-		}
-	} else
-#endif
-	if (gScreenToDisplay != DISPLAY_SCANNER) {
-		RADIO_SelectVfos();
-		GUI_SelectNextDisplay(DISPLAY_MAIN);
-		if (gScanState != SCAN_OFF) {
-			SCANNER_Stop();
+	if (!gFmRadioMode) {
+		return;
+	}
+	if (gCurrentFunction != FUNCTION_RECEIVE && gCurrentFunction != FUNCTION_MONITOR && gCurrentFunction != FUNCTION_TRANSMIT) {
+		uint16_t Frequency;
+		GUI_SelectNextDisplay(DISPLAY_FM);
+		
+		if (gFM_ScanState != FM_SCAN_OFF) {
+			FM_PlayAndUpdate();
 		} else {
-			CHANNEL_Next(true, 1);
+			if (bRestart) {
+				gFM_AutoScan = true;
+				gFM_ChannelPosition = 0;
+				FM_EraseChannels();
+				Frequency = 760;
+			} else {
+				gFM_AutoScan = false;
+				gFM_ChannelPosition = 0;
+				Frequency = gEeprom.FM_FrequencyPlaying;
+			}
+			BK1080_GetFrequencyDeviation(Frequency);
+			FM_Tune(Frequency, 1, bRestart);
 		}
 	}
 }
+#else
+void ACTION_Scan(void)
+{
+	if (gScreenToDisplay == DISPLAY_SCANNER) {
+		return;
+	}
+	RADIO_SelectVfos();
+	GUI_SelectNextDisplay(DISPLAY_MAIN);
+	if (gScanState != SCAN_OFF) {
+		SCANNER_Stop();
+	} else {
+		CHANNEL_Next(true, 1);
+	}
+}
+#endif
 
 #if defined(ENABLE_FMRADIO)
 void ACTION_FM(void)
@@ -199,7 +205,11 @@ void ACTION_Handle(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		// Work around bug where unlocking does
 		// not work while scan is running
 		if (!gEeprom.KEY_LOCK) {
+#if defined(ENABLE_FMRADIO)
 			ACTION_Scan(true);
+#else
+			ACTION_Scan();
+#endif
 		}
 		break;
 	case 5:

@@ -105,7 +105,7 @@ uint8_t FREQUENCY_CalculateOutputPower(uint8_t TxpLow, uint8_t TxpMid, uint8_t T
 uint32_t FREQUENCY_FloorToStep(uint32_t Upper, uint32_t Step, uint32_t Lower)
 {
 	uint32_t Index;
-	// dualtachyon
+	// DualTachyon
 	if (Step == 833) {
 		const uint32_t Delta = Upper - Lower;
 		uint32_t Base = (Delta / 2500) * 2500;
@@ -149,6 +149,9 @@ bool FREQUENCY_Check(VFO_Info_t *pInfo)
 		if (Frequency >= 43000000 && Frequency <= 44000000) {
 			return false;
 		}
+		break;
+
+	case F_LOCK_PMR:
 		if (Frequency >= 44600000 && Frequency <= 44620000) {
 			return false;
 		}

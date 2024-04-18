@@ -14,8 +14,6 @@
  *     limitations under the License.
  */
 
-#include "ARMCM0.h"
-#include "bsp/dp32g030/irq.h"
 #include "bsp/dp32g030/saradc.h"
 #include "bsp/dp32g030/syscon.h"
 #include "driver/adc.h"
@@ -115,7 +113,7 @@ void ADC_Configure(ADC_Config_t *pAdc)
 		| ((pAdc->IE_FIFO_HFULL << SARADC_IE_FIFO_HFULL_SHIFT) & SARADC_IE_FIFO_HFULL_MASK)
 		;
 
-	NVIC_EnableIRQ((IRQn_Type)DP32_SARADC_IRQn);
+	//NVIC_EnableIRQ((IRQn_Type)DP32_SARADC_IRQn);
 	// ADC_Enable();
 	SARADC_CFG = (SARADC_CFG & ~SARADC_CFG_ADC_EN_MASK) | SARADC_CFG_ADC_EN_BITS_ENABLE;
 }

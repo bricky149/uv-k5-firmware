@@ -26,6 +26,7 @@ enum {
 	F_LOCK_OFF = 0U,
 	F_LOCK_FCC = 1U,
 	F_LOCK_CE  = 2U,
+	F_LOCK_PMR = 3U,
 };
 
 enum {
@@ -58,13 +59,6 @@ enum {
 	OUTPUT_POWER_HIGH = 2U,
 };
 
-enum ROGER_Mode_t {
-	ROGER_MODE_OFF   = 0U,
-	ROGER_MODE_ROGER = 1U,
-	ROGER_MODE_MDC   = 2U,
-};
-typedef enum ROGER_Mode_t ROGER_Mode_t;
-
 enum CHANNEL_DisplayMode_t {
 	MDF_FREQUENCY = 0U,
 	MDF_CHANNEL   = 1U,
@@ -93,19 +87,20 @@ typedef struct {
 	uint8_t TX_TIMEOUT_TIMER;
 	bool KEY_LOCK;
 	uint8_t CHANNEL_DISPLAY_MODE;
-	bool TAIL_NOTE_ELIMINATION;
-	bool VFO_OPEN;
+	uint8_t TAIL_NOTE_ELIMINATION;
+	uint8_t VFO_OPEN;
 	uint8_t DUAL_WATCH;
 	uint8_t CROSS_BAND_RX_TX;
 	uint8_t BACKLIGHT;
 	uint8_t SCAN_RESUME_MODE;
 	uint8_t SCAN_LIST_DEFAULT;
-	bool SCAN_LIST_ENABLED[2];
+	uint8_t SCAN_LIST_ENABLED[2];
 	uint8_t SCANLIST_PRIORITY_CH1[2];
 	uint8_t SCANLIST_PRIORITY_CH2[2];
-	bool AUTO_KEYPAD_LOCK;
+	uint8_t AUTO_KEYPAD_LOCK;
 	uint16_t FM_FrequencyPlaying;
-	ROGER_Mode_t ROGER;
+	bool DTMF_SIDE_TONE;
+	uint8_t ROGER;
 	uint8_t REPEATER_TAIL_TONE_ELIMINATION;
 	uint8_t KEY_1_SHORT_PRESS_ACTION;
 	uint8_t KEY_1_LONG_PRESS_ACTION;
@@ -121,7 +116,6 @@ typedef struct {
 	char DTMF_GROUP_CALL_CODE;
 	uint8_t DTMF_DECODE_RESPONSE;
 	uint8_t DTMF_AUTO_RESET_TIME;
-	bool DTMF_SIDE_TONE;
 	uint16_t DTMF_PRELOAD_TIME;
 	uint16_t DTMF_FIRST_CODE_PERSIST_TIME;
 	uint16_t DTMF_HASH_CODE_PERSIST_TIME;

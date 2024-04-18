@@ -71,8 +71,7 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 	case MENU_TXP: case MENU_SFT_D:
 	case MENU_TDR: case MENU_WX:
 	case MENU_SC_REV: case MENU_MDF:
-	case MENU_W_N: case MENU_ROGER:
-	case MENU_F_LOCK:
+	case MENU_W_N:
 		*pMin = 0;
 		*pMax = 2;
 		break;
@@ -92,8 +91,8 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 #endif
 	case MENU_BCL: case MENU_AUTOLK:
 	case MENU_S_ADD1: case MENU_S_ADD2:
-	case MENU_STE:
-	case MENU_D_ST: case MENU_D_DCD:
+	case MENU_STE: case MENU_D_ST:
+	case MENU_D_DCD: case MENU_ROGER:
 	case MENU_RESET: case MENU_350TX:
 	case MENU_200TX: case MENU_500TX:
 		*pMin = 0;
@@ -122,6 +121,7 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 #endif
 	case MENU_D_RSP: case MENU_PTT_ID:
 	case MENU_COMPND: case MENU_MOD:
+	case MENU_F_LOCK:
 		*pMin = 0;
 		*pMax = 3;
 		break;
