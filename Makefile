@@ -1,6 +1,5 @@
 TARGET = firmware
 
-ENABLE_1o11AMFIX := 0
 ENABLE_FMRADIO := 0
 ENABLE_MDC1200 := 1
 ENABLE_SWD := 0
@@ -34,7 +33,10 @@ ifeq ($(ENABLE_FMRADIO),1)
 OBJS += driver/bk1080.o
 endif
 OBJS += driver/bk4819.o
-ifeq ($(ENABLE_MDC1200),1) || ifeq ($(ENABLE_UART),1)
+ifeq ($(ENABLE_MDC1200),1)
+OBJS += driver/crc.o
+endif
+ifeq ($(ENABLE_UART),1)
 OBJS += driver/crc.o
 endif
 OBJS += driver/eeprom.o
@@ -126,9 +128,6 @@ endif
 CFLAGS += -DPRINTF_INCLUDE_CONFIG_H
 CFLAGS += -DGIT_HASH=\"$(GIT_HASH)\"
 
-ifeq ($(ENABLE_1o11AMFIX),1)
-CFLAGS += -DENABLE_1o11AMFIX
-endif
 ifeq ($(ENABLE_FMRADIO),1)
 CFLAGS += -DENABLE_FMRADIO
 endif

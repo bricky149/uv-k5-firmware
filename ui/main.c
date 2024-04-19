@@ -225,12 +225,12 @@ void UI_DisplayMain(void)
 							Channel = gEeprom.TX_VFO;
 						}
 						if (Channel == i) {
-							NUMBER_ToDigits(gEeprom.VfoInfo[i].pTX->Frequency, String);
+							NUMBER_ToDigits(gVFO.Info[i].pTX->Frequency, String);
 						} else {
-							NUMBER_ToDigits(gEeprom.VfoInfo[i].pRX->Frequency, String);
+							NUMBER_ToDigits(gVFO.Info[i].pRX->Frequency, String);
 						}
 					} else {
-						NUMBER_ToDigits(gEeprom.VfoInfo[i].pRX->Frequency, String);
+						NUMBER_ToDigits(gVFO.Info[i].pRX->Frequency, String);
 					}
 					UI_DisplayFrequency(String, 31, i * 4, false, false);
 					if (IS_MR_CHANNEL(gEeprom.ScreenChannel[i])) {
@@ -247,11 +247,11 @@ void UI_DisplayMain(void)
 					sprintf(String, "CH-%03u", gEeprom.ScreenChannel[i] + 1);
 					UI_PrintString(String, 31, 112, i * 4, 8, true);
 				} else if (gEeprom.CHANNEL_DISPLAY_MODE == MDF_NAME) {
-					if(gEeprom.VfoInfo[i].Name[0] == 0 || gEeprom.VfoInfo[i].Name[0] == 0xFF) {
+					if(gVFO.Info[i].Name[0] == 0 || gVFO.Info[i].Name[0] == 0xFF) {
 						sprintf(String, "CH-%03u", gEeprom.ScreenChannel[i] + 1);
 						UI_PrintString(String, 31, 112, i * 4, 8, true);
 					} else {
-						UI_PrintString(gEeprom.VfoInfo[i].Name, 31, 112, i * 4, 8, true);
+						UI_PrintString(gVFO.Info[i].Name, 31, 112, i * 4, 8, true);
 					}
 				}
 			}
@@ -298,12 +298,12 @@ void UI_DisplayMain(void)
 
 		const FREQ_Config_t *pConfig;
 		// 0x931E
-		switch (gEeprom.VfoInfo[i].MODULATION_MODE) {
+		switch (gVFO.Info[i].MODULATION_MODE) {
 		case 0:
 			if (LevelMode == LEVEL_MODE_TX) {
-				pConfig = gEeprom.VfoInfo[i].pTX;
+				pConfig = gVFO.Info[i].pTX;
 			} else {
-				pConfig = gEeprom.VfoInfo[i].pRX;
+				pConfig = gVFO.Info[i].pRX;
 			}
 
 			switch (pConfig->CodeType) {
@@ -318,7 +318,7 @@ void UI_DisplayMain(void)
 				break;
 			}
 
-			if (gEeprom.VfoInfo[i].CompanderMode != COMPND_OFF) {
+			if (gVFO.Info[i].CompanderMode != COMPND_OFF) {
 				memcpy(pLine1 + 94, BITMAP_C, sizeof(BITMAP_C));
 			}
 			break;
@@ -330,7 +330,7 @@ void UI_DisplayMain(void)
 		}
 
 		// 0x936C
-		switch (gEeprom.VfoInfo[i].OUTPUT_POWER) {
+		switch (gVFO.Info[i].OUTPUT_POWER) {
 		case OUTPUT_POWER_LOW:
 			memcpy(pLine1 + 44, BITMAP_PowerLow, sizeof(BITMAP_PowerLow));
 			break;
@@ -342,26 +342,26 @@ void UI_DisplayMain(void)
 			break;
 		}
 
-		if (gEeprom.VfoInfo[i].ConfigRX.Frequency != gEeprom.VfoInfo[i].ConfigTX.Frequency) {
-			if (gEeprom.VfoInfo[i].FREQUENCY_DEVIATION_SETTING == FREQUENCY_DEVIATION_ADD) {
+		if (gVFO.Info[i].ConfigRX.Frequency != gVFO.Info[i].ConfigTX.Frequency) {
+			if (gVFO.Info[i].FREQUENCY_DEVIATION_SETTING == FREQUENCY_DEVIATION_ADD) {
 				memcpy(pLine1 + 54, BITMAP_Add, sizeof(BITMAP_Add));
 			}
-			if (gEeprom.VfoInfo[i].FREQUENCY_DEVIATION_SETTING == FREQUENCY_DEVIATION_SUB) {
+			if (gVFO.Info[i].FREQUENCY_DEVIATION_SETTING == FREQUENCY_DEVIATION_SUB) {
 				memcpy(pLine1 + 54, BITMAP_Sub, sizeof(BITMAP_Sub));
 			}
 		}
 
-		if (gEeprom.VfoInfo[i].FrequencyReverse) {
+		if (gVFO.Info[i].FrequencyReverse) {
 			memcpy(pLine1 + 64, BITMAP_ReverseMode, sizeof(BITMAP_ReverseMode));
 		}
-		switch (gEeprom.VfoInfo[i].CHANNEL_BANDWIDTH) {
+		switch (gVFO.Info[i].CHANNEL_BANDWIDTH) {
 		case BANDWIDTH_NARROWER:
 			// No bitmap for now
 		case BANDWIDTH_NARROW:
 			memcpy(pLine1 + 74, BITMAP_NarrowBand, sizeof(BITMAP_NarrowBand));
 			break;
 		}
-		if (gEeprom.VfoInfo[i].DTMF_DECODING_ENABLE) {
+		if (gVFO.Info[i].DTMF_DECODING_ENABLE) {
 			memcpy(pLine1 + 84, BITMAP_DTMF, sizeof(BITMAP_DTMF));
 		}
 	}

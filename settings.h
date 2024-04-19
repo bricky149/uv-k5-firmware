@@ -76,7 +76,6 @@ enum MDC1200_Mode_t {
 typedef enum MDC1200_Mode_t MDC1200_Mode_t;
 
 typedef struct {
-	VFO_Info_t VfoInfo[2];
 	uint32_t POWER_ON_PASSWORD;
 	uint8_t ScreenChannel[2];
 	uint8_t FreqChannel[2];
@@ -125,10 +124,8 @@ typedef struct {
 } EEPROM_Config_t;
 
 typedef struct {
-	uint16_t SelectedFrequency;
-	uint8_t SelectedChannel;
-	bool IsMrMode;
-} EEPROM_FM_t;
+	VFO_Info_t Info[2];
+} EEPROM_VFO_t;
 
 typedef struct {
 	int16_t BK4819_XTAL_FREQ_LOW;
@@ -138,8 +135,18 @@ typedef struct {
 	uint8_t DAC_GAIN;
 } EEPROM_Calibration_t;
 
-extern EEPROM_Config_t gEeprom;
+#if defined(ENABLE_FMRADIO)
+typedef struct {
+	uint16_t SelectedFrequency;
+	uint8_t SelectedChannel;
+	bool IsMrMode;
+} EEPROM_FM_t;
+
 extern EEPROM_FM_t gFM;
+#endif
+
+extern EEPROM_Config_t gEeprom;
+extern EEPROM_VFO_t gVFO;
 extern EEPROM_Calibration_t gCalibration;
 
 void SETTINGS_SaveFM(void);

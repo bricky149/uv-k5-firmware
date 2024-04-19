@@ -138,10 +138,9 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 	uint8_t Band;
 	bool bParticipation2;
 	uint16_t Base;
-	uint8_t Tmp;
 	uint32_t Frequency;
 
-	pRadio = &gEeprom.VfoInfo[VFO];
+	pRadio = &gVFO.Info[VFO];
 
 	Channel = gEeprom.ScreenChannel[VFO];
 	if (IS_VALID_CHANNEL(Channel)) {
@@ -169,6 +168,9 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		}
 		Index = Channel - FREQ_CHANNEL_FIRST;
 		RADIO_InitInfo(pRadio, Channel, Index, LowerLimitFrequencyBandTable[Index]);
+		// Out-of-bounds when radio is reset, a VFO is set and radio is rebooted
+		// Save any non-configured VFO to prevent the above from happening
+		SETTINGS_SaveChannel(Channel, VFO, pRadio, 0);
 		return;
 	}
 
@@ -178,17 +180,17 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 	}
 
 	if (IS_MR_CHANNEL(Channel)) {
-		gEeprom.VfoInfo[VFO].Band = Band;
-		gEeprom.VfoInfo[VFO].SCANLIST1_PARTICIPATION = !!(Attributes & MR_CH_SCANLIST1);
+		gVFO.Info[VFO].Band = Band;
+		gVFO.Info[VFO].SCANLIST1_PARTICIPATION = !!(Attributes & MR_CH_SCANLIST1);
 		bParticipation2 = !!(Attributes & MR_CH_SCANLIST2);
 	} else {
 		Band = Channel - FREQ_CHANNEL_FIRST;
-		gEeprom.VfoInfo[VFO].Band = Band;
+		gVFO.Info[VFO].Band = Band;
 		bParticipation2 = true;
-		gEeprom.VfoInfo[VFO].SCANLIST1_PARTICIPATION = true;
+		gVFO.Info[VFO].SCANLIST1_PARTICIPATION = true;
 	}
-	gEeprom.VfoInfo[VFO].SCANLIST2_PARTICIPATION = bParticipation2;
-	gEeprom.VfoInfo[VFO].CHANNEL_SAVE = Channel;
+	gVFO.Info[VFO].SCANLIST2_PARTICIPATION = bParticipation2;
+	gVFO.Info[VFO].CHANNEL_SAVE = Channel;
 
 	if (IS_MR_CHANNEL(Channel)) {
 		Base = Channel * 16;
@@ -200,163 +202,91 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 	memset(Data, 0, sizeof(Data));
 
 	if (Configure == VFO_CONFIGURE_RELOAD || Channel >= FREQ_CHANNEL_FIRST) {
-		EEPROM_ReadBuffer(Base + 8, Data, 8);
-
-		Tmp = Data[0];
-		switch (gEeprom.VfoInfo[VFO].ConfigRX.CodeType) {
-		case CODE_TYPE_CONTINUOUS_TONE:
-			if (Tmp >= 50) {
-				Tmp = 0;
-			}
-			break;
-
-		case CODE_TYPE_DIGITAL:
-		case CODE_TYPE_REVERSE_DIGITAL:
-			if (Tmp >= 104) {
-				Tmp = 0;
-			}
-			break;
-
-		default:
-			gEeprom.VfoInfo[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
-			Tmp = 0;
-			break;
-		}
-		gEeprom.VfoInfo[VFO].ConfigRX.Code = Tmp;
-
-		Tmp = Data[1];
-		switch (gEeprom.VfoInfo[VFO].ConfigTX.CodeType) {
-		case CODE_TYPE_CONTINUOUS_TONE:
-			if (Tmp >= 50) {
-				Tmp = 0;
-			}
-			break;
-
-		case CODE_TYPE_DIGITAL:
-		case CODE_TYPE_REVERSE_DIGITAL:
-			if (Tmp >= 104) {
-				Tmp = 0;
-			}
-			break;
-
-		default:
-			gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
-			Tmp = 0;
-			break;
-		}
-		gEeprom.VfoInfo[VFO].ConfigTX.Code = Tmp;
-
-		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = (Data[2] & 0x0F);
-		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = (Data[2] >> 4) & 0x0F;
-
-		// Non-stock memory layout from now on
-		if (Data[3] == 0xFF) {
-			gEeprom.VfoInfo[VFO].FREQUENCY_DEVIATION_SETTING = 0;
-			gEeprom.VfoInfo[VFO].FrequencyReverse = false;
-		} else {
-			gEeprom.VfoInfo[VFO].FREQUENCY_DEVIATION_SETTING = (Data[3] & 3);
-			gEeprom.VfoInfo[VFO].FrequencyReverse = (Data[3] >> 4) & 1;
-		}
-
-		if (Data[4] == 0xFF) {
-			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BK4819_FILTER_BW_WIDE;
-			gEeprom.VfoInfo[VFO].OUTPUT_POWER = OUTPUT_POWER_LOW;
-			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = 0;
-		} else {
-			gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = (Data[4] & 3);
-			gEeprom.VfoInfo[VFO].OUTPUT_POWER = (Data[4] >> 2) & 3;
-			gEeprom.VfoInfo[VFO].BUSY_CHANNEL_LOCK = (Data[4] >> 4) & 1;
-		}
-
-		if (Data[5] == 0xFF) {
-			gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = 0;
-			gEeprom.VfoInfo[VFO].DTMF_PTT_ID_TX_MODE = PTT_ID_OFF;
-		} else {
-			gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = (Data[5] & 1);
-			gEeprom.VfoInfo[VFO].DTMF_PTT_ID_TX_MODE = (Data[5] >> 1) & 3;
-		}
-
-		Tmp = Data[6];
-		if (Tmp > STEP_8_33kHz) {
-			Tmp = STEP_25_0kHz;
-		}
-		gEeprom.VfoInfo[VFO].STEP_SETTING = Tmp;
-		gEeprom.VfoInfo[VFO].StepFrequency = StepFrequencyTable[Tmp];
-
-		if (Data[7] == 0xFF) {
-			gEeprom.VfoInfo[VFO].CompanderMode = COMPND_OFF;
-			gEeprom.VfoInfo[VFO].MODULATION_MODE = MOD_FM;
-#if defined (ENABLE_MDC1200)
-			gEeprom.VfoInfo[VFO].MDC1200_MODE = MDC1200_MODE_OFF;
-#endif
-		} else {
-			gEeprom.VfoInfo[VFO].CompanderMode = (Data[7] & 3);
-			gEeprom.VfoInfo[VFO].MODULATION_MODE = (Data[7] >> 2) & 3;
-#if defined (ENABLE_MDC1200)
-			gEeprom.VfoInfo[VFO].MDC1200_MODE = (Data[7] >> 4) & 3;
-#endif
-		}
-
 		struct {
 			uint32_t Frequency;
 			uint32_t Offset;
 		} Info;
 		EEPROM_ReadBuffer(Base, &Info, sizeof(Info));
 
-		pRadio->ConfigRX.Frequency = Info.Frequency;
-		if (Info.Offset >= 1000000) {
-			Info.Offset = 0;
-		}
-		gEeprom.VfoInfo[VFO].FREQUENCY_OF_DEVIATION = Info.Offset;
+		gVFO.Info[VFO].ConfigRX.Frequency = Info.Frequency;
+		gVFO.Info[VFO].FREQUENCY_OF_DEVIATION = Info.Offset;
+
+		EEPROM_ReadBuffer(Base + 8, Data, 8);
+
+		gVFO.Info[VFO].ConfigRX.Code = Data[0];
+		gVFO.Info[VFO].ConfigTX.Code = Data[1];
+
+		gVFO.Info[VFO].ConfigRX.CodeType = (Data[2] & 0x0F);
+		gVFO.Info[VFO].ConfigTX.CodeType = (Data[2] >> 4) & 0x0F;
+
+		// Non-stock memory layout from now on
+		gVFO.Info[VFO].FREQUENCY_DEVIATION_SETTING = (Data[3] & 3);
+		gVFO.Info[VFO].FrequencyReverse = (Data[3] >> 4) & 1;
+
+		gVFO.Info[VFO].CHANNEL_BANDWIDTH = (Data[4] & 3);
+		gVFO.Info[VFO].OUTPUT_POWER = (Data[4] >> 2) & 3;
+		gVFO.Info[VFO].BUSY_CHANNEL_LOCK = (Data[4] >> 4) & 1;
+
+		gVFO.Info[VFO].DTMF_DECODING_ENABLE = (Data[5] & 1);
+		gVFO.Info[VFO].DTMF_PTT_ID_TX_MODE = (Data[5] >> 1) & 3;
+
+		gVFO.Info[VFO].STEP_SETTING = Data[6];
+		gVFO.Info[VFO].StepFrequency = StepFrequencyTable[Data[6]];
+
+		gVFO.Info[VFO].CompanderMode = (Data[7] & 3);
+		gVFO.Info[VFO].MODULATION_MODE = (Data[7] >> 2) & 3;
+#if defined (ENABLE_MDC1200)
+		gVFO.Info[VFO].MDC1200_MODE = (Data[7] >> 4) & 3;
+#endif
 	}
 
-	Frequency = pRadio->ConfigRX.Frequency;
+	Frequency = gVFO.Info[VFO].ConfigRX.Frequency;
 	if (Frequency < LowerLimitFrequencyBandTable[Band]) {
-		pRadio->ConfigRX.Frequency = LowerLimitFrequencyBandTable[Band];
+		gVFO.Info[VFO].ConfigRX.Frequency = LowerLimitFrequencyBandTable[Band];
 	} else if (Frequency > UpperLimitFrequencyBandTable[Band]) {
-		pRadio->ConfigRX.Frequency = UpperLimitFrequencyBandTable[Band];
+		gVFO.Info[VFO].ConfigRX.Frequency = UpperLimitFrequencyBandTable[Band];
 	} else if (Channel >= FREQ_CHANNEL_FIRST) {
-		pRadio->ConfigRX.Frequency = FREQUENCY_FloorToStep(pRadio->ConfigRX.Frequency, gEeprom.VfoInfo[VFO].StepFrequency, LowerLimitFrequencyBandTable[Band]);
+		gVFO.Info[VFO].ConfigRX.Frequency = FREQUENCY_FloorToStep(pRadio->ConfigRX.Frequency, gVFO.Info[VFO].StepFrequency, LowerLimitFrequencyBandTable[Band]);
 	}
 
 	if (Frequency >= 10800000 && Frequency <= 13599990) {
-		gEeprom.VfoInfo[VFO].FREQUENCY_DEVIATION_SETTING = FREQUENCY_DEVIATION_OFF;
+		gVFO.Info[VFO].FREQUENCY_DEVIATION_SETTING = FREQUENCY_DEVIATION_OFF;
 	} else if (!IS_MR_CHANNEL(Channel)) {
-		Frequency = FREQUENCY_FloorToStep(gEeprom.VfoInfo[VFO].FREQUENCY_OF_DEVIATION, gEeprom.VfoInfo[VFO].StepFrequency, 0);
-		gEeprom.VfoInfo[VFO].FREQUENCY_OF_DEVIATION = Frequency;
+		Frequency = FREQUENCY_FloorToStep(pRadio->FREQUENCY_OF_DEVIATION, pRadio->StepFrequency, 0);
+		gVFO.Info[VFO].FREQUENCY_OF_DEVIATION = Frequency;
 	}
 	RADIO_ApplyOffset(pRadio);
 	if (IS_MR_CHANNEL(Channel)) {
-		memset(gEeprom.VfoInfo[VFO].Name, 0, sizeof(gEeprom.VfoInfo[VFO].Name));
-		EEPROM_ReadBuffer(0x0F50 + (Channel * 0x10), gEeprom.VfoInfo[VFO].Name, 16);
+		memset(gVFO.Info[VFO].Name, 0, sizeof(gVFO.Info[VFO].Name));
+		EEPROM_ReadBuffer(0x0F50 + (Channel * 0x10), gVFO.Info[VFO].Name, 16);
 		// 16 bytes allocated but only 12 used
-		//EEPROM_ReadBuffer(0x0F50 + (Channel * 0x10), gEeprom.VfoInfo[VFO].Name + 0, 8);
-		//EEPROM_ReadBuffer(0x0F58 + (Channel * 0x10), gEeprom.VfoInfo[VFO].Name + 8, 8);
+		//EEPROM_ReadBuffer(0x0F50 + (Channel * 0x10), gVFO.Info[VFO].Name + 0, 8);
+		//EEPROM_ReadBuffer(0x0F58 + (Channel * 0x10), gVFO.Info[VFO].Name + 8, 8);
 	}
 
-	if (!gEeprom.VfoInfo[VFO].FrequencyReverse) {
-		gEeprom.VfoInfo[VFO].pRX = &gEeprom.VfoInfo[VFO].ConfigRX;
-		gEeprom.VfoInfo[VFO].pTX = &gEeprom.VfoInfo[VFO].ConfigTX;
+	if (!gVFO.Info[VFO].FrequencyReverse) {
+		gVFO.Info[VFO].pRX = &gVFO.Info[VFO].ConfigRX;
+		gVFO.Info[VFO].pTX = &gVFO.Info[VFO].ConfigTX;
 	} else {
-		gEeprom.VfoInfo[VFO].pRX = &gEeprom.VfoInfo[VFO].ConfigTX;
-		gEeprom.VfoInfo[VFO].pTX = &gEeprom.VfoInfo[VFO].ConfigRX;
+		gVFO.Info[VFO].pRX = &gVFO.Info[VFO].ConfigTX;
+		gVFO.Info[VFO].pTX = &gVFO.Info[VFO].ConfigRX;
 	}
 
-	if (gEeprom.VfoInfo[VFO].Band == BAND2_108MHz) {
+	if (gVFO.Info[VFO].Band == BAND2_108MHz) {
 		// Airband
-		gEeprom.VfoInfo[VFO].MODULATION_MODE = MOD_AM;
+		gVFO.Info[VFO].MODULATION_MODE = MOD_AM;
 	}
-	if (gEeprom.VfoInfo[VFO].MODULATION_MODE != MOD_FM) {
-		gEeprom.VfoInfo[VFO].DTMF_DECODING_ENABLE = false;
-		gEeprom.VfoInfo[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
-		gEeprom.VfoInfo[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
-		gEeprom.VfoInfo[VFO].CompanderMode = COMPND_OFF;
+	if (gVFO.Info[VFO].MODULATION_MODE != MOD_FM) {
+		gVFO.Info[VFO].DTMF_DECODING_ENABLE = false;
+		gVFO.Info[VFO].ConfigRX.CodeType = CODE_TYPE_OFF;
+		gVFO.Info[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
+		gVFO.Info[VFO].CompanderMode = COMPND_OFF;
 	}
-	switch (gEeprom.VfoInfo[VFO].MODULATION_MODE) {
+	switch (gVFO.Info[VFO].MODULATION_MODE) {
 	case MOD_LSB:
 	case MOD_USB:
 		// SSB will not work with any other bandwidth mode
-		gEeprom.VfoInfo[VFO].CHANNEL_BANDWIDTH = BANDWIDTH_NARROWER;
+		gVFO.Info[VFO].CHANNEL_BANDWIDTH = BANDWIDTH_NARROWER;
 	}
 
 	RADIO_ConfigureSquelchAndOutputPower(pRadio);
@@ -448,7 +378,7 @@ static void RADIO_SelectCurrentVfo(void)
 	if (gEeprom.CROSS_BAND_RX_TX == CROSS_BAND_OFF) {
 		gCurrentVfo = gRxVfo;
 	} else {
-		gCurrentVfo = &gEeprom.VfoInfo[gEeprom.TX_VFO];
+		gCurrentVfo = &gVFO.Info[gEeprom.TX_VFO];
 	}
 }
 
@@ -464,7 +394,7 @@ void RADIO_SelectVfos(void)
 		gEeprom.TX_VFO = 0;
 	}
 
-	gTxVfo = &gEeprom.VfoInfo[gEeprom.TX_VFO];
+	gTxVfo = &gVFO.Info[gEeprom.TX_VFO];
 	if (gEeprom.CROSS_BAND_RX_TX == CROSS_BAND_OFF) {
 		gEeprom.RX_VFO = gEeprom.TX_VFO;
 	} else {
@@ -475,7 +405,7 @@ void RADIO_SelectVfos(void)
 		}
 	}
 
-	gRxVfo = &gEeprom.VfoInfo[gEeprom.RX_VFO];
+	gRxVfo = &gVFO.Info[gEeprom.RX_VFO];
 	RADIO_SelectCurrentVfo();
 }
 
@@ -659,7 +589,7 @@ void RADIO_PrepareTX(void)
 		gScheduleDualWatch = false;
 		if (!gRxVfoIsActive) {
 			gEeprom.RX_VFO = gEeprom.TX_VFO;
-			gRxVfo = &gEeprom.VfoInfo[gEeprom.TX_VFO];
+			gRxVfo = &gVFO.Info[gEeprom.TX_VFO];
 		}
 		gRxVfoIsActive = true;
 	}

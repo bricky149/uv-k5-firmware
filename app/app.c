@@ -439,7 +439,7 @@ static void MR_NextChannel(void)
 static void DUALWATCH_Alternate(void)
 {
 	gEeprom.RX_VFO = !gEeprom.RX_VFO;
-	gRxVfo = &gEeprom.VfoInfo[gEeprom.RX_VFO];
+	gRxVfo = &gVFO.Info[gEeprom.RX_VFO];
 
 	RADIO_SetupRegisters(false);
 	gDualWatchCountdown = 10;
@@ -684,11 +684,6 @@ void APP_TimeSlice10ms(void)
 		}
 	}
 
-	if (gRxVfo->MODULATION_MODE == MOD_AM) {
-		// Manually adjust gain register values
-		BK4819_AMFix();
-	}
-
 #if defined(ENABLE_FMRADIO)
 	if (gFmRadioCountdown > 0) {
 		return;
@@ -795,7 +790,10 @@ void APP_TimeSlice10ms(void)
 }
 
 void APP_TimeSlice40ms(void) {
-
+	if (gRxVfo->MODULATION_MODE == MOD_AM) {
+		// Manually adjust gain register values
+		BK4819_AMFix_40ms();
+	}
 }
 
 void APP_TimeSlice500ms(void)
@@ -810,6 +808,11 @@ void APP_TimeSlice500ms(void)
 	}
 
 	// Skipped authentic device check
+
+	if (gRxVfo->MODULATION_MODE == MOD_AM) {
+		// Manually adjust gain register values
+		BK4819_AMFix_500ms();
+	}
 
 #if defined(ENABLE_FMRADIO)
 	if (gFmRadioCountdown > 0) {

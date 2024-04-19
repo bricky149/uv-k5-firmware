@@ -367,12 +367,12 @@ static void CMD_052F(const uint8_t *pBuffer)
 	gEeprom.CROSS_BAND_RX_TX = CROSS_BAND_OFF;
 	gEeprom.RX_VFO = 0;
 	gEeprom.DTMF_SIDE_TONE = false;
-	gEeprom.VfoInfo[0].FrequencyReverse = false;
-	gEeprom.VfoInfo[0].pRX = &gEeprom.VfoInfo[0].ConfigRX;
-	gEeprom.VfoInfo[0].pTX = &gEeprom.VfoInfo[0].ConfigTX;
-	gEeprom.VfoInfo[0].FREQUENCY_DEVIATION_SETTING = FREQUENCY_DEVIATION_OFF;
-	gEeprom.VfoInfo[0].DTMF_PTT_ID_TX_MODE = PTT_ID_OFF;
-	gEeprom.VfoInfo[0].DTMF_DECODING_ENABLE = false;
+	gVFO.Info[0].FrequencyReverse = false;
+	gVFO.Info[0].pRX = &gVFO.Info[0].ConfigRX;
+	gVFO.Info[0].pTX = &gVFO.Info[0].ConfigTX;
+	gVFO.Info[0].FREQUENCY_DEVIATION_SETTING = FREQUENCY_DEVIATION_OFF;
+	gVFO.Info[0].DTMF_PTT_ID_TX_MODE = PTT_ID_OFF;
+	gVFO.Info[0].DTMF_DECODING_ENABLE = false;
 
 	if (gCurrentFunction == FUNCTION_POWER_SAVE) {
 		FUNCTION_Select(FUNCTION_FOREGROUND);

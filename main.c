@@ -123,10 +123,10 @@ void Main(void)
 		APP_TimeSlice10ms();
 		gNextTimeslice = false;
 
-		// if (gNextTimeslice40ms) {
-		// 	APP_TimeSlice40ms();
-		// 	gNextTimeslice40ms = false;
-		// }
+		if (gNextTimeslice40ms) {
+			APP_TimeSlice40ms();
+			gNextTimeslice40ms = false;
+		}
 		if (gNextTimeslice500ms) {
 			APP_TimeSlice500ms();
 			gNextTimeslice500ms = false;

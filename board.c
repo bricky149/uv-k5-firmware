@@ -531,7 +531,7 @@ void BOARD_EEPROM_Init(void)
 	gEeprom.SQUELCH_LEVEL    = (Data[1] < 10) ? Data[1] : 2;
 	gEeprom.TX_TIMEOUT_TIMER = (Data[2] < 11) ? Data[2] : 2;
 	gEeprom.KEY_LOCK         = (Data[4] <  2) ? Data[4] : false;
-	gEeprom.MIC_SENSITIVITY  = (Data[7] <  5) ? Data[7] : 3;
+	gEeprom.MIC_SENSITIVITY  = (Data[7] <  5) ? Data[7] : 2; // 3,8,16,24,31 / 2 = mic gain
 	// 0E78..0E7F
 	//EEPROM_ReadBuffer(0x0E78, Data, 8);
 	gEeprom.CHANNEL_DISPLAY_MODE  = (Data[9] < 3) ? Data[9] : MDF_FREQUENCY;
@@ -576,13 +576,13 @@ void BOARD_EEPROM_Init(void)
 	memcpy(&gEeprom.POWER_ON_PASSWORD, Data, 4);
 
 	// 0EA0..0EA7
-	// Non-stock memory layout
+	// Non-stock memory layout, was voice prompt
 	EEPROM_ReadBuffer(0x0EA0, Data, 4);
 	memcpy(&gEeprom.MDC1200_ID, Data, 4);
 
 	// 0EA8..0EAF
 	EEPROM_ReadBuffer(0x0EA8, Data, 8);
-	gEeprom.ROGER                          = (Data[1] <  2) ? Data[1] : 0;
+	gEeprom.ROGER                          = (Data[1] <  2) ? Data[1] : 1;
 	gEeprom.REPEATER_TAIL_TONE_ELIMINATION = (Data[2] < 11) ? Data[2] : 0;
 	gEeprom.TX_VFO                         = (Data[3] <  2) ? Data[3] : 0;
 
@@ -689,7 +689,7 @@ void BOARD_EEPROM_LoadCalibration(void)
 
 	uint8_t Mic;
 	EEPROM_ReadBuffer(0x1F80 + gEeprom.MIC_SENSITIVITY, &Mic, 1);
-	gEeprom.MIC_SENSITIVITY_TUNING = (Mic < 32) ? Mic : 15;
+	gEeprom.MIC_SENSITIVITY_TUNING = (Mic < 32) ? Mic : 16; // 0.5dB per step
 
 	EEPROM_ReadBuffer(0x1F88, &gCalibration, sizeof(gCalibration));
 	BK4819_WriteRegister(BK4819_REG_3B, gCalibration.BK4819_XTAL_FREQ_LOW + 22656);

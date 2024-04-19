@@ -22,7 +22,6 @@
 #include "driver/gpio.h"
 #include "driver/system.h"
 #include "driver/systick.h"
-#include "misc.h"
 
 #if defined(ENABLE_MDC1200)
 #include "mdc1200.h"
@@ -34,74 +33,6 @@ __inline static uint16_t ScaleFreq(const uint16_t freq)
 }
 #endif
 
-// 1o11
-#if defined(ENABLE_1o11AMFIX)
-typedef struct
-{
-	uint16_t reg_val;
-	int8_t   gain_dB;
-} t_gain_table;
-static const t_gain_table gain_table[26] = {
-#if 0
-	// Prioritise LNA - slightly less deaf but with more distortion
-	{0x03F8, -33}, // 3 7 3 0 .. 0dB   0dB  0dB -33dB .. -33dB
-	{0x03B9, -31}, // 3 5 3 1 .. 0dB  -4dB  0dB -27dB .. -31dB
-	{0x037A, -30}, // 3 3 3 2 .. 0dB  -9dB  0dB -21dB .. -30dB
-	{0x03DA, -29}, // 3 6 3 1 .. 0dB  -2dB  0dB -27dB .. -29dB
-	{0x03F9, -27}, // 3 7 3 1 .. 0dB   0dB  0dB -27dB .. -27dB
-	{0x03BA, -25}, // 3 5 3 2 .. 0dB  -4dB  0dB -21dB .. -25dB
-	{0x037B, -24}, // 3 3 3 3 .. 0dB  -9dB  0dB -15dB .. -24dB
-	{0x03DA, -23}, // 3 6 3 2 .. 0dB  -2dB  0dB -21dB .. -23dB
-	{0x039B, -21}, // 3 4 3 3 .. 0dB  -6dB  0dB -15dB .. -21dB
-	{0x03BB, -19}, // 3 5 3 3 .. 0dB  -4dB  0dB -15dB .. -19dB
-	{0x037C, -18}, // 3 3 3 4 .. 0dB  -9dB  0dB  -9dB .. -18dB
-	{0x03DB, -17}, // 3 6 3 3 .. 0dB  -2dB  0dB -15dB .. -17dB
-	{0x03FB, -15}, // 3 7 3 3 .. 0dB   0dB  0dB -15dB .. -15dB
-	{0x03BC, -13}, // 3 5 3 4 .. 0dB  -4dB  0dB  -9dB .. -13dB
-	{0x037E, -12}, // 3 3 3 6 .. 0dB  -9dB  0dB  -3dB .. -12dB
-	{0x03DC, -11}, // 3 6 3 4 .. 0dB  -2dB  0dB  -9dB .. -11dB
-	{0x03BD, -10}, // 3 5 3 5 .. 0dB  -4dB  0dB  -6dB .. -10dB
-	{0x03FC,  -9}, // 3 7 3 4 .. 0dB   0dB  0dB  -9dB ..  -9dB
-	{0x03DD,  -8}, // 3 6 3 5 .. 0dB  -2dB  0dB  -6dB ..  -8dB
-	{0x03BE,  -7}, // 3 5 3 6 .. 0dB  -4dB  0dB  -3dB ..  -7dB  original
-	{0x03FD,  -6}, // 3 7 3 5 .. 0dB   0dB  0dB  -6dB ..  -6dB
-	{0x03DE,  -5}, // 3 6 3 6 .. 0dB  -2dB  0dB  -3dB ..  -5dB
-	{0x03BF,  -4}, // 3 5 3 7 .. 0dB  -4dB  0dB   0dB ..  -4dB
-	{0x03FE,  -3}, // 3 7 3 6 .. 0dB   0dB  0dB  -3dB ..  -3dB
-	{0x03DF,  -2}, // 3 6 3 7 .. 0dB  -2dB  0dB   0dB ..  -2dB
-	{0x03FF,   0}  // 3 7 3 7 .. 0dB   0dB  0dB   0dB ..   0dB
-#else
-	// Suppress LNA - less distortion but slightly more deaf
-	{0x031C, -33}, // 3 0 3 4 .. 0dB -24dB  0dB  -9dB .. -33dB
-	{0x031D, -30}, // 3 0 3 5 .. 0dB -24dB  0dB  -6dB .. -30dB
-	{0x033C, -28}, // 3 1 3 4 .. 0dB -19dB  0dB  -9dB .. -28dB
-	{0x031E, -27}, // 3 0 3 6 .. 0dB -24dB  0dB  -3dB .. -27dB
-	{0x033D, -25}, // 3 1 3 5 .. 0dB -19dB  0dB  -6dB .. -25dB
-	{0x031F, -24}, // 3 0 3 7 .. 0dB -24dB  0dB   0dB .. -24dB
-	{0x033E, -22}, // 3 1 3 6 .. 0dB -19dB  0dB  -3dB .. -22dB
-	{0x035D, -20}, // 3 2 3 5 .. 0dB -14dB  0dB  -6dB .. -20dB
-	{0x033F, -19}, // 3 1 3 7 .. 0dB -19dB  0dB   0dB .. -19dB
-	{0x037C, -18}, // 3 3 3 4 .. 0dB  -9dB  0dB  -9dB .. -18dB
-	{0x035E, -17}, // 3 2 3 6 .. 0dB -14dB  0dB  -3dB .. -17dB
-	{0x037D, -15}, // 3 3 3 5 .. 0dB  -9dB  0dB  -6dB .. -15dB
-	{0x035F, -14}, // 3 2 3 7 .. 0dB -14dB  0dB   0dB .. -14dB
-	{0x03BC, -13}, // 3 5 3 4 .. 0dB  -4dB  0dB  -9dB .. -13dB
-	{0x037E, -12}, // 3 3 3 6 .. 0dB  -9dB  0dB  -3dB .. -12dB
-	{0x03DC, -11}, // 3 6 3 4 .. 0dB  -2dB  0dB  -9dB .. -11dB
-	{0x03BD, -10}, // 3 5 3 5 .. 0dB  -4dB  0dB  -6dB .. -10dB
-	{0x037F,  -9}, // 3 3 3 7 .. 0dB  -9dB  0dB   0dB ..  -9dB
-	{0x03DD,  -8}, // 3 6 3 5 .. 0dB  -2dB  0dB  -6dB ..  -8dB
-	{0x03BE,  -7}, // 3 5 3 6 .. 0dB  -4dB  0dB  -3dB ..  -7dB  original
-	{0x039F,  -6}, // 3 4 3 7 .. 0dB  -6dB  0dB   0dB ..  -6dB
-	{0x03DE,  -5}, // 3 6 3 6 .. 0dB  -2dB  0dB  -3dB ..  -5dB
-	{0x03BF,  -4}, // 3 5 3 7 .. 0dB  -4dB  0dB   0dB ..  -4dB
-	{0x03FE,  -3}, // 3 7 3 6 .. 0dB   0dB  0dB  -3dB ..  -3dB
-	{0x03DF,  -2}, // 3 6 3 7 .. 0dB  -2dB  0dB   0dB ..  -2dB
-	{0x03FF,   0}  // 3 7 3 7 .. 0dB   0dB  0dB   0dB ..   0dB
-#endif
-};
-int8_t gGainIndex = 19; // Original
-#endif
 static const uint8_t RSSI_CEILING = 143; // S9
 
 static uint16_t gBK4819_GpioOutState;
@@ -216,38 +147,7 @@ void BK4819_WriteU8(uint8_t Data)
 	}
 }
 
-#if defined(ENABLE_1o11AMFIX)
-// 1o11
-void BK4819_AMFix(void) {
-	const uint16_t RSSI = BK4819_GetRSSI();
-	const uint16_t Diff_dB = (RSSI - RSSI_CEILING) / 2;
-	uint8_t i = gGainIndex;
-	if (Diff_dB >= 9) {
-		const int16_t DesiredGain = gain_table[i].gain_dB - Diff_dB + 6;
-		while (i > 0) {
-			if (gain_table[--i].gain_dB <= DesiredGain) {
-				break;
-			}
-		}
-	} else if (Diff_dB > 0) {
-		if (i > 0) {
-			i--;
-		}
-		// else {
-		// 	// Bug from original implementation where gain would get
-		// 	// stuck on lowest gain index until radio was restarted
-		// 	i = 25;
-		// }
-	} else {
-		if (i < 25) {
-			i++;
-		}
-	}
-	BK4819_WriteRegister(BK4819_REG_13, gain_table[i].reg_val);
-	gGainIndex = i;
-}
-#else
-void BK4819_AMFix(void) {
+void BK4819_AMFix_40ms(void) {
 	// Read current AGC fix index so we don't suddenly peak
 	uint16_t AgcFixIndex = (BK4819_ReadRegister(BK4819_REG_7E) >> 12) & 3;
 	// Take the difference between current and desired RSSI readings
@@ -257,7 +157,23 @@ void BK4819_AMFix(void) {
 	if (Diff_dB > 0 && AgcFixIndex != 4) {
 		// Over distortion threshold, reduce gain
 		AgcFixIndex = (AgcFixIndex + 7) % 8; // Decrement AGC fix index
-	} else if (g_SquelchLost && AgcFixIndex != 3) {
+	} else {
+		// No gain adjustment needed
+		return;
+	}
+	// Write new fix index to the AGC register
+	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
+		(AgcFixIndex << 12));           // 3 AGC fix index
+}
+
+void BK4819_AMFix_500ms(void) {
+	// Read current AGC fix index so we don't suddenly peak
+	uint16_t AgcFixIndex = (BK4819_ReadRegister(BK4819_REG_7E) >> 12) & 3;
+	// Take the difference between current and desired RSSI readings
+	const uint16_t RSSI = BK4819_GetRSSI();
+	const int8_t Diff_dB = RSSI - RSSI_CEILING;
+	// Gaps between gain values are ~17dB
+	if (Diff_dB < -17 && AgcFixIndex != 3) {
 		// Attempt to reopen squelch by increasing gain
 		// This helps prevent hysteresis as we're not eagerly increasing
 		// gain based on an arbitrary floor RSSI value
@@ -270,7 +186,6 @@ void BK4819_AMFix(void) {
 	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
 		(AgcFixIndex << 12));           // 3 AGC fix index
 }
-#endif
 
 void BK4819_SetAGC(void)
 {
@@ -317,13 +232,11 @@ void BK4819_SetFGC(void)
 		(6u <<  0));                    // 6 DC filter bandwidth for Rx
 
 	// AGC fix indexes
-	BK4819_WriteRegister(BK4819_REG_13, 0x03BE); // 3  (-7)
-	#if !defined(ENABLE_1o11AMFIX)
-	BK4819_WriteRegister(BK4819_REG_12, 0x037C); // 2  (-18)
-	BK4819_WriteRegister(BK4819_REG_11, 0x035B); // 1  (-29)
-	BK4819_WriteRegister(BK4819_REG_10, 0x033A); // 0  (-40)
-	BK4819_WriteRegister(BK4819_REG_14, 0x0319); // -1 (-51)
-	#endif
+	BK4819_WriteRegister(BK4819_REG_13, 0x03BE); // 3
+	BK4819_WriteRegister(BK4819_REG_12, 0x037C); // 2
+	BK4819_WriteRegister(BK4819_REG_11, 0x027B); // 1
+	BK4819_WriteRegister(BK4819_REG_10, 0x017A); // 0
+	BK4819_WriteRegister(BK4819_REG_14, 0x0059); // -1
 
 	BK4819_WriteRegister(BK4819_REG_49, 0x2A38);
 	BK4819_WriteRegister(BK4819_REG_7B, 0x318C);
@@ -1209,6 +1122,9 @@ void BK4819_SendMDC1200(uint8_t op, uint8_t arg, uint16_t id, bool long_preamble
 	case BK4819_FILTER_BW_NARROWER:
 		deviation = 750;
 		break;
+	default:
+		// Fix warning of using this uninitialised
+		deviation = 0;
 	}
 	BK4819_WriteRegister(0x40, (dev_val & 0xf000) | (deviation & 0xfff));
 

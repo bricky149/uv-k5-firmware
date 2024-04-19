@@ -27,10 +27,12 @@
 #include "settings.h"
 
 EEPROM_Config_t gEeprom;
-EEPROM_FM_t gFM;
+EEPROM_VFO_t gVFO;
 EEPROM_Calibration_t gCalibration;
 
 #if defined(ENABLE_FMRADIO)
+EEPROM_FM_t gFM;
+
 void SETTINGS_SaveFM(void)
 {
 
@@ -224,7 +226,14 @@ void SETTINGS_SaveChannel(uint8_t Channel, uint8_t VFO, const VFO_Info_t *pVFO, 
 
 		EEPROM_WriteBuffer(OffsetVFO + 8, State8);
 
-		SETTINGS_UpdateChannel(Channel, pVFO, true);
+		if (Mode > 0) {
+			SETTINGS_UpdateChannel(Channel, pVFO, true);
+		} else {
+			// When the radio is reset and only one VFO is set, the other
+			// will go through RADIO_Init with Mode=0 here. Don't give it
+			// any attributes until it's configured by the user.
+			SETTINGS_UpdateChannel(Channel, pVFO, false);
+		}
 
 		if (IS_MR_CHANNEL(Channel)) {
 			// DualTachyon
