@@ -33,8 +33,6 @@ __inline static uint16_t ScaleFreq(const uint16_t freq)
 }
 #endif
 
-static const uint8_t RSSI_CEILING = 143; // S9
-
 static uint16_t gBK4819_GpioOutState;
 bool gRxIdleMode;
 
@@ -145,46 +143,6 @@ void BK4819_WriteU8(uint8_t Data)
 		Data <<= 1;
 		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_BK4819_SCL);
 	}
-}
-
-void BK4819_AMFix_40ms(void) {
-	// Read current AGC fix index so we don't suddenly peak
-	uint16_t AgcFixIndex = (BK4819_ReadRegister(BK4819_REG_7E) >> 12) & 3;
-	// Take the difference between current and desired RSSI readings
-	const uint16_t RSSI = BK4819_GetRSSI();
-	const int8_t Diff_dB = RSSI - RSSI_CEILING;
-
-	if (Diff_dB > 0 && AgcFixIndex != 4) {
-		// Over distortion threshold, reduce gain
-		AgcFixIndex = (AgcFixIndex + 7) % 8; // Decrement AGC fix index
-	} else {
-		// No gain adjustment needed
-		return;
-	}
-	// Write new fix index to the AGC register
-	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
-		(AgcFixIndex << 12));           // 3 AGC fix index
-}
-
-void BK4819_AMFix_500ms(void) {
-	// Read current AGC fix index so we don't suddenly peak
-	uint16_t AgcFixIndex = (BK4819_ReadRegister(BK4819_REG_7E) >> 12) & 3;
-	// Take the difference between current and desired RSSI readings
-	const uint16_t RSSI = BK4819_GetRSSI();
-	const int8_t Diff_dB = RSSI - RSSI_CEILING;
-	// Gaps between gain values are ~17dB
-	if (Diff_dB < -17 && AgcFixIndex != 3) {
-		// Attempt to reopen squelch by increasing gain
-		// This helps prevent hysteresis as we're not eagerly increasing
-		// gain based on an arbitrary floor RSSI value
-		AgcFixIndex = (AgcFixIndex + 1) % 8; // Increment AGC fix index
-	} else {
-		// No gain adjustment needed
-		return;
-	}
-	// Write new fix index to the AGC register
-	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
-		(AgcFixIndex << 12));           // 3 AGC fix index
 }
 
 void BK4819_SetAGC(void)

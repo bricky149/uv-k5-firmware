@@ -14,7 +14,6 @@
  *     limitations under the License.
  */
 
-#include <string.h>
 #include "app/dtmf.h"
 #if defined(ENABLE_FMRADIO)
 #include "app/fm.h"
@@ -22,9 +21,6 @@
 #include "app/scanner.h"
 #include "driver/keyboard.h"
 #include "misc.h"
-
-
-
 #include "ui/fmradio.h"
 #include "ui/inputbox.h"
 #include "ui/main.h"
@@ -56,11 +52,6 @@ void GUI_DisplayScreen(void)
 	case DISPLAY_SCANNER:
 		UI_DisplayScanner();
 		break;
-
-
-
-
-
 	default:
 		break;
 	}

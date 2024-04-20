@@ -1,6 +1,6 @@
 TARGET = firmware
 
-ENABLE_FMRADIO := 0
+ENABLE_FMRADIO := 1
 ENABLE_MDC1200 := 1
 ENABLE_SWD := 0
 ENABLE_UART := 1
@@ -94,6 +94,16 @@ OBJS += ui/scanner.o
 OBJS += ui/status.o
 OBJS += ui/ui.o
 
+# Tasks
+OBJS += task/am_fix.o
+ifeq ($(ENABLE_FMRADIO),1)
+OBJS += task/fm.o
+endif
+OBJS += task/keys.o
+OBJS += task/radio.o
+OBJS += task/scanner.o
+OBJS += task/screen.o
+
 OBJS += main.o
 
 ifeq ($(OS),Windows_NT)
@@ -164,9 +174,10 @@ CFLAGS += -g
 LDFLAGS += -g
 endif
 
+CMSIS_5_HOME = $(TOP)/external/CMSIS_5
 INC = -I $(TOP)
-INC += -I $(TOP)/external/CMSIS_5/CMSIS/Core/Include/
-INC += -I $(TOP)/external/CMSIS_5/Device/ARM/ARMCM0/Include
+INC += -I $(CMSIS_5_HOME)/CMSIS/Core/Include/
+INC += -I $(CMSIS_5_HOME)/Device/ARM/ARMCM0/Include/
 
 #LIBS = /usr/arm-none-eabi/lib/thumb/v6-m/nofp/libc_nano.a
 #LIBS += /usr/lib/gcc/arm-none-eabi/13.2.0/thumb/v6-m/nofp/libgcc.a

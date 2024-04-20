@@ -23,8 +23,8 @@
 #include "driver/backlight.h"
 #include "driver/bk4819.h"
 #include "driver/gpio.h"
-#include "driver/system.h"
 #include "driver/systick.h"
+#include "scheduler.h"
 #if defined(ENABLE_UART)
 #include "driver/uart.h"
 #endif
@@ -36,6 +36,15 @@
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
+#include "task/am_fix.h"
+//#include "task/battery.h"
+#if defined(ENABLE_FMRADIO)
+#include "task/fm.h"
+#endif
+#include "task/keys.h"
+#include "task/radio.h"
+#include "task/scanner.h"
+#include "task/screen.h"
 #include "ui/lock.h"
 
 #if defined(ENABLE_UART)
@@ -114,19 +123,32 @@ void Main(void)
 	SYSCON_REGISTER |= SYSCON_REGISTER_SLEEPDEEP_BITS_ENABLE;
 
 	while (1) {
-		__asm volatile ("wfi":::"memory");
 		// Original evaluates both if-statements
-		if (!gNextTimeslice) {
+		if (!SCHEDULER_CheckTask(TASK_AM_FIX) &&
+			!SCHEDULER_CheckTask(TASK_CHECK_KEYS) &&
+			!SCHEDULER_CheckTask(TASK_CHECK_RADIO_INTERRUPTS) &&
+			!SCHEDULER_CheckTask(TASK_FM_SCANNER) &&
+			!SCHEDULER_CheckTask(TASK_SCANNER))
+		{
+			__asm volatile ("wfi":::"memory");
 			continue;
 		}
-		APP_Update(); // Does not rely on sub-10ms timings
-		APP_TimeSlice10ms();
-		gNextTimeslice = false;
 
-		if (gNextTimeslice40ms) {
-			APP_TimeSlice40ms();
-			gNextTimeslice40ms = false;
-		}
+		APP_Update(); // Does not rely on sub-10ms timings
+
+		// 10ms
+		TASK_CheckKeys();
+		TASK_CheckRadioInterrupts();
+		TASK_UpdateScreen();
+#if defined(ENABLE_FMRADIO)
+		TASK_FM_Radio();
+#endif
+		TASK_Scanner();
+
+		// 40ms
+		TASK_AM_Fix();
+
+		// 500ms
 		if (gNextTimeslice500ms) {
 			APP_TimeSlice500ms();
 			gNextTimeslice500ms = false;

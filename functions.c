@@ -19,13 +19,11 @@
 #if defined(ENABLE_FMRADIO)
 #include "app/fm.h"
 #endif
-#include "bsp/dp32g030/gpio.h"
 #include "dcs.h"
 #if defined(ENABLE_FMRADIO)
 #include "driver/bk1080.h"
 #endif
 #include "driver/bk4819.h"
-#include "driver/gpio.h"
 #include "driver/system.h"
 #include "functions.h"
 #include "helper/battery.h"
@@ -96,7 +94,7 @@ void FUNCTION_Select(FUNCTION_Type_t Function)
 		}
 #if defined(ENABLE_FMRADIO)
 		if (gFmRadioMode) {
-			gFM_RestoreCountdown = 500;
+			gFM_RestoreCountdown = 4;
 		}
 #endif
 		if (gDTMF_CallState == DTMF_CALL_STATE_CALL_OUT || gDTMF_CallState == DTMF_CALL_STATE_RECEIVED) {
@@ -117,7 +115,7 @@ void FUNCTION_Select(FUNCTION_Type_t Function)
 		BK4819_ClearGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE);
 		gBatterySaveCountdownExpired = false;
 		gUpdateStatus = true;
-		GUI_SelectNextDisplay(DISPLAY_MAIN);
+		gRequestDisplayScreen = DISPLAY_MAIN;
 		return;
 
 	case FUNCTION_TRANSMIT:

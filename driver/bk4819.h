@@ -67,8 +67,6 @@ uint16_t BK4819_ReadRegister(BK4819_REGISTER_t Register);
 void BK4819_WriteRegister(BK4819_REGISTER_t Register, uint16_t Data);
 void BK4819_WriteU8(uint8_t Data);
 
-void BK4819_AMFix_40ms(void);
-void BK4819_AMFix_500ms(void);
 void BK4819_SetAGC(void);
 void BK4819_SetFGC(void);
 

@@ -130,11 +130,11 @@ extern bool gPttIsPressed;
 extern uint8_t gPttDebounceCounter;
 extern uint8_t gMenuListCount;
 extern uint8_t gBackupCROSS_BAND_RX_TX;
-extern uint8_t gScanDelay;
+//extern uint8_t gScanDelay;
 extern uint8_t gFSKWriteIndex;
 
 
-extern volatile bool gNextTimeslice;
+//extern volatile bool gNextTimeslice;
 extern bool gUpdateDisplay;
 extern bool gF_LOCK;
 extern uint8_t gShowChPrefix;
@@ -147,7 +147,7 @@ extern volatile bool gBatterySaveCountdownExpired;
 extern volatile bool gScheduleDualWatch;
 extern volatile bool gFlagTteComplete;
 #if defined(ENABLE_FMRADIO)
-extern volatile bool gScheduleFM;
+//extern volatile bool gScheduleFM;
 #endif
 
 extern uint8_t gIsLocked;

@@ -240,7 +240,6 @@ void SCANNER_Start(void)
 		BK4819_SelectFilter(0xFFFFFFFF);
 		BK4819_EnableFrequencyScan();
 	}
-	gScanDelay = 21;
 	gScanCssResultCode = 0xFF;
 	gScanCssResultType = 0xFF;
 	gScanHitCount = 0;

@@ -22,6 +22,7 @@
 #include "driver/keyboard.h"
 #include "driver/st7565.h"
 #include "misc.h"
+#include "scheduler.h"
 #include "settings.h"
 #include "ui/helper.h"
 #include "ui/inputbox.h"
@@ -57,10 +58,9 @@ void UI_DisplayLock(void)
 	memset(gInputBox, 10, sizeof(gInputBox));
 
 	while (1) {
-		while (!gNextTimeslice) {
+		while (!SCHEDULER_CheckTask(TASK_CHECK_LOCK)) {
 		}
 		// TODO: Original code doesn't do the below, but is needed for proper key debounce.
-		gNextTimeslice = false;
 		Key = KEYBOARD_Poll();
 		if (gKeyReading0 == Key) {
 			gDebounceCounter++;

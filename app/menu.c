@@ -367,7 +367,7 @@ void MENU_AcceptSetting(void)
 	case MENU_D_LIST:
 		gDTMFChosenContact = gSubMenuSelection - 1;
 		if (gIsDtmfContactValid) {
-			GUI_SelectNextDisplay(DISPLAY_MAIN);
+			gRequestDisplayScreen = DISPLAY_MAIN;
 			gDTMF_InputMode = true;
 			gDTMF_InputIndex = 3;
 			memcpy(gDTMF_InputBox, gDTMF_ID, 4);

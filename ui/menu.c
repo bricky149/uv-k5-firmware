@@ -480,7 +480,7 @@ void UI_DisplayMenu(void)
 	case MENU_SLIST1:
 	case MENU_SLIST2:
 		if (gSubMenuSelection == 0xFF) {
-			sprintf(String, "NULL");
+			strcpy(String, "NULL");
 		} else {
 			UI_GenerateChannelStringEx(String, true, (uint8_t)gSubMenuSelection);
 		}

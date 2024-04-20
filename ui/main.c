@@ -206,10 +206,10 @@ void UI_DisplayMain(void)
 				strcpy(String, "TIMEOUT");
 				break;
 			case 5:
-				sprintf(String, "DISALLOW");
+				strcpy(String, "DISALLOW");
 				break;
 			case 6:
-				sprintf(String, "VOL HIGH");
+				strcpy(String, "VOL HIGH");
 				break;
 			}
 			UI_PrintString(String, 31, 112, i * 4, 10, true);

@@ -14,7 +14,6 @@
  *     limitations under the License.
  */
 
-#include <string.h>
 #include "misc.h"
 
 bool gSetting_350TX;
@@ -92,11 +91,11 @@ bool gPttIsPressed;
 uint8_t gPttDebounceCounter;
 uint8_t gMenuListCount;
 uint8_t gBackupCROSS_BAND_RX_TX;
-uint8_t gScanDelay;
+//uint8_t gScanDelay;
 uint8_t gFSKWriteIndex;
 
 
-volatile bool gNextTimeslice;
+//volatile bool gNextTimeslice;
 bool gUpdateDisplay;
 bool gF_LOCK;
 uint8_t gShowChPrefix;
@@ -109,7 +108,7 @@ volatile bool gBatterySaveCountdownExpired;
 volatile bool gScheduleDualWatch = true;
 volatile bool gFlagTteComplete;
 #if defined(ENABLE_FMRADIO)
-volatile bool gScheduleFM;
+//volatile bool gScheduleFM;
 #endif
 
 uint8_t gIsLocked = 0xFF;

@@ -124,7 +124,6 @@ void FM_Tune(uint16_t Frequency, int8_t Step, bool bFlag)
 	} else {
 		gFmPlayCountdown = 10;
 	}
-	gScheduleFM = false;
 	gFM_FoundFrequency = false;
 	gAskToSave = false;
 	gAskToDelete = false;
@@ -154,7 +153,6 @@ void FM_PlayAndUpdate(void)
 	BK1080_SetFrequency(gEeprom.FM_FrequencyPlaying);
 	SETTINGS_SaveFM();
 	gFmPlayCountdown = 0;
-	gScheduleFM = false;
 	gAskToSave = false;
 	GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
 	gEnableSpeaker = true;

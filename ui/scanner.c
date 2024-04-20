@@ -38,13 +38,13 @@ void UI_DisplayScanner(void)
 		uint32_t kHz = gScanFrequency % 100000;
 		sprintf(String, "FREQ:%u.%05u", MHz, kHz);
 	} else {
-		sprintf(String, "FREQ:***.*****");
+		strcpy(String, "FREQ:***.*****");
 	}
 	UI_PrintString(String, 2, 127, 1, 8, false);
 	memset(String, 0, sizeof(String));
 
 	if (gScanCssState < SCAN_CSS_STATE_FOUND || !gScanUseCssResult) {
-		sprintf(String, "CTC:***.*");
+		strcpy(String, "CTC:***.*");
 	} else if (gScanCssResultType == CODE_TYPE_CONTINUOUS_TONE) {
 		uint8_t Hz = CTCSS_Options[gScanCssResultCode] / 10;
 		uint8_t mHz = CTCSS_Options[gScanCssResultCode] % 10;

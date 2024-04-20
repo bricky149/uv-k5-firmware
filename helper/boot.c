@@ -54,11 +54,11 @@ void BOOT_ProcessMode(BOOT_Mode_t Mode)
 	if (Mode == BOOT_MODE_F_LOCK) {
 		gMenuCursor = MENU_350TX;
 		gSubMenuSelection = gSetting_350TX;
-		GUI_SelectNextDisplay(DISPLAY_MENU);
+		GUI_SelectNextDisplay(DISPLAY_MENU); // Can't schedule due to button presses
 		gMenuListCount = 56; // Does include hidden items
 		gF_LOCK = true;
 	} else {
-		GUI_SelectNextDisplay(DISPLAY_MAIN);
+		gRequestDisplayScreen = DISPLAY_MAIN;
 	}
 }
 

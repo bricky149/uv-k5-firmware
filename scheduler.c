@@ -21,6 +21,7 @@
 #include "functions.h"
 #include "helper/battery.h"
 #include "misc.h"
+#include "scheduler.h"
 #include "settings.h"
 
 #define DECREMENT_AND_TRIGGER(cnt, flag) \
@@ -39,14 +40,49 @@
 		} \
 	}
 
+static uint16_t SCHEDULER_Tasks;
+static uint16_t SCHEDULER_Counter;
+
+static void SetTask(uint16_t Task)
+{
+	SCHEDULER_Tasks |= Task;
+}
+
+bool SCHEDULER_CheckTask(uint16_t Task)
+{
+	return SCHEDULER_Tasks & Task;
+}
+
+void SCHEDULER_ClearTask(uint16_t Task)
+{
+	SCHEDULER_Tasks &= ~Task;
+}
+
 static volatile uint32_t gGlobalSysTickCounter;
 
 void SystickHandler(void);
 
 void SystickHandler(void)
 {
+	SCHEDULER_Counter++;
+	SetTask(TASK_CHECK_LOCK);
+	SetTask(TASK_CHECK_KEYS);
+	SetTask(TASK_CHECK_RADIO_INTERRUPTS);
+
+	if ((SCHEDULER_Counter & 3) == 0) {
+		if (gRxVfo->MODULATION_MODE == 1) {
+			SetTask(TASK_AM_FIX);
+		}
+	}
+	if ((SCHEDULER_Counter % 21) == 0) {
+		SetTask(TASK_SCANNER);
+	}
+	if ((SCHEDULER_Counter % 50) == 0) {
+		SetTask(TASK_FM_SCANNER);
+	}
+
 	gGlobalSysTickCounter++;
-	gNextTimeslice = true;
+
 	if ((gGlobalSysTickCounter & 3) == 0) {
 		gNextTimeslice40ms = true;
 	}
@@ -93,12 +129,12 @@ void SystickHandler(void)
 	}
 	DECREMENT_AND_TRIGGER(gTailNoteEliminationCountdown, gFlagTteComplete);
 
-#if defined(ENABLE_FMRADIO)
-	if (gFM_ScanState != FM_SCAN_OFF && gCurrentFunction != FUNCTION_MONITOR) {
-		if (gCurrentFunction != FUNCTION_TRANSMIT && gCurrentFunction != FUNCTION_RECEIVE) {
-			DECREMENT_AND_TRIGGER(gFmPlayCountdown, gScheduleFM);
+	if (gCurrentFunction == FUNCTION_TRANSMIT && gRTTECountdown > 0) {
+		gRTTECountdown--;
+		if (gRTTECountdown == 0) {
+			FUNCTION_Select(FUNCTION_FOREGROUND);
+			gUpdateDisplay = true;
 		}
 	}
-#endif
 }
 

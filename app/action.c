@@ -119,7 +119,7 @@ void ACTION_Scan(void)
 		return;
 	}
 	RADIO_SelectVfos();
-	GUI_SelectNextDisplay(DISPLAY_MAIN);
+	gRequestDisplayScreen = DISPLAY_MAIN;
 	if (gScanState != SCAN_OFF) {
 		SCANNER_Stop();
 	} else {
