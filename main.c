@@ -123,14 +123,7 @@ void Main(void)
 	SYSCON_REGISTER |= SYSCON_REGISTER_SLEEPDEEP_BITS_ENABLE;
 
 	while (1) {
-		// Original evaluates both if-statements
-		if (!SCHEDULER_CheckTask(TASK_AM_FIX) &&
-			!SCHEDULER_CheckTask(TASK_CHECK_KEYS) &&
-			!SCHEDULER_CheckTask(TASK_CHECK_RADIO_INTERRUPTS) &&
-			!SCHEDULER_CheckTask(TASK_FM_SCANNER) &&
-			!SCHEDULER_CheckTask(TASK_SCANNER))
-		{
-			__asm volatile ("wfi":::"memory");
+		if (SCHEDULER_CheckTask(TASK_SLEEP)) {
 			continue;
 		}
 
@@ -140,15 +133,16 @@ void Main(void)
 		TASK_CheckKeys();
 		TASK_CheckRadioInterrupts();
 		TASK_UpdateScreen();
-#if defined(ENABLE_FMRADIO)
-		TASK_FM_Radio();
-#endif
-		TASK_Scanner();
 
 		// 40ms
 		TASK_AM_Fix();
 
 		// 500ms
+#if defined(ENABLE_FMRADIO)
+		TASK_FM_Radio();
+#endif
+		TASK_Scanner();
+
 		if (gNextTimeslice500ms) {
 			APP_TimeSlice500ms();
 			gNextTimeslice500ms = false;

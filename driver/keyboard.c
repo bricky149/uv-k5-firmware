@@ -113,13 +113,13 @@ KEY_Code_t KEYBOARD_Poll(void)
                         1 << GPIOA_PIN_KEYBOARD_5 |
                         1 << GPIOA_PIN_KEYBOARD_6 |
                         1 << GPIOA_PIN_KEYBOARD_7 ;
-        // Wait for the pins to stabilise. 1 works for me.
-        SYSTICK_DelayUs(1);
+        // Wait for the pins to stabilise.
+        SYSTICK_DelayUs(2);
 
         // Clear the pin we are selecting
         GPIOA->DATA &= keyboard[row].set_to_zero_mask;
-        // Wait for the pins to stabilise. 1 works for me.
-        SYSTICK_DelayUs(1);
+        // Wait for the pins to stabilise.
+        SYSTICK_DelayUs(2);
 
         // Read all 4 GPIO pins at once
         uint16_t reg = GPIOA->DATA;

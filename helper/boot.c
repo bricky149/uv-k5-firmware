@@ -58,7 +58,7 @@ void BOOT_ProcessMode(BOOT_Mode_t Mode)
 		gMenuListCount = 56; // Does include hidden items
 		gF_LOCK = true;
 	} else {
-		gRequestDisplayScreen = DISPLAY_MAIN;
+		GUI_SelectNextDisplay(DISPLAY_MAIN); // Can't schedule as it's the first screen
 	}
 }
 

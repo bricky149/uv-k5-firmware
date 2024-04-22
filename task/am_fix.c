@@ -1,4 +1,5 @@
 #include "driver/bk4819.h"
+#include "misc.h"
 #include "scheduler.h"
 
 static const uint8_t RSSI_CEILING = 143; // S9
@@ -17,7 +18,7 @@ void TASK_AM_Fix(void) {
 	if (Diff_dB > 0 && AgcFixIndex != 4) {
 		// Over distortion threshold, reduce gain
 		AgcFixIndex = (AgcFixIndex + 7) % 8; // Decrement AGC fix index
-	} else if (Diff_dB < -17 && AgcFixIndex != 3) {
+	} else if (g_SquelchLost && AgcFixIndex != 3) {
 		// Attempt to reopen squelch by increasing gain
 		// This helps prevent hysteresis as we're not eagerly increasing
 		// gain based on an arbitrary floor RSSI value

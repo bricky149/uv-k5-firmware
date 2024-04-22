@@ -60,10 +60,10 @@ static void BOARD_EnableInterrupts(void)
 	// Maybe we could have IRQ handlers instead of handling
 	// events ourselves somewhere in code?
 
-	NVIC_SetPriority((IRQn_Type)DP32_SPI0_IRQn, 1);
+	//NVIC_SetPriority((IRQn_Type)DP32_SPI0_IRQn, 1);
 	NVIC_EnableIRQ((IRQn_Type)DP32_SPI0_IRQn);
 
-	NVIC_SetPriority((IRQn_Type)DP32_SARADC_IRQn, 2);
+	//NVIC_SetPriority((IRQn_Type)DP32_SARADC_IRQn, 2);
 	NVIC_EnableIRQ((IRQn_Type)DP32_SARADC_IRQn);
 
 	// SysTick IRQs run at lowest priority (3)

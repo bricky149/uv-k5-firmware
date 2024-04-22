@@ -5,10 +5,10 @@
 #include "ui/ui.h"
 
 void TASK_FM_Radio(void) {
-	if (!SCHEDULER_CheckTask(TASK_FM_SCANNER)) {
+	if (!SCHEDULER_CheckTask(TASK_FM_RADIO)) {
 		return;
 	}
-	SCHEDULER_ClearTask(TASK_FM_SCANNER);
+	SCHEDULER_ClearTask(TASK_FM_RADIO);
 
 	if (gFmRadioCountdown > 0) {
 		gFmRadioCountdown--;

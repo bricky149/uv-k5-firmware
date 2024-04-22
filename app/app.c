@@ -318,17 +318,14 @@ void APP_StartListening(FUNCTION_Type_t Function)
 	BK4819_SetModulation(gRxVfo->MODULATION_MODE);
 	if (gRxVfo->MODULATION_MODE != MOD_FM) {
 		BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
-		BK4819_SetFGC();
 		BK4819_SetCompander(0);
 	} else {
 		BK4819_WriteRegister(BK4819_REG_48, 0xB000
 				| (gCalibration.VOLUME_GAIN << 4)
 				| (gCalibration.DAC_GAIN << 0)
 				);
-		BK4819_SetAGC();
 		BK4819_SetCompander(gRxVfo->CompanderMode);
 	}
-	//BK4819_EnableAGC(gRxVfo->MODULATION_MODE);
 
 	FUNCTION_Select(Function);
 	if (Function == FUNCTION_MONITOR
@@ -461,18 +458,24 @@ void APP_Update(void)
 #endif
 
     gFlashLightBlinkCounter++;
+	// Consider re-adding SOS
 	if (gFlashLightState == FLASHLIGHT_BLINK && (gFlashLightBlinkCounter & 15U) == 0) {
 		GPIO_FlipBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
 	}
 
-	if (gCurrentFunction == FUNCTION_TRANSMIT && gTxTimeoutReached) {
-		gTxTimeoutReached = false;
-		gFlagEndTransmission = true;
-		APP_EndTransmission();
-		RADIO_SetVfoState(VFO_STATE_TIMEOUT);
-		gUpdateDisplay = true;
-	}
-	if (gCurrentFunction != FUNCTION_TRANSMIT) {
+	if (gCurrentFunction == FUNCTION_TRANSMIT) {
+		if (gTxTimeoutReached) {
+			gTxTimeoutReached = false;
+			gFlagEndTransmission = true;
+			APP_EndTransmission();
+			RADIO_SetVfoState(VFO_STATE_TIMEOUT);
+			gUpdateDisplay = true;
+		}
+		if (gRTTECountdown == 0) {
+			FUNCTION_Select(FUNCTION_FOREGROUND);
+			gUpdateDisplay = true;
+		}
+	} else {
 		APP_HandleFunction();
 	}
 

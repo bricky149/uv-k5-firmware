@@ -493,6 +493,10 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 				;
 			break;
 		}
+
+		BK4819_SetAGC();
+	} else {
+		BK4819_SetFGC();
 	}
 
 	if (gRxVfo->MODULATION_MODE != MOD_FM || !gRxVfo->DTMF_DECODING_ENABLE) {

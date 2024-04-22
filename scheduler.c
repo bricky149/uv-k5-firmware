@@ -41,7 +41,6 @@
 	}
 
 static uint16_t SCHEDULER_Tasks;
-static uint16_t SCHEDULER_Counter;
 
 static void SetTask(uint16_t Task)
 {
@@ -64,31 +63,25 @@ void SystickHandler(void);
 
 void SystickHandler(void)
 {
-	SCHEDULER_Counter++;
+	gGlobalSysTickCounter++;
+
 	SetTask(TASK_CHECK_LOCK);
 	SetTask(TASK_CHECK_KEYS);
 	SetTask(TASK_CHECK_RADIO_INTERRUPTS);
 
-	if ((SCHEDULER_Counter & 3) == 0) {
+	if ((gGlobalSysTickCounter & 3) == 0) {
+		gNextTimeslice40ms = true;
 		if (gRxVfo->MODULATION_MODE == 1) {
 			SetTask(TASK_AM_FIX);
 		}
 	}
-	if ((SCHEDULER_Counter % 21) == 0) {
+	if ((gGlobalSysTickCounter % 21) == 0) {
 		SetTask(TASK_SCANNER);
-	}
-	if ((SCHEDULER_Counter % 50) == 0) {
-		SetTask(TASK_FM_SCANNER);
-	}
-
-	gGlobalSysTickCounter++;
-
-	if ((gGlobalSysTickCounter & 3) == 0) {
-		gNextTimeslice40ms = true;
 	}
 	if ((gGlobalSysTickCounter % 50) == 0) {
 		gNextTimeslice500ms = true;
 		DECREMENT_AND_TRIGGER(gTxTimerCountdown, gTxTimeoutReached);
+		SetTask(TASK_FM_RADIO);
 	}
 
 	TRIGGER_CXCSS(gFoundCDCSSCountdown, gFoundCDCSS, gFoundCTCSS);
@@ -127,14 +120,10 @@ void SystickHandler(void)
 			break;
 		}
 	}
-	DECREMENT_AND_TRIGGER(gTailNoteEliminationCountdown, gFlagTteComplete);
 
 	if (gCurrentFunction == FUNCTION_TRANSMIT && gRTTECountdown > 0) {
 		gRTTECountdown--;
-		if (gRTTECountdown == 0) {
-			FUNCTION_Select(FUNCTION_FOREGROUND);
-			gUpdateDisplay = true;
-		}
 	}
+	DECREMENT_AND_TRIGGER(gTailNoteEliminationCountdown, gFlagTteComplete);
 }
 
