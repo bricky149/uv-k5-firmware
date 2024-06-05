@@ -646,9 +646,9 @@ void BOARD_EEPROM_Init(void)
 	EEPROM_ReadBuffer(0x0F40, Data, 8);
 	gSetting_F_LOCK = (Data[0] < 4) ? Data[0] : F_LOCK_OFF;
 
-	gSetting_350TX  = (Data[1] < 2) ? Data[1] : 0;
-	gSetting_200TX  = (Data[3] < 2) ? Data[3] : 0;
-	gSetting_500TX  = (Data[4] < 2) ? Data[4] : 0;
+	// gSetting_350TX  = (Data[1] < 2) ? Data[1] : 0;
+	// gSetting_200TX  = (Data[3] < 2) ? Data[3] : 0;
+	// gSetting_500TX  = (Data[4] < 2) ? Data[4] : 0;
 
 	if (!gEeprom.VFO_OPEN) {
 		gEeprom.ScreenChannel[0] = gEeprom.MrChannel[0];
@@ -712,9 +712,9 @@ void BOARD_FactoryReset(bool bIsAll)
 			(bIsAll || (
 				!(i >= 0x0D60 && i < 0x0E28) && // MR Channel Attributes
 				!(i >= 0x0F18 && i < 0x0F30) && // Scan List
-				!(i >= 0x0F50 && i < 0x1C00) && // MR Channel NAmes
+				!(i >= 0x0F50 && i < 0x1C00) && // MR Channel Names
 				!(i >= 0x0E40 && i < 0x0E70) && // FM Channels
-				!(i >= 0x0E88 && i < 0x0E90))) // FM settings
+				!(i >= 0x0E88 && i < 0x0E90)))  // FM settings
 			) {
 			EEPROM_WriteBuffer(i, Template);
 		}

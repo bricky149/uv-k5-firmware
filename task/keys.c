@@ -50,9 +50,6 @@ static void TASK_ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	}
 
 	if (bKeyPressed) {
-		if (Key != KEY_PTT) {
-			gVoltageMenuCountdown = 0x10;
-		}
 		BACKLIGHT_TurnOn();
 		if (gDTMF_DecodeRing) {
 			gDTMF_DecodeRing = false;

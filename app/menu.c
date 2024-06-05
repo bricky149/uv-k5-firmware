@@ -93,8 +93,8 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 	case MENU_S_ADD1: case MENU_S_ADD2:
 	case MENU_STE: case MENU_D_ST:
 	case MENU_D_DCD: case MENU_ROGER:
-	case MENU_RESET: case MENU_350TX:
-	case MENU_200TX: case MENU_500TX:
+	case MENU_RESET:
+	// case MENU_350TX: case MENU_200TX: case MENU_500TX:
 		*pMin = 0;
 		*pMax = 1;
 		break;
@@ -399,21 +399,21 @@ void MENU_AcceptSetting(void)
 		BOARD_FactoryReset(gSubMenuSelection);
 		return;
 
-	case MENU_350TX:
-		gSetting_350TX = gSubMenuSelection;
-		break;
+	// case MENU_350TX:
+	// 	gSetting_350TX = gSubMenuSelection;
+	// 	break;
 
 	case MENU_F_LOCK:
 		gSetting_F_LOCK = gSubMenuSelection;
 		break;
 
-	case MENU_200TX:
-		gSetting_200TX = gSubMenuSelection;
-		break;
+	// case MENU_200TX:
+	// 	gSetting_200TX = gSubMenuSelection;
+	// 	break;
 
-	case MENU_500TX:
-		gSetting_500TX = gSubMenuSelection;
-		break;
+	// case MENU_500TX:
+	// 	gSetting_500TX = gSubMenuSelection;
+	// 	break;
 
 	case MENU_BATCAL:
 		// 7.6V is nominal voltage, used as basis for calibrating battery values
@@ -671,21 +671,21 @@ void MENU_ShowCurrentSetting(void)
 		gSubMenuSelection = RADIO_FindNextChannel(gEeprom.MrChannel[0], 1, false, 1);
 		break;
 
-	case MENU_350TX:
-		gSubMenuSelection = gSetting_350TX;
-		break;
+	// case MENU_350TX:
+	// 	gSubMenuSelection = gSetting_350TX;
+	// 	break;
 
 	case MENU_F_LOCK:
 		gSubMenuSelection = gSetting_F_LOCK;
 		break;
 
-	case MENU_200TX:
-		gSubMenuSelection = gSetting_200TX;
-		break;
+	// case MENU_200TX:
+	// 	gSubMenuSelection = gSetting_200TX;
+	// 	break;
 
-	case MENU_500TX:
-		gSubMenuSelection = gSetting_500TX;
-		break;
+	// case MENU_500TX:
+	// 	gSubMenuSelection = gSetting_500TX;
+	// 	break;
 
 	case MENU_BATCAL:
 		gSubMenuSelection = gBatteryCalibration[3];

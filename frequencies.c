@@ -158,24 +158,27 @@ bool FREQUENCY_Check(VFO_Info_t *pInfo)
 		break;
 
 	default:
-		if (Frequency >= 17400000 && Frequency <= 34999990) {
-			if (gSetting_200TX) {
-				return false;
-			}
+		if (Frequency >= 13600000 && Frequency <= 17399990) {
+			return false;
 		}
-		if (Frequency >= 35000000 && Frequency <= 39999990) {
-			if (gSetting_350TX) {
-				return false;
-			}
-		}
+		// if (Frequency >= 17400000 && Frequency <= 34999990) {
+		// 	if (gSetting_200TX) {
+		// 		return false;
+		// 	}
+		// }
+		// if (Frequency >= 35000000 && Frequency <= 39999990) {
+		// 	if (gSetting_350TX) {
+		// 		return false;
+		// 	}
+		// }
 		if (Frequency >= 40000000 && Frequency <= 46999990) {
 			return false;
 		}
-		if (Frequency >= 47000000 && Frequency <= 63000000) {
-			if (gSetting_500TX) {
-				return false;
-			}
-		}
+		// if (Frequency >= 47000000 && Frequency <= 63000000) {
+		// 	if (gSetting_500TX) {
+		// 		return false;
+		// 	}
+		// }
 		break;
 	}
 

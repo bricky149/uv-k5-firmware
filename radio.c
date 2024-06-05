@@ -493,11 +493,8 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 				;
 			break;
 		}
-
-		BK4819_SetAGC();
-	} else {
-		BK4819_SetFGC();
 	}
+	BK4819_SetAGC(gRxVfo->MODULATION_MODE);
 
 	if (gRxVfo->MODULATION_MODE != MOD_FM || !gRxVfo->DTMF_DECODING_ENABLE) {
 		BK4819_DisableDTMF();

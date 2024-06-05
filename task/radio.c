@@ -5,9 +5,15 @@
 #include "mdc1200.h"
 #endif
 #include "misc.h"
+#include "scheduler.h"
 #include "ui/ui.h"
 
 void TASK_CheckRadioInterrupts(void) {
+	if (!SCHEDULER_CheckTask(TASK_CHECK_RADIO_INTERRUPTS)) {
+		return;
+	}
+	SCHEDULER_ClearTask(TASK_CHECK_RADIO_INTERRUPTS);
+
     if ((gCurrentFunction != FUNCTION_POWER_SAVE || !gRxIdleMode) && gScreenToDisplay != DISPLAY_SCANNER) {
 		//APP_CheckRadioInterrupts();
 		while (BK4819_ReadRegister(BK4819_REG_0C) & 1U) {

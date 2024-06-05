@@ -471,9 +471,14 @@ void APP_Update(void)
 			RADIO_SetVfoState(VFO_STATE_TIMEOUT);
 			gUpdateDisplay = true;
 		}
-		if (gRTTECountdown == 0) {
-			FUNCTION_Select(FUNCTION_FOREGROUND);
-			gUpdateDisplay = true;
+		if (gRTTECountdown > 0) {
+			// Tried refactoring to let SystickHandler handle decrementing this value
+			// Turns out this hangs the radio during TX (probably in RADIO_PrepareTX)
+			gRTTECountdown--;
+			if (gRTTECountdown == 0) {
+				FUNCTION_Select(FUNCTION_FOREGROUND);
+				gUpdateDisplay = true;
+			}
 		}
 	} else {
 		APP_HandleFunction();
@@ -632,7 +637,7 @@ void APP_TimeSlice500ms(void)
 						gAskToDelete = false;
 #if defined(ENABLE_FMRADIO)
 						if (gFmRadioMode && gCurrentFunction != FUNCTION_RECEIVE && gCurrentFunction != FUNCTION_MONITOR && gCurrentFunction != FUNCTION_TRANSMIT) {
-							GUI_SelectNextDisplay(DISPLAY_FM);
+							gRequestDisplayScreen = DISPLAY_FM;
 						} else {
 							gRequestDisplayScreen = DISPLAY_MAIN;
 						}

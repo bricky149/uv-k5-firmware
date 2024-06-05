@@ -40,7 +40,7 @@ static const MENU_Item_t MenuList[56] = {
 	{ "SFT-D", MENU_SFT_D },
 	{ "OFFSET", MENU_OFFSET },
 	{ "W/N", MENU_W_N },
-	{ "SCR", MENU_SCR },
+	// { "SCR", MENU_SCR },
 	{ "BCL", MENU_BCL },
 	{ "MEM-CH", MENU_MEM_CH },
 	{ "MDCMOD", MENU_MDCMOD },
@@ -48,9 +48,9 @@ static const MENU_Item_t MenuList[56] = {
 	{ "ABR", MENU_ABR },
 	{ "TDR", MENU_TDR },
 	{ "WX", MENU_WX },
-	{ "BEEP", MENU_BEEP },
+	// { "BEEP", MENU_BEEP },
 	{ "TOT", MENU_TOT },
-	{ "VOICE", MENU_VOICE },
+	// { "VOICE", MENU_VOICE },
 	{ "SC-REV", MENU_SC_REV },
 	{ "MDF", MENU_MDF },
 	{ "AUTOLK", MENU_AUTOLK },
@@ -73,18 +73,18 @@ static const MENU_Item_t MenuList[56] = {
 	{ "PTT-ID", MENU_PTT_ID },
 	{ "D-DCD", MENU_D_DCD },
 	{ "D-LIST", MENU_D_LIST },
-	{ "PONMSG", MENU_PONMSG },
-	{ "ROGER", MENU_ROGER },
+	// { "PONMSG", MENU_PONMSG },
 	{ "COMPND", MENU_COMPND },
+	{ "ROGER", MENU_ROGER },
 	{ "MOD", MENU_MOD },
 	{ "DEL-CH", MENU_DEL_CH },
 	{ "RESET", MENU_RESET },
-	{ "350TX", MENU_350TX },
+	// { "350TX", MENU_350TX },
 	{ "F-LOCK", MENU_F_LOCK },
-	{ "200TX", MENU_200TX },
-	{ "500TX", MENU_500TX },
-	{ "350EN", MENU_350EN },
-	{ "SCREN", MENU_SCREN },
+	// { "200TX", MENU_200TX },
+	// { "500TX", MENU_500TX },
+	// { "350EN", MENU_350EN },
+	// { "SCREN", MENU_SCREN },
 	{ "BATCAL", MENU_BATCAL },
 };
 
@@ -306,9 +306,7 @@ void UI_DisplayMenu(void)
 	case MENU_D_ST:
 	case MENU_D_DCD:
 	case MENU_ROGER:
-	case MENU_350TX:
-	case MENU_200TX:
-	case MENU_500TX:
+	// case MENU_350TX: case MENU_200TX: case MENU_500TX:
 		strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
 		break;
 

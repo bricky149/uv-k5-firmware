@@ -67,8 +67,8 @@ uint16_t BK4819_ReadRegister(BK4819_REGISTER_t Register);
 void BK4819_WriteRegister(BK4819_REGISTER_t Register, uint16_t Data);
 void BK4819_WriteU8(uint8_t Data);
 
-void BK4819_SetAGC(void);
-void BK4819_SetFGC(void);
+void BK4819_InitAGC(void);
+void BK4819_SetAGC(BK4819_MOD_Type_t ModType);
 
 void BK4819_SetGpioOut(BK4819_GPIO_PIN_t Pin);
 void BK4819_ClearGpioOut(BK4819_GPIO_PIN_t Pin);

@@ -95,7 +95,7 @@ OBJS += ui/status.o
 OBJS += ui/ui.o
 
 # Tasks
-OBJS += task/am_fix.o
+#OBJS += task/battery.o
 ifeq ($(ENABLE_FMRADIO),1)
 OBJS += task/fm.o
 endif

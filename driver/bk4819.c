@@ -1,6 +1,6 @@
 /* Copyright 2023 Dual Tachyon
  * Copyright 2023 fagci
- * Copyright 2023 OneOfEleven
+ * Copyright 2024 kamilsss655
  * https://github.com/DualTachyon
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -67,6 +67,7 @@ void BK4819_Init(void)
 	BK4819_WriteRegister(BK4819_REG_09, 0xF09F);
 	BK4819_WriteRegister(BK4819_REG_1F, 0x5454);
 	BK4819_WriteRegister(BK4819_REG_3E, 0xA037);
+	BK4819_InitAGC();
 
 	gBK4819_GpioOutState = 0x9000;
 	BK4819_WriteRegister(BK4819_REG_33, gBK4819_GpioOutState);
@@ -145,7 +146,8 @@ void BK4819_WriteU8(uint8_t Data)
 	}
 }
 
-void BK4819_SetAGC(void)
+// kamilsss655
+void BK4819_InitAGC(void)
 {
 	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
 		(0u << 15) |                    // 0 AGC fix mode
@@ -154,62 +156,67 @@ void BK4819_SetAGC(void)
 		(6u <<  0));                    // 6 DC filter bandwidth for Rx
 
 	// AGC fix indexes
-	BK4819_WriteRegister(BK4819_REG_13, 0x03BE); // 3
-	BK4819_WriteRegister(BK4819_REG_12, 0x037B); // 2
-	BK4819_WriteRegister(BK4819_REG_11, 0x027B); // 1
-	BK4819_WriteRegister(BK4819_REG_10, 0x007A); // 0
-	BK4819_WriteRegister(BK4819_REG_14, 0x0019); // -1
+	// switched values to ones from 1o11 am_fix:
+	BK4819_WriteRegister(BK4819_REG_13, 0x03DE); // 0x03BE / 000000 11 101 11 110 /  -5dB
+	BK4819_WriteRegister(BK4819_REG_12, 0x0393); // 0x037B / 000000 11 011 11 011 / -24dB
+	BK4819_WriteRegister(BK4819_REG_11, 0x01B5); // 0x027B / 000000 10 011 11 011 / -43dB
+	BK4819_WriteRegister(BK4819_REG_10, 0x0145); // 0x007A / 000000 00 011 11 010 / -58dB
+	BK4819_WriteRegister(BK4819_REG_14, 0x0019); // 0x0019 / 000000 00 000 11 001 / -84dB
 
-	// Affects when to adjust AGC fix index
-	BK4819_WriteRegister(BK4819_REG_49, 0x2A38); // 00 1010100 0111000
-	// if (ModType != MOD_AM) {
-	// 	BK4819_WriteRegister(BK4819_REG_49,
-	// 		(0u  << 14) |                   // 0  High/Low Lo selection
-	// 		(84u <<  7) |                   // 84 RF AGC high threshold (sensitivity vs. distortion)
-	// 		(56u <<  0));                   // 56 RF AGC low threshold
-	// } else {
-	// 	BK4819_WriteRegister(BK4819_REG_49,
-	// 		(0u  << 14) |                   // 0  High/Low Lo selection
-	// 		(52u <<  7) |                   // 84 RF AGC high threshold (sensitivity vs. distortion)
-	// 		(34u <<  0));                   // 56 RF AGC low threshold
-	// }
-
+	// kamilsss655: what is this for? turned off, seems like rssi is increased?
+	// bricky149: Leaving enabled to retain stock behaviour
 	BK4819_WriteRegister(BK4819_REG_7B, 0x8420);
 }
-
-void BK4819_SetFGC(void)
+void BK4819_SetAGC(BK4819_MOD_Type_t ModType)
 {
-	// AGC increases gain on strong signals which would explain the distortion
-	// when a signal saturates the demodulator. OneOfEleven's 'AM fix' inverts
-	// this, toning down gain registers when a signal exceeds -89dBm
-	// (~33dB above sensitivity).
-	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
-		(1u << 15) |                    // 0 AGC fix mode
-		(3u << 12) |                    // 3 AGC fix index
-		(5u <<  3) |                    // 5 DC filter bandwidth for Tx
-		(6u <<  0));                    // 6 DC filter bandwidth for Rx
-
-	// AGC fix indexes
-	BK4819_WriteRegister(BK4819_REG_13, 0x03BE); // 3
-	BK4819_WriteRegister(BK4819_REG_12, 0x037C); // 2
-	BK4819_WriteRegister(BK4819_REG_11, 0x027B); // 1
-	BK4819_WriteRegister(BK4819_REG_10, 0x017A); // 0
-	BK4819_WriteRegister(BK4819_REG_14, 0x0059); // -1
-
-	BK4819_WriteRegister(BK4819_REG_49, 0x2A38);
-	BK4819_WriteRegister(BK4819_REG_7B, 0x318C);
-	BK4819_WriteRegister(BK4819_REG_7C, 0x595E);
-	BK4819_WriteRegister(BK4819_REG_20, 0x8DEF);
-
-	// fagci
-	for (int i = 0; i < 8; i++) {
-		BK4819_WriteRegister(BK4819_REG_06, (i & 7) << 13 | 0x4A << 7 | 0x36);
+	// Affects when to adjust AGC fix index
+	//BK4819_WriteRegister(BK4819_REG_49, 0x2A38);
+	// 30, 10 - doesn't overload but sound low
+	// 50, 10 - best so far
+	// 50, 15 - SOFT - signal doesn't fall too low - works best for now
+	// 45, 25 - AGGRESSIVE - lower hysteresis, but volume jumps heavily, not good for music, might be good for aviation
+	// 1 << 14 - way better, seems to open squelch and match squelch as opposed to 0
+	if (ModType != MOD_AM) {
+		// FM, USB modulation
+		BK4819_WriteRegister(BK4819_REG_49, (0 << 14) | (84 << 7) | (56 << 0));
+	} else {
+		BK4819_WriteRegister(BK4819_REG_49, (0 << 14) | (50 << 7) | (15 << 0));
 	}
-	//for (i = 0; i < 8; i++) {
-	//	// Bug? The bit 0x2000 below overwrites the (i << 13)
-	//	BK4819_WriteRegister(BK4819_REG_06, ((i << 13) | 0x2500U) + 0x36U);
-	//}
 }
+
+// void BK4819_SetFGC(void)
+// {
+// 	// AGC increases gain on strong signals which would explain the distortion
+// 	// when a signal saturates the demodulator. OneOfEleven's 'AM fix' inverts
+// 	// this, toning down gain registers when a signal exceeds -89dBm
+// 	// (~33dB above sensitivity).
+// 	BK4819_WriteRegister(BK4819_REG_7E, // 1o11
+// 		(1u << 15) |                    // 0 AGC fix mode
+// 		(3u << 12) |                    // 3 AGC fix index
+// 		(5u <<  3) |                    // 5 DC filter bandwidth for Tx
+// 		(6u <<  0));                    // 6 DC filter bandwidth for Rx
+
+// 	// AGC fix indexes
+// 	BK4819_WriteRegister(BK4819_REG_13, 0x03BE); // 3
+// 	BK4819_WriteRegister(BK4819_REG_12, 0x037C); // 2
+// 	BK4819_WriteRegister(BK4819_REG_11, 0x027B); // 1
+// 	BK4819_WriteRegister(BK4819_REG_10, 0x017A); // 0
+// 	BK4819_WriteRegister(BK4819_REG_14, 0x0059); // -1
+
+// 	BK4819_WriteRegister(BK4819_REG_49, 0x2A38);
+// 	BK4819_WriteRegister(BK4819_REG_7B, 0x318C);
+// 	BK4819_WriteRegister(BK4819_REG_7C, 0x595E);
+// 	BK4819_WriteRegister(BK4819_REG_20, 0x8DEF);
+
+// 	// fagci
+// 	for (int i = 0; i < 8; i++) {
+// 		BK4819_WriteRegister(BK4819_REG_06, (i & 7) << 13 | 0x4A << 7 | 0x36);
+// 	}
+// 	//for (i = 0; i < 8; i++) {
+// 	//	// Bug? The bit 0x2000 below overwrites the (i << 13)
+// 	//	BK4819_WriteRegister(BK4819_REG_06, ((i << 13) | 0x2500U) + 0x36U);
+// 	//}
+// }
 
 void BK4819_SetGpioOut(BK4819_GPIO_PIN_t Pin)
 {
@@ -298,6 +305,7 @@ void BK4819_SetFilterBandwidth(BK4819_FilterBandwidth_t Bandwidth)
 		BK4819_WriteRegister(BK4819_REG_43, 0x4048);
 		break;
 	case BK4819_FILTER_BW_NARROWER:
+		// RT-890
 		BK4819_WriteRegister(BK4819_REG_43, 0x2058);
 		break;
 	}

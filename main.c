@@ -36,7 +36,6 @@
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
-#include "task/am_fix.h"
 //#include "task/battery.h"
 #if defined(ENABLE_FMRADIO)
 #include "task/fm.h"
@@ -112,7 +111,7 @@ void Main(void)
 			UI_DisplayLock();
 			bIsInLockScreen = false;
 		}
-		gMenuListCount = 49; // Does not include hidden items
+		gMenuListCount = 45; // Does not include hidden items
 		BOOT_Mode_t BootMode = BOOT_GetMode();
 		BOOT_ProcessMode(BootMode);
 		gUpdateStatus = true;
@@ -133,9 +132,6 @@ void Main(void)
 		TASK_CheckKeys();
 		TASK_CheckRadioInterrupts();
 		TASK_UpdateScreen();
-
-		// 40ms
-		TASK_AM_Fix();
 
 		// 500ms
 #if defined(ENABLE_FMRADIO)

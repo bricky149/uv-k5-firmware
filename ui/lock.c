@@ -58,7 +58,7 @@ void UI_DisplayLock(void)
 	memset(gInputBox, 10, sizeof(gInputBox));
 
 	while (1) {
-		while (!SCHEDULER_CheckTask(TASK_CHECK_LOCK)) {
+		while (!SCHEDULER_CheckTask(TASK_SLEEP)) {
 		}
 		// TODO: Original code doesn't do the below, but is needed for proper key debounce.
 		Key = KEYBOARD_Poll();

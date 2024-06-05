@@ -23,6 +23,7 @@
 #include "misc.h"
 #include "scheduler.h"
 #include "settings.h"
+#include "ui/ui.h"
 
 #define DECREMENT_AND_TRIGGER(cnt, flag) \
 	if (cnt > 0 && --cnt == 0) { \
@@ -65,15 +66,14 @@ void SystickHandler(void)
 {
 	gGlobalSysTickCounter++;
 
-	SetTask(TASK_CHECK_LOCK);
 	SetTask(TASK_CHECK_KEYS);
 	SetTask(TASK_CHECK_RADIO_INTERRUPTS);
+	if (gCurrentFunction != FUNCTION_TRANSMIT || gRequestDisplayScreen != DISPLAY_INVALID) {
+		SetTask(TASK_UPDATE_SCREEN);
+	}
 
 	if ((gGlobalSysTickCounter & 3) == 0) {
 		gNextTimeslice40ms = true;
-		if (gRxVfo->MODULATION_MODE == 1) {
-			SetTask(TASK_AM_FIX);
-		}
 	}
 	if ((gGlobalSysTickCounter % 21) == 0) {
 		SetTask(TASK_SCANNER);
@@ -121,9 +121,6 @@ void SystickHandler(void)
 		}
 	}
 
-	if (gCurrentFunction == FUNCTION_TRANSMIT && gRTTECountdown > 0) {
-		gRTTECountdown--;
-	}
 	DECREMENT_AND_TRIGGER(gTailNoteEliminationCountdown, gFlagTteComplete);
 }
 
