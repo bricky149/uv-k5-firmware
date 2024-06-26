@@ -1,6 +1,8 @@
 /* Copyright 2023 Dual Tachyon
  * Copyright 2023 fagci
+ * Copyright 2023 OneOfEleven
  * Copyright 2024 kamilsss655
+ * Copyright 2024 mobilinkd
  * https://github.com/DualTachyon
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,11 +46,11 @@ void BK4819_Init(void)
 
 	BK4819_WriteRegister(BK4819_REG_00, 0x8000);
 	BK4819_WriteRegister(BK4819_REG_00, 0);
-	BK4819_WriteRegister(BK4819_REG_37, 0x1D0F);
-	BK4819_WriteRegister(BK4819_REG_36, 0x0022);
-	BK4819_WriteRegister(BK4819_REG_19, 0x1041);
-	BK4819_WriteRegister(BK4819_REG_7D, 0xE940);
-	BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
+	//BK4819_WriteRegister(BK4819_REG_37, 0x1D0F);
+	//BK4819_WriteRegister(BK4819_REG_36, 0x0022);
+	//BK4819_WriteRegister(BK4819_REG_19, 0x1041);
+	//BK4819_WriteRegister(BK4819_REG_7D, 0xE940);
+	//BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
 	BK4819_WriteRegister(BK4819_REG_09, 0x006F);
 	BK4819_WriteRegister(BK4819_REG_09, 0x106B);
 	BK4819_WriteRegister(BK4819_REG_09, 0x2067);
@@ -156,18 +158,17 @@ void BK4819_InitAGC(void)
 		(6u <<  0));                    // 6 DC filter bandwidth for Rx
 
 	// AGC fix indexes
-	// switched values to ones from 1o11 am_fix:
-	BK4819_WriteRegister(BK4819_REG_13, 0x03DE); // 0x03BE / 000000 11 101 11 110 /  -5dB
-	BK4819_WriteRegister(BK4819_REG_12, 0x0393); // 0x037B / 000000 11 011 11 011 / -24dB
-	BK4819_WriteRegister(BK4819_REG_11, 0x01B5); // 0x027B / 000000 10 011 11 011 / -43dB
-	BK4819_WriteRegister(BK4819_REG_10, 0x0145); // 0x007A / 000000 00 011 11 010 / -58dB
-	BK4819_WriteRegister(BK4819_REG_14, 0x0019); // 0x0019 / 000000 00 000 11 001 / -84dB
+	BK4819_WriteRegister(BK4819_REG_13, 0x03BE); // 3
+	BK4819_WriteRegister(BK4819_REG_12, 0x037B); // 2
+	BK4819_WriteRegister(BK4819_REG_11, 0x027B); // 1
+	BK4819_WriteRegister(BK4819_REG_10, 0x007A); // 0
+	BK4819_WriteRegister(BK4819_REG_14, 0x0019); // -1
 
 	// kamilsss655: what is this for? turned off, seems like rssi is increased?
 	// bricky149: Leaving enabled to retain stock behaviour
 	BK4819_WriteRegister(BK4819_REG_7B, 0x8420);
 }
-void BK4819_SetAGC(BK4819_MOD_Type_t ModType)
+void BK4819_SetAGC(BK4819_ModType_t ModType)
 {
 	// Affects when to adjust AGC fix index
 	//BK4819_WriteRegister(BK4819_REG_49, 0x2A38);
@@ -295,21 +296,151 @@ void BK4819_Set55HzTailDetection(void)
 	BK4819_WriteRegister(BK4819_REG_07, (1U << 13) | 462);
 }
 
-void BK4819_SetFilterBandwidth(BK4819_FilterBandwidth_t Bandwidth)
+// 1o11
+// mobilinkd
+void BK4819_SetFilterBandwidth(BK4819_FilterBandwidth_t Bandwidth, bool weak_no_different)
 {
-	switch (Bandwidth) {
-	case BK4819_FILTER_BW_WIDE:
-		BK4819_WriteRegister(BK4819_REG_43, 0x3028);
-		break;
-	case BK4819_FILTER_BW_NARROW:
-		BK4819_WriteRegister(BK4819_REG_43, 0x4048);
-		break;
-	case BK4819_FILTER_BW_NARROWER:
-		// RT-890
-		BK4819_WriteRegister(BK4819_REG_43, 0x2058);
-		break;
+	// REG_43
+	// <15>    0 ???
+	//
+	// <14:12> 4 RF filter bandwidth
+	//         0 = 1.7  kHz
+	//         1 = 2.0  kHz
+	//         2 = 2.5  kHz
+	//         3 = 3.0  kHz
+	//         4 = 3.75 kHz
+	//         5 = 4.0  kHz
+	//         6 = 4.25 kHz
+	//         7 = 4.5  kHz
+	// if <5> == 1, RF filter bandwidth * 2
+	//
+	// <11:9>  0 RF filter bandwidth when signal is weak
+	//         0 = 1.7  kHz
+	//         1 = 2.0  kHz
+	//         2 = 2.5  kHz
+	//         3 = 3.0  kHz
+	//         4 = 3.75 kHz
+	//         5 = 4.0  kHz
+	//         6 = 4.25 kHz
+	//         7 = 4.5  kHz
+	// if <5> == 1, RF filter bandwidth * 2
+	//
+	// <8:6>   1 AFTxLPF2 filter Band Width
+	//         1 = 2.5  kHz (for 12.5k channel space)
+	//         2 = 2.75 kHz
+	//         0 = 3.0  kHz (for 25k   channel space)
+	//         3 = 3.5  kHz
+	//         4 = 4.5  kHz
+	//         5 = 4.25 kHz
+	//         6 = 4.0  kHz
+	//         7 = 3.75 kHz
+	//
+	// <5:4>   0 BW Mode Selection
+	//         0 = 12.5k
+	//         1 =  6.25k
+	//         2 = 25k/20k
+	//
+	// <3>     1 ???
+	//
+	// <2>     0 Gain after FM Demodulation
+	//         0 = 0dB
+	//         1 = 6dB
+	//
+	// <1:0>   0 ???
+
+	uint16_t val = 0;
+#if defined(ENABLE_DIGITAL_MODULATION)
+	bool digitalFilters = false;
+#endif
+	switch (Bandwidth)
+	{
+#if defined(ENABLE_DIGITAL_MODULATION)
+		case BK4819_FILTER_BW_DIGITAL_WIDE:
+			val = (4u << 12) |     // RF RX filter bandwidth (7.5kHz)
+				  (3u <<  9) |     // Weak RX signal bandwidth (6kHz)
+				  (6u <<  6) |     // Tx AF Filter bandwidth (4.5kHz, bypassed)
+				  (2u <<  4) |     // 25kHz channel bandwidth
+				  (1u <<  3) |     // ?
+				  (0u <<  2);      // 0 Gain after FM Demodulation
+			digitalFilters = true;
+			break;
+		case BK4819_FILTER_BW_DIGITAL_NARROW:
+			val = (7u << 12) |     // RF RX filter bandwidth (4.5kHz)
+				  (4u <<  9) |     // Weak RX signal bandwidth (3.75kHz)
+				  (0u <<  6) |     // Tx AF Filter bandwidth (3kHz, bypassed)
+				  (0u <<  4) |     // 12.5kHz channel bandwidth
+				  (1u <<  3) |     // ?
+				  (0u <<  2);      // 0 Gain after FM Demodulation
+			digitalFilters = true;
+			break;
+#endif
+		default:
+		case BK4819_FILTER_BW_WIDE:	// 25kHz
+			val = (4u << 12) |     // *3 RF filter bandwidth
+				  (6u <<  6) |     // *0 AFTxLPF2 filter Band Width
+				  (2u <<  4) |     //  2 BW Mode Selection
+				  (1u <<  3) |     //  1
+				  (0u <<  2);     //  0 Gain after FM Demodulation
+
+			if (weak_no_different) {
+				// make the RX bandwidth the same with weak signals
+				val |= (4u <<  9);     // *0 RF filter bandwidth when signal is weak
+			} else {
+				/// with weak RX signals the RX bandwidth is reduced
+				val |= (2u <<  9);     // *0 RF filter bandwidth when signal is weak
+			}
+
+			break;
+
+		case BK4819_FILTER_BW_NARROW:	// 12.5kHz
+			val = (4u << 12) |     // *4 RF filter bandwidth
+				  (0u <<  6) |     // *1 AFTxLPF2 filter Band Width
+				  (0u <<  4) |     //  0 BW Mode Selection
+				  (1u <<  3) |     //  1
+				  (0u <<  2);      //  0 Gain after FM Demodulation
+
+			if (weak_no_different) {
+				val |= (4u <<  9);     // *0 RF filter bandwidth when signal is weak
+			} else {
+				val |= (2u <<  9);
+			}
+
+			break;
+
+		case BK4819_FILTER_BW_NARROWER:	// 6.25kHz
+			val = (3u << 12) |     //  3 RF filter bandwidth
+				  (3u <<  9) |     // *0 RF filter bandwidth when signal is weak
+				  (1u <<  6) |     //  1 AFTxLPF2 filter Band Width
+				  (1u <<  4) |     //  1 BW Mode Selection
+				  (1u <<  3) |     //  1
+				  (0u <<  2);      //  0 Gain after FM Demodulation
+
+			if (weak_no_different) {
+				val |= (3u <<  9);
+			} else {
+				val |= (0u <<  9);     //  0 RF filter bandwidth when signal is weak
+			}
+			break;
 	}
+
+	BK4819_WriteRegister(BK4819_REG_43, val);
+
+#if defined(ENABLE_DIGITAL_MODULATION)
+	if (digitalFilters) {
+		// NOTE: AFTxLPF2 is bypassed in BK4819_PrepareDigitalTransmit()
+		// Disable DC filter (RX & TX).
+		BK4819_WriteRegister(BK4819_REG_7E, BK4819_ReadRegister(BK4819_REG_7E) & 0xFFC0);
+		// Disable FM sub-audio filters & emphasis
+		BK4819_WriteRegister(BK4819_REG_2B, (BK4819_ReadRegister(BK4819_REG_2B) & 0xF8F8) | 0x707);
+	} else {
+		// Enable DC filter (RX & TX).
+		BK4819_WriteRegister(BK4819_REG_7E, BK4819_ReadRegister(BK4819_REG_7E) | 0b101110);
+		// Enable FM sub-audio filters & emphasis
+		BK4819_WriteRegister(BK4819_REG_2B, BK4819_ReadRegister(BK4819_REG_2B) & 0xF8F8);
+	}
+#endif
 }
+
 
 void BK4819_SetupPowerAmplifier(uint8_t Bias, uint32_t Frequency)
 {
@@ -342,8 +473,12 @@ void BK4819_SetupSquelch(uint8_t SquelchOpenRSSIThresh, uint8_t SquelchCloseRSSI
 	//BK4819_WriteRegister(BK4819_REG_4E, 0x6F00 | SquelchOpenGlitchThresh);
 	BK4819_WriteRegister(BK4819_REG_4E,      // 1o11
 			(1u << 14) |                     // 1 ???
-			(4u << 11) |                     // 5 squelch = open delay .. 0 ~ 7
-			(2u <<  9) |                     // 3 squelch = close delay .. 0 ~ 3
+#if defined(ENABLE_DIGITAL_MODULATION)
+			(0u << 11) |                     // *0  squelch = open  delay .. 0 ~ 7
+#else
+			(2u << 11) |                     // 5 squelch = open delay .. 0 ~ 7
+#endif
+			(1u <<  9) |                     // 3 squelch = close delay .. 0 ~ 3
 			(SquelchOpenGlitchThresh << 0)); // 0 ~ 255
 	BK4819_WriteRegister(BK4819_REG_4F, (SquelchCloseNoiseThresh << 8) | SquelchOpenNoiseThresh);
 	BK4819_WriteRegister(BK4819_REG_78, (SquelchOpenRSSIThresh << 8) | SquelchCloseRSSIThresh);
@@ -351,25 +486,32 @@ void BK4819_SetupSquelch(uint8_t SquelchOpenRSSIThresh, uint8_t SquelchCloseRSSI
 	BK4819_RX_TurnOn();
 }
 
-void BK4819_SetModulation(BK4819_MOD_Type_t ModType) {
+void BK4819_SetModulation(BK4819_ModType_t ModType) {
 	switch(ModType) {
+		case MOD_DIG:
 		case MOD_FM:
-			BK4819_SetAF(BK4819_AF_OPEN);
+			BK4819_SetAF(BK4819_AF_FM);
 			BK4819_WriteRegister(BK4819_REG_3D, 0);
 			break;
 		case MOD_AM:
 			BK4819_SetAF(BK4819_AF_AM);
 			BK4819_WriteRegister(BK4819_REG_3D, 0);
 			break;
-		case MOD_LSB:
-			BK4819_SetAF(BK4819_AF_LSB);
-			BK4819_WriteRegister(BK4819_REG_3D, 0x2B45);
-			break;
 		case MOD_USB:
 			BK4819_SetAF(BK4819_AF_USB);
 			BK4819_WriteRegister(BK4819_REG_3D, 0x2B45);
 			break;
 	}
+
+#if defined(ENABLE_DIGITAL_MODULATION)
+	if (ModType == MOD_DIG || ModType == MOD_FM) {
+		BK4819_WriteRegister(BK4819_REG_73, (0 << 4)); // enable AFC
+	} else {
+		BK4819_WriteRegister(BK4819_REG_73, (1 << 4)); // disable AFC
+	}
+#else
+	BK4819_WriteRegister(BK4819_REG_73, (ModType != MOD_FM << 4));
+#endif
 }
 
 void BK4819_SetAF(BK4819_AF_Type_t AF)
@@ -524,15 +666,63 @@ void BK4819_Sleep(void)
 	BK4819_WriteRegister(BK4819_REG_37, 0x1D00);
 }
 
-void BK4819_PrepareTransmit(void)
+void BK4819_ExitBypass(void)
 {
-	//BK4819_ExitBypass();
 	BK4819_SetAF(BK4819_AF_MUTE);
 	BK4819_WriteRegister(BK4819_REG_7E, 0x302E);
 
-	BK4819_ExitTxMute();
+#if defined(ENABLE_DIGITAL_MODULATION)
+	// Enable ALC
+	BK4819_WriteRegister(BK4819_REG_4B, (0 << 5));
+	// Enable MIC AGC
+	BK4819_WriteRegister(BK4819_REG_19, (0 << 15));
+#endif
+}
 
-	//BK4819_TxOn_Beep();
+#if defined(ENABLE_DIGITAL_MODULATION)
+void BK4819_PrepareDigitalTransmit(const BK4819_FilterBandwidth_t Bandwidth)
+{
+	// Mute output audio and bypass all AF TX filters.
+	BK4819_WriteRegister(BK4819_REG_47, (2u << 12) | (BK4819_AF_MUTE << 8) | (1u << 6) | 1);
+	// Disable Mic AGC and TX DC filter.
+	BK4819_WriteRegister(BK4819_REG_7E, (BK4819_ReadRegister(BK4819_REG_7E) & 0xFFC7) | 0x8000);
+	// Disable Voice FM AF TX filters
+	BK4819_WriteRegister(BK4819_REG_2B, (BK4819_ReadRegister(BK4819_REG_2B) & 0xFFF8) | 0x7);
+	// Disable ALC
+	BK4819_WriteRegister(BK4819_REG_4B, (1 << 15));
+	// Disable MIC AGC
+	BK4819_WriteRegister(BK4819_REG_19, 0x1041);
+	// Set Mic Sensitivity
+	BK4819_WriteRegister(BK4819_REG_7D, 0xE940);
+	// Set Deviation
+	// This should be moved into EEPROM settings.
+	switch (Bandwidth)
+	{
+		default:
+		case BK4819_FILTER_BW_NARROW:
+		case BK4819_FILTER_BW_DIGITAL_NARROW:
+			BK4819_WriteRegister(BK4819_REG_40, 0x14D6);
+			break;
+		case BK4819_FILTER_BW_WIDE:
+		case BK4819_FILTER_BW_DIGITAL_WIDE:
+			BK4819_WriteRegister(BK4819_REG_40, 0x1383);
+			break;
+	}
+
+	BK4819_ExitTxMute();
+	BK4819_TxOn_Beep();
+}
+#endif
+
+void BK4819_PrepareTransmit(void)
+{
+	BK4819_ExitBypass();
+	BK4819_ExitTxMute();
+	BK4819_TxOn_Beep();
+}
+
+void BK4819_TxOn_Beep(void)
+{
 	BK4819_WriteRegister(BK4819_REG_37, 0x1D0F);
 	BK4819_WriteRegister(BK4819_REG_52, 0x028F);
 	BK4819_WriteRegister(BK4819_REG_30, 0);

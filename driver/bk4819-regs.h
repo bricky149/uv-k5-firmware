@@ -1,4 +1,5 @@
 /* Copyright 2023 Dual Tachyon
+ * Copyright 2024 mobilinkd
  * https://github.com/DualTachyon
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,11 +56,13 @@ enum BK4819_REGISTER_t {
 	BK4819_REG_3D = 0x3DU,
 	BK4819_REG_3E = 0x3EU,
 	BK4819_REG_3F = 0x3FU,
+	BK4819_REG_40 = 0x40U, // TX Deviation
 	BK4819_REG_43 = 0x43U,
 	BK4819_REG_46 = 0x46U,
 	BK4819_REG_47 = 0x47U,
 	BK4819_REG_48 = 0x48U,
 	BK4819_REG_49 = 0x49U,
+	BK4819_REG_4B = 0x4BU, // Audio Level Control (ALC)
 	BK4819_REG_4D = 0x4DU,
 	BK4819_REG_4E = 0x4EU,
 	BK4819_REG_4F = 0x4FU,
@@ -84,6 +87,7 @@ enum BK4819_REGISTER_t {
 	BK4819_REG_70 = 0x70U,
 	BK4819_REG_71 = 0x71U,
 	BK4819_REG_72 = 0x72U,
+	BK4819_REG_73 = 0x73U, // AFC
 	BK4819_REG_78 = 0x78U,
 	BK4819_REG_79 = 0x79U,
 	BK4819_REG_7A = 0x7AU,

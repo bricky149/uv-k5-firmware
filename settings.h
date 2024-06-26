@@ -67,6 +67,7 @@ enum CHANNEL_DisplayMode_t {
 typedef enum CHANNEL_DisplayMode_t CHANNEL_DisplayMode_t;
 
 // 1o11
+#if defined(ENABLE_MDC1200)
 enum MDC1200_Mode_t {
 	MDC1200_MODE_OFF = 0U,
 	MDC1200_MODE_BOT = 1U,  // BEGIN OF TX
@@ -74,6 +75,7 @@ enum MDC1200_Mode_t {
 	MDC1200_MODE_BOTH = 3U,
 };
 typedef enum MDC1200_Mode_t MDC1200_Mode_t;
+#endif
 
 typedef struct {
 	uint32_t POWER_ON_PASSWORD;

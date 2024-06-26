@@ -1,5 +1,6 @@
 /* Copyright 2023 Dual Tachyon
  * Copyright 2023 OneOfEleven
+ * Copyright 2024 mobilinkd
  * https://github.com/DualTachyon
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -282,9 +283,7 @@ void RADIO_ConfigureChannel(uint8_t VFO, uint32_t Configure)
 		gVFO.Info[VFO].ConfigTX.CodeType = CODE_TYPE_OFF;
 		gVFO.Info[VFO].CompanderMode = COMPND_OFF;
 	}
-	switch (gVFO.Info[VFO].MODULATION_MODE) {
-	case MOD_LSB:
-	case MOD_USB:
+	if (gVFO.Info[VFO].MODULATION_MODE == MOD_USB) {
 		// SSB will not work with any other bandwidth mode
 		gVFO.Info[VFO].CHANNEL_BANDWIDTH = BANDWIDTH_NARROWER;
 	}
@@ -415,12 +414,25 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 	uint16_t InterruptMask;
 	uint32_t Frequency;
 
-	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
-	gEnableSpeaker = false;
-	BK4819_ClearGpioOut(BK4819_GPIO6_PIN2_GREEN);
-
 	BK4819_FilterBandwidth_t Bandwidth = gRxVfo->CHANNEL_BANDWIDTH;
-	BK4819_SetFilterBandwidth(Bandwidth);
+#if defined(ENABLE_DIGITAL_MODULATION)
+	if (gRxVfo->MODULATION_MODE == MOD_DIG) {
+		if (Bandwidth == BK4819_FILTER_BW_WIDE) {
+			Bandwidth = BK4819_FILTER_BW_DIGITAL_WIDE;
+		} else {
+			Bandwidth = BK4819_FILTER_BW_DIGITAL_NARROW;
+		}
+		BK4819_SetFilterBandwidth(Bandwidth, false);
+	} else
+	// Do not turn off the audio path for digital modulation.
+	// This is needed to reduce turn-around time.
+#endif
+	{
+		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
+		gEnableSpeaker = false;
+		BK4819_ClearGpioOut(BK4819_GPIO6_PIN2_GREEN);
+		BK4819_SetFilterBandwidth(Bandwidth, true);
+	}
 
 	BK4819_ClearGpioOut(BK4819_GPIO5_PIN1_RED);
 	BK4819_SetupPowerAmplifier(0, 0);
@@ -434,7 +446,14 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 		BK4819_WriteRegister(BK4819_REG_02, 0);
 	}
 	BK4819_WriteRegister(BK4819_REG_3F, 0);
-	BK4819_WriteRegister(BK4819_REG_7D, gEeprom.MIC_SENSITIVITY_TUNING | 0xE940);
+#if defined(ENABLE_DIGITAL_MODULATION)
+	if (gRxVfo->MODULATION_MODE == MOD_DIG) {
+		BK4819_WriteRegister(BK4819_REG_7D, 0xE940);
+	} else
+#endif
+	{
+		BK4819_WriteRegister(BK4819_REG_7D, gEeprom.MIC_SENSITIVITY_TUNING | 0xE940);
+	}
 	Frequency = gRxVfo->pRX->Frequency;
 	BK4819_SetFrequency(Frequency);
 	BK4819_SetupSquelch(
@@ -494,6 +513,7 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 			break;
 		}
 	}
+	BK4819_SetModulation(gRxVfo->MODULATION_MODE);
 	BK4819_SetAGC(gRxVfo->MODULATION_MODE);
 
 	if (gRxVfo->MODULATION_MODE != MOD_FM || !gRxVfo->DTMF_DECODING_ENABLE) {
@@ -502,8 +522,14 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 		BK4819_DisableMDC1200Rx();
 #endif
 	} else {
+#if defined(ENABLE_DIGITAL_MODULATION)
+	if (gRxVfo->MODULATION_MODE != MOD_DIG) {
+#endif
 		BK4819_EnableDTMF();
 		InterruptMask |= BK4819_REG_3F_DTMF_5TONE_FOUND;
+#if defined(ENABLE_DIGITAL_MODULATION)
+	}
+#endif
 #if defined(ENABLE_MDC1200)
 		BK4819_EnableMDC1200Rx();
 		InterruptMask |= BK4819_REG_3F_FSK_RX_SYNC | BK4819_REG_3F_FSK_RX_FINISHED | BK4819_REG_3F_FSK_FIFO_ALMOST_FULL;
@@ -520,15 +546,41 @@ void RADIO_SetupRegisters(bool bSwitchToFunction0)
 
 void RADIO_SetTxParameters(void)
 {
-	GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
-	gEnableSpeaker = false;
-	BK4819_ClearGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE);
-
 	BK4819_FilterBandwidth_t Bandwidth = gCurrentVfo->CHANNEL_BANDWIDTH;
-	BK4819_SetFilterBandwidth(Bandwidth);
+#if defined(ENABLE_DIGITAL_MODULATION)
+	if (gCurrentVfo->MODULATION_MODE == MOD_DIG) {
+		if (Bandwidth == BK4819_FILTER_BW_WIDE) {
+			Bandwidth = BK4819_FILTER_BW_DIGITAL_WIDE;
+		} else {
+			Bandwidth = BK4819_FILTER_BW_DIGITAL_NARROW;
+		}
+		BK4819_SetFilterBandwidth(Bandwidth, false);
+	} else
+	// Do not turn off the audio path for digital modulation.
+	// This is needed to reduce turn-around time.
+#endif
+	{
+		GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_AUDIO_PATH);
+		gEnableSpeaker = false;
+		BK4819_ClearGpioOut(BK4819_GPIO0_PIN28_RX_ENABLE);
+		BK4819_SetFilterBandwidth(Bandwidth, true);
+	}
 
 	BK4819_SetFrequency(gCurrentVfo->pTX->Frequency);
-	BK4819_PrepareTransmit();
+	if (gRxVfo->MODULATION_MODE == MOD_FM) {
+		BK4819_SetCompander(gCurrentVfo->CompanderMode);
+	} else {
+		BK4819_SetCompander(0);
+	}
+	
+#if defined(ENABLE_DIGITAL_MODULATION)
+	if (gCurrentVfo->MODULATION_MODE == MOD_DIG) {
+		BK4819_PrepareDigitalTransmit(gCurrentVfo->CHANNEL_BANDWIDTH);
+	} else
+#endif
+	{
+		BK4819_PrepareTransmit();
+	}
 
 	BK4819_SelectFilter(gCurrentVfo->pTX->Frequency);
 	BK4819_SetGpioOut(BK4819_GPIO1_PIN29_PA_ENABLE);
@@ -605,7 +657,14 @@ void RADIO_PrepareTX(void)
 			State = VFO_STATE_BAT_LOW;
 		} else if (gBatteryDisplayLevel == 6) {
 			State = VFO_STATE_VOL_HIGH;
-		} else if (gEeprom.KEY_LOCK) {
+		}
+#if defined(ENABLE_DIGITAL_MODULATION)
+		else if (gCurrentVfo->MODULATION_MODE == MOD_DIG) {
+			// Allow TX in digital mode.
+			State = VFO_STATE_NORMAL;
+		}
+#endif
+		else if (gEeprom.KEY_LOCK) {
 			State = VFO_STATE_DISALLOWED;
 		} else {
 			State = VFO_STATE_NORMAL;

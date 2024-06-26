@@ -315,16 +315,13 @@ void APP_StartListening(FUNCTION_Type_t Function)
 		gScheduleDualWatch = false;
 	}
 
-	BK4819_SetModulation(gRxVfo->MODULATION_MODE);
 	if (gRxVfo->MODULATION_MODE != MOD_FM) {
 		BK4819_WriteRegister(BK4819_REG_48, 0xB3A8);
-		BK4819_SetCompander(0);
 	} else {
 		BK4819_WriteRegister(BK4819_REG_48, 0xB000
 				| (gCalibration.VOLUME_GAIN << 4)
 				| (gCalibration.DAC_GAIN << 0)
 				);
-		BK4819_SetCompander(gRxVfo->CompanderMode);
 	}
 
 	FUNCTION_Select(Function);
@@ -539,7 +536,9 @@ void APP_Update(void)
 				|| gDTMF_CallState != DTMF_CALL_STATE_NONE
 				) {
 			gBatterySaveCountdown = 1000;
-		} else {
+		} else if (gRxVfo->MODULATION_MODE != MOD_DIG) {
+			// Digital modulation cannot go into power save
+			// This is due to the low turnaround needed
 			FUNCTION_Select(FUNCTION_POWER_SAVE);
 		}
 		gSchedulePowerSave = false;
@@ -672,7 +671,7 @@ void APP_TimeSlice500ms(void)
 			gLowBatteryCountdown = 0;
 			if (!gChargingWithTypeC) {
 				FUNCTION_Select(FUNCTION_POWER_SAVE);
-				ST7565_HardwareReset();
+				//ST7565_HardwareReset();
 				GPIO_ClearBit(&GPIOB->DATA, GPIOB_PIN_BACKLIGHT);
 			}
 		}
@@ -680,7 +679,8 @@ void APP_TimeSlice500ms(void)
 
 	if (gScreenToDisplay == DISPLAY_SCANNER && gScannerEditState == 0 && gScanCssState < SCAN_CSS_STATE_FOUND) {
 		gScanProgressIndicator++;
-		if (gScanProgressIndicator > 32) {
+		// Scan for as long as possible, rather than to an arbitrary counter value
+		if (gScanProgressIndicator == 65535) {
 			if (gScanCssState == SCAN_CSS_STATE_SCANNING && !gScanSingleFrequency) {
 				gScanCssState = SCAN_CSS_STATE_FOUND;
 			} else {

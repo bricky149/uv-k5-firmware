@@ -55,8 +55,9 @@ extern const uint8_t BITMAP_PowerHigh[8];
 extern const uint8_t BITMAP_PowerMid[8];
 extern const uint8_t BITMAP_PowerLow[8];
 
-extern const uint8_t BITMAP_SB[6];
 extern const uint8_t BITMAP_AM[12];
+extern const uint8_t BITMAP_DIG[6];
+extern const uint8_t BITMAP_SSB[6];
 
 extern const uint8_t BITMAP_CT[12];
 extern const uint8_t BITMAP_DCS[18];

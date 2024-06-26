@@ -163,8 +163,8 @@ static const char gSubMenu_COMPND[4][6] = {
 static const char gSubMenu_MOD[4][4] = {
 	"FM",
 	"AM",
-	"LSB", // SSB
-	"USB", // SSB
+	"USB", // Single Sideband
+	"DIG", // Digital
 };
 
 static const char gSubMenu_RESET[2][4] = {

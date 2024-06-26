@@ -97,14 +97,14 @@ static const struct {
 
 KEY_Code_t KEYBOARD_Poll(void)
 {
-	KEY_Code_t Key = KEY_INVALID;
-
 	if (!GPIO_CheckBit(&GPIOC->DATA, GPIOC_PIN_PTT)) {
         // Double check for pin stability
         if (!GPIO_CheckBit(&GPIOC->DATA, GPIOC_PIN_PTT)) {
-            Key = KEY_PTT;
+            return KEY_PTT;
         }
 	}
+
+	KEY_Code_t Key = KEY_INVALID;
 
 	// *****************
     for (uint8_t row = 0; row < 5; row++) {

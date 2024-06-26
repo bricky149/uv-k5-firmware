@@ -1,4 +1,6 @@
 /* Copyright 2023 Dual Tachyon
+ * Copyright 2023 OneOfEleven
+ * Copyright 2024 mobilinkd
  * https://github.com/DualTachyon
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,25 +23,26 @@
 #include <stdint.h>
 #include "driver/bk4819-regs.h"
 
-enum BK4819_MOD_Type_t {
+enum BK4819_ModType_t {
 	MOD_FM = 0U,
 	MOD_AM = 1U,
-	MOD_LSB = 2U, // SSB
-	MOD_USB = 3U, // SSB
+	MOD_USB = 2U, // Single Sideband
+	MOD_DIG = 3U, // Digital
 };
 
-typedef enum BK4819_MOD_Type_t BK4819_MOD_Type_t;
+typedef enum BK4819_ModType_t BK4819_ModType_t;
 
 enum BK4819_AF_Type_t {
 	BK4819_AF_MUTE = 0U,
-	BK4819_AF_OPEN = 1U,
+	BK4819_AF_FM = 1U,
 	BK4819_AF_ALAM = 2U,
 	BK4819_AF_BEEP = 3U,
-	BK4819_AF_LSB = 4U,  // SSB
-	BK4819_AF_USB = 5U,  // SSB
+	//BK4819_AF_RAW = 4U,
+	BK4819_AF_USB = 5U,  // Single Sideband
 	BK4819_AF_CTCO = 6U,
 	BK4819_AF_AM = 7U,
 	BK4819_AF_FSKO = 8U,
+	//BK4819_AF_BYP = 9U,
 };
 
 typedef enum BK4819_AF_Type_t BK4819_AF_Type_t;
@@ -48,6 +51,10 @@ enum BK4819_FilterBandwidth_t {
 	BK4819_FILTER_BW_WIDE = 0U,     // 25kHz
 	BK4819_FILTER_BW_NARROW = 1U,   // 12.5kHz
 	BK4819_FILTER_BW_NARROWER = 2U, // 6.25kHz
+#if defined(ENABLE_DIGITAL_MODULATION)
+	BK4819_FILTER_BW_DIGITAL_WIDE = 3U,
+	BK4819_FILTER_BW_DIGITAL_NARROW = 4U,
+#endif
 };
 
 typedef enum BK4819_FilterBandwidth_t BK4819_FilterBandwidth_t;
@@ -68,7 +75,7 @@ void BK4819_WriteRegister(BK4819_REGISTER_t Register, uint16_t Data);
 void BK4819_WriteU8(uint8_t Data);
 
 void BK4819_InitAGC(void);
-void BK4819_SetAGC(BK4819_MOD_Type_t ModType);
+void BK4819_SetAGC(BK4819_ModType_t ModType);
 
 void BK4819_SetGpioOut(BK4819_GPIO_PIN_t Pin);
 void BK4819_ClearGpioOut(BK4819_GPIO_PIN_t Pin);
@@ -77,7 +84,7 @@ void BK4819_SetCDCSSCodeWord(uint32_t CodeWord);
 void BK4819_SetCTCSSFrequency(uint32_t BaudRate);
 void BK4819_Set55HzTailDetection(void);
 
-void BK4819_SetFilterBandwidth(BK4819_FilterBandwidth_t Bandwidth);
+void BK4819_SetFilterBandwidth(BK4819_FilterBandwidth_t Bandwidth, bool weak_no_different);
 void BK4819_SetupPowerAmplifier(uint8_t Bias, uint32_t Frequency);
 void BK4819_SetFrequency(uint32_t Frequency);
 void BK4819_SetupSquelch(
@@ -85,8 +92,7 @@ void BK4819_SetupSquelch(
 		uint8_t SquelchOpenNoiseThresh, uint8_t SquelchCloseNoiseThresh,
 		uint8_t SquelchCloseGlitchThresh, uint8_t SquelchOpenGlitchThresh);
 
-void BK4819_SetModulation(BK4819_MOD_Type_t ModType);
-
+void BK4819_SetModulation(BK4819_ModType_t ModType);
 void BK4819_SetAF(BK4819_AF_Type_t AF);
 void BK4819_RX_TurnOn(void);
 void BK4819_SelectFilter(uint32_t Frequency);
@@ -102,8 +108,13 @@ void BK4819_Sleep(void);
 //void BK4819_TurnsOffTones_TurnsOnRX(void);
 
 //void BK4819_ExitBypass(void);
+
+#if defined(ENABLE_DIGITAL_MODULATION)
+void BK4819_PrepareDigitalTransmit(const BK4819_FilterBandwidth_t Bandwidth);
+#endif
+
 void BK4819_PrepareTransmit(void);
-//void BK4819_TxOn_Beep(void);
+void BK4819_TxOn_Beep(void);
 void BK4819_ExitSubAu(void);
 
 void BK4819_EnableRX(void);

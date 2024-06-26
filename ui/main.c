@@ -325,8 +325,12 @@ void UI_DisplayMain(void)
 		case 1:
 			memcpy(pLine1 + 27, BITMAP_AM, sizeof(BITMAP_AM));
 			break;
+		case 2:
+			memcpy(pLine1 + 27, BITMAP_SSB, sizeof(BITMAP_SSB));
+			break;
 		default:
-			memcpy(pLine1 + 27, BITMAP_SB, sizeof(BITMAP_SB));
+			memcpy(pLine1 + 27, BITMAP_DIG, sizeof(BITMAP_DIG));
+			break;
 		}
 
 		// 0x936C

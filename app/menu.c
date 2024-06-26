@@ -71,6 +71,9 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 	case MENU_TXP: case MENU_SFT_D:
 	case MENU_TDR: case MENU_WX:
 	case MENU_SC_REV: case MENU_MDF:
+#ifndef ENABLE_DIGITAL_MODULATION
+	case MENU_MOD:
+#endif
 	case MENU_W_N:
 		*pMin = 0;
 		*pMax = 2;
@@ -116,12 +119,14 @@ bool MENU_GetLimits(uint8_t Cursor, uint16_t *pMin, uint16_t *pMax)
 		*pMin = 1;
 		*pMax = 2;
 		break;
+#if defined(ENABLE_DIGITAL_MODULATION)
+	case MENU_MOD:
+#endif
 #if defined(ENABLE_MDC1200)
 	case MENU_MDCMOD:
 #endif
 	case MENU_D_RSP: case MENU_PTT_ID:
-	case MENU_COMPND: case MENU_MOD:
-	case MENU_F_LOCK:
+	case MENU_COMPND: case MENU_F_LOCK:
 		*pMin = 0;
 		*pMax = 3;
 		break;
